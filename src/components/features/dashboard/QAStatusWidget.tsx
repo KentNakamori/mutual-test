@@ -1,4 +1,6 @@
-﻿import React, { useState, useEffect } from 'react';
+﻿'use client'
+
+import React, { useState, useEffect } from 'react';
 import { MessageSquare, AlertTriangle } from 'lucide-react';
 import BaseWidget from './BaseWidget';
 import type { QADTO } from '../../../types/dto';

@@ -1,4 +1,6 @@
-﻿import React, { useState, useCallback } from 'react';
+﻿'use client'
+
+import React, { useState, useCallback } from 'react';
 import { Card, CardHeader, CardContent } from '@/components/ui/card';
 import type { InvestorDocument } from '@/types/models';
 

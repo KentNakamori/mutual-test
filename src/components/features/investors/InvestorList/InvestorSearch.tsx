@@ -1,4 +1,6 @@
-﻿import React, { useState, useCallback, useRef } from 'react';
+﻿'use client'
+
+import React, { useState, useCallback, useRef } from 'react';
 import { debounce } from 'lodash';
 import { Card, CardContent } from '@/components/ui/card';
 

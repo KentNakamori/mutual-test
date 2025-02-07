@@ -1,4 +1,6 @@
-﻿import React from 'react';
+﻿'use client'
+
+import React from 'react';
 import { Calendar, MessageSquare, Users, FileText, Settings } from 'lucide-react';
 
 interface NavItem {
@@ -9,9 +11,9 @@ interface NavItem {
 
 const navItems: NavItem[] = [
   { icon: <Users size={20} />, label: '投資家一覧', href: '/investors' },
-  { icon: <Calendar size={20} />, label: '面談管理', href: '/meetings' },
+  { icon: <Calendar size={20} />, label: '面談管理', href: '/investor-meetings' },
   { icon: <MessageSquare size={20} />, label: 'Q&A管理', href: '/qa' },
-  { icon: <FileText size={20} />, label: 'ドキュメント', href: '/documents' },
+  { icon: <FileText size={20} />, label: 'ドキュメント', href: '/chat-board' },
   { icon: <Settings size={20} />, label: '設定', href: '/settings' },
 ];
 

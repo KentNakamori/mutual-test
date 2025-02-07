@@ -1,9 +1,9 @@
 ﻿'use client';
 
 import React, { useState, useEffect } from 'react';
-import { InvestorList } from '@/components/features/investors/InvestorList';
-import { InvestorFilter } from '@/components/features/investors/InvestorFilter';
-import { InvestorSearch } from '@/components/features/investors/InvestorSearch';
+import { InvestorList } from '@/components/features/investors/InvestorList/InvestorList';
+import { InvestorFilter } from '@/components/features/investors/InvestorList/InvestorFilter';
+import { InvestorSearch } from '@/components/features/investors/InvestorList/InvestorSearch';
 import type { Investor } from '@/types/models';
 import type { FilterParams, PaginationParams } from '@/types/api';
 import { API_ENDPOINTS } from '@/types/utils';

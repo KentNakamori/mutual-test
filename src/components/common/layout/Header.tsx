@@ -1,4 +1,6 @@
-﻿import React from 'react';
+﻿'use client'
+
+import React from 'react';
 import { Bell, Search, User } from 'lucide-react';
 import { Alert } from '@/components/ui/alert';
 

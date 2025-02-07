@@ -1,4 +1,6 @@
-﻿import React from 'react';
+﻿'use client'
+
+import React from 'react';
 import { Card, CardHeader, CardContent } from '@/components/ui/card';
 import type { InvestorBasicInfo } from '@/types/models';
 

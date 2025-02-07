@@ -1,56 +1,23 @@
 // src/mocks/handlers/websocket.ts
-import { http, HttpResponse, WebSocket } from 'msw'
-import { API_ENDPOINTS } from '../../types/utils'
+import { http, HttpResponse } from 'msw'
 import type { WSMessage } from '../../types/components'
+import { createErrorResponse } from '../types'
 
 // WebSocketコネクション管理クラス
 class WebSocketConnectionManager {
-  private connections = new Map<string, Set<WebSocket>>()
   private messageHistory = new Map<string, WSMessage[]>()
 
-  addConnection(roomId: string, ws: WebSocket): void {
-    if (!this.connections.has(roomId)) {
-      this.connections.set(roomId, new Set())
-    }
-    this.connections.get(roomId)?.add(ws)
-
-    // 接続時に過去のメッセージ履歴を送信
-    const history = this.messageHistory.get(roomId) || []
-    history.forEach(message => {
-      ws.send(JSON.stringify(message))
-    })
-  }
-
-  removeConnection(roomId: string, ws: WebSocket): void {
-    this.connections.get(roomId)?.delete(ws)
-    if (this.connections.get(roomId)?.size === 0) {
-      this.connections.delete(roomId)
-    }
-  }
-
-  broadcast(roomId: string, message: WSMessage, excludeWs?: WebSocket): void {
-    // メッセージ履歴に追加
+  addMessage(roomId: string, message: WSMessage): void {
     if (!this.messageHistory.has(roomId)) {
       this.messageHistory.set(roomId, [])
     }
-    this.messageHistory.get(roomId)?.push(message)
-
+    const history = this.messageHistory.get(roomId)!
+    history.push(message)
+    
     // 最大100件までの履歴を保持
-    const history = this.messageHistory.get(roomId)
-    if (history && history.length > 100) {
+    if (history.length > 100) {
       this.messageHistory.set(roomId, history.slice(-100))
     }
-
-    // 接続中の全クライアントにブロードキャスト
-    this.connections.get(roomId)?.forEach(ws => {
-      if (ws !== excludeWs) {
-        ws.send(JSON.stringify(message))
-      }
-    })
-  }
-
-  getRoomConnections(roomId: string): Set<WebSocket> | undefined {
-    return this.connections.get(roomId)
   }
 
   getMessageHistory(roomId: string): WSMessage[] {
@@ -61,39 +28,8 @@ class WebSocketConnectionManager {
 const wsManager = new WebSocketConnectionManager()
 
 export const websocketHandlers = [
-  // WebSocket接続ハンドラー
-  http.get(`${API_ENDPOINTS.CHAT}/ws`, ({ request }) => {
-    const url = new URL(request.url)
-    const roomId = url.searchParams.get('roomId')
-    const token = url.searchParams.get('token')
-
-    // パラメーター検証
-    if (!roomId) {
-      return HttpResponse.json(
-        { error: 'Room ID is required' },
-        { status: 400 }
-      )
-    }
-
-    if (!token) {
-      return HttpResponse.json(
-        { error: 'Authentication token is required' },
-        { status: 401 }
-      )
-    }
-
-    // WebSocket接続を確立
-    return new Response(null, {
-      status: 101,
-      headers: {
-        'Upgrade': 'websocket',
-        'Connection': 'Upgrade'
-      }
-    })
-  }),
-
-  // WebSocket メッセージハンドラー
-  http.post(`${API_ENDPOINTS.CHAT}/ws/messages`, async ({ request }) => {
+  // メッセージ送信エンドポイント
+  http.post('/api/v1/chat/messages', async ({ request }) => {
     try {
       const { roomId, message } = await request.json()
       const wsMessage: WSMessage = {
@@ -102,52 +38,126 @@ export const websocketHandlers = [
         timestamp: Date.now()
       }
 
-      wsManager.broadcast(roomId, wsMessage)
-      return HttpResponse.json({ data: wsMessage }, { status: 201 })
+      wsManager.addMessage(roomId, wsMessage)
+      
+      return HttpResponse.json({ 
+        success: true,
+        message: wsMessage 
+      })
     } catch (error) {
       return HttpResponse.json(
-        { error: 'Failed to broadcast message' },
+        createErrorResponse(500, 'Failed to send message'),
         { status: 500 }
       )
     }
   }),
 
   // メッセージ履歴取得
-  http.get(`${API_ENDPOINTS.CHAT}/rooms/:roomId/messages`, ({ params }) => {
+  http.get('/api/v1/chat/rooms/:roomId/messages', ({ params }) => {
     const { roomId } = params
-    const messages = wsManager.getMessageHistory(roomId as string)
+    if (typeof roomId !== 'string') {
+      return HttpResponse.json(
+        createErrorResponse(400, '無効なRoom IDです'),
+        { status: 400 }
+      )
+    }
+
+    const messages = wsManager.getMessageHistory(roomId)
     return HttpResponse.json({ data: messages })
   })
 ]
 
-// WebSocketセットアップヘルパー
-export function setupWebSocket(url: string, options: {
+// クライアント側でのWebSocket接続をシミュレートするクラス
+export class MockWebSocket extends EventTarget {
+  private roomId: string
+  private intervalId?: NodeJS.Timeout
+
+  constructor(roomId: string) {
+    super()
+    this.roomId = roomId
+    
+    // 接続成功をシミュレート
+    setTimeout(() => {
+      this.dispatchEvent(new Event('open'))
+      this.startPolling()
+    }, 100)
+  }
+
+  send(data: string): void {
+    try {
+      const message = JSON.parse(data)
+      fetch('/api/v1/chat/messages', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          roomId: this.roomId,
+          message
+        })
+      })
+    } catch (error) {
+      this.dispatchEvent(new ErrorEvent('error', { error }))
+    }
+  }
+
+  close(): void {
+    if (this.intervalId) {
+      clearInterval(this.intervalId)
+    }
+    this.dispatchEvent(new Event('close'))
+  }
+
+  // ポーリングでメッセージを取得
+  private startPolling(): void {
+    let lastMessageTimestamp = 0
+
+    this.intervalId = setInterval(async () => {
+      try {
+        const response = await fetch(`/api/v1/chat/rooms/${this.roomId}/messages`)
+        const { data } = await response.json()
+        
+        if (data && Array.isArray(data)) {
+          // 新しいメッセージのみを取得
+          const newMessages = data.filter(msg => msg.timestamp > lastMessageTimestamp)
+          
+          if (newMessages.length > 0) {
+            lastMessageTimestamp = Math.max(...newMessages.map(msg => msg.timestamp))
+            
+            // 新しいメッセージごとにイベントを発火
+            newMessages.forEach(message => {
+              this.dispatchEvent(new MessageEvent('message', {
+                data: JSON.stringify(message)
+              }))
+            })
+          }
+        }
+      } catch (error) {
+        console.error('Polling error:', error)
+      }
+    }, 1000) // 1秒ごとにポーリング
+  }
+}
+
+// セットアップヘルパー
+export function setupWebSocket(roomId: string, options: {
   onMessage: (data: WSMessage) => void
   onError?: (error: Error) => void
   onClose?: () => void
 }) {
-  const ws = new WebSocket(url)
-
-  ws.addEventListener('open', () => {
-    const connectMessage: WSMessage = {
-      type: 'connect',
-      payload: { message: 'Connected to chat room' },
-      timestamp: Date.now()
-    }
-    ws.send(JSON.stringify(connectMessage))
-  })
+  const ws = new MockWebSocket(roomId)
 
   ws.addEventListener('message', (event) => {
     try {
-      const data = JSON.parse(event.data) as WSMessage
+      const data = JSON.parse((event as MessageEvent).data) as WSMessage
       options.onMessage(data)
     } catch (error) {
       options.onError?.(new Error('Invalid message format'))
     }
   })
 
-  ws.addEventListener('error', (error) => {
-    options.onError?.(error)
+  ws.addEventListener('error', (event) => {
+    options.onError?.(event instanceof ErrorEvent ? event.error : new Error('WebSocket error'))
   })
 
   ws.addEventListener('close', () => {
@@ -157,7 +167,6 @@ export function setupWebSocket(url: string, options: {
   return ws
 }
 
-// WebSocketイベントタイプ定義
 export const WS_EVENTS = {
   CONNECT: 'connect',
   DISCONNECT: 'disconnect',
@@ -165,33 +174,3 @@ export const WS_EVENTS = {
   TYPING: 'typing',
   READ: 'read'
 } as const
-
-// メッセージユーティリティ
-export const wsUtils = {
-  createMessage(type: string, payload: unknown): WSMessage {
-    return {
-      type,
-      payload,
-      timestamp: Date.now()
-    }
-  },
-
-  parseMessage(data: string): WSMessage | null {
-    try {
-      return JSON.parse(data) as WSMessage
-    } catch {
-      return null
-    }
-  },
-
-  validateMessage(message: unknown): message is WSMessage {
-    if (!message || typeof message !== 'object') return false
-    
-    const msg = message as WSMessage
-    return (
-      typeof msg.type === 'string' &&
-      msg.payload !== undefined &&
-      typeof msg.timestamp === 'number'
-    )
-  }
-}

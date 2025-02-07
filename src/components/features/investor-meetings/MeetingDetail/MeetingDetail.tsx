@@ -1,4 +1,6 @@
-﻿import React from 'react';
+﻿'use client'
+
+import React from 'react';
 import { MeetingInfo } from './MeetingInfo';
 import { MeetingNotes } from './MeetingNotes';
 import { MeetingActions } from './MeetingActions';

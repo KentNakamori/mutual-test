@@ -1,4 +1,6 @@
-﻿import React, { useState } from 'react';
+﻿'use client'
+
+import React, { useState } from 'react';
 import { Card, CardHeader, CardContent } from '@/components/ui/card';
 import type { Investor } from '@/types/models';
 
