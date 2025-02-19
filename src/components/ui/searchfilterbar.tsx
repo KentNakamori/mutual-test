@@ -4,8 +4,8 @@
  */
 
 import React, { useState } from "react";
-import SearchBar from "./SearchBar";
-import FilterBar from "./FilterBar";
+import SearchBar from "./searchbar";
+import FilterBar from "./filterbar";
 
 type FilterItem = {
   type: "select" | "checkbox" | "radio" | "input";
