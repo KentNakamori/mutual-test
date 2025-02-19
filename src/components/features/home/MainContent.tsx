@@ -6,8 +6,8 @@ import { useAuth } from "@/hooks/useAuth";
 import { useCompanies } from "@/hooks/useCompanies";
 
 // 共通コンポーネント (既存想定)
-import SearchBar from "@/components/common/SearchBar";
-import FilterBar from "@/components/common/FilterBar";
+import SearchBar from "@/components/ui/searchbar";
+import FilterBar from "@/components/ui/filterbar";
 
 // ページ固有コンポーネント
 import CompanyList from "./CompanyList";
