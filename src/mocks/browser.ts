@@ -1,5 +1,8 @@
-import { setupWorker } from 'msw';
-import { handlers } from './handlers';
+// mocks/browser.ts
+import { setupWorker } from "msw";
+import { handlers } from "./handlers";
 
-// ブラウザ側でMSWをセットアップ
+/**
+ * ブラウザ上でService WorkerとしてAPIをモックする
+ */
 export const worker = setupWorker(...handlers);
