@@ -3,7 +3,7 @@
  * @description ON/OFFの二択を切り替えるスイッチUI
  */
 import React from "react";
-import { Switch as ShadcnSwitch } from "@/components/ui/shadcn-base/switch";
+import { Switch as ShadcnSwitch } from "@/components/ui/switch";
 
 type SwitchToggleProps = {
   checked: boolean;

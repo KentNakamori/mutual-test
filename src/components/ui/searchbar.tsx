@@ -4,8 +4,8 @@
  */
 
 import React from "react";
-import Input from "./Input";
-import Button from "./Button";
+import {Input} from "./input";
+import {Button}from "./button";
 
 type SearchBarProps = {
   placeholder?: string;

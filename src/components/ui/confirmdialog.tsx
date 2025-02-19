@@ -13,8 +13,8 @@ import {
   AlertDialogDescription,
   AlertDialogAction,
   AlertDialogCancel,
-} from "@/components/ui/shadcn-base/alert-dialog";
-import Button from "./Button";
+} from "@/components/ui/alert-dialog";
+import {Button}from "./button";
 
 type ConfirmDialogProps = {
   isOpen: boolean;

@@ -4,7 +4,7 @@
  */
 
 import React from "react";
-import ProfileMenu from "./ProfileMenu";
+import ProfileMenu from "./profilemenu";
 
 type HeaderProps = {
   /** ユーザー種別で表示切り替えたい場合に使用 */
