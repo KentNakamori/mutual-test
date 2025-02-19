@@ -19,7 +19,17 @@ interface CompanyData {
   isFollowing: boolean;
 }
 
-// ページ本体
+// 企業データの型定義
+interface CompanyData {
+  id: string;
+  name: string;
+  logoUrl: string;
+  industry: string;
+  description: string;
+  isFollowing: boolean;
+}
+
+// ページ本体だ
 export default function CompanyDetailPage() {
   const params = useParams();
   const companyId = params.id as string;
