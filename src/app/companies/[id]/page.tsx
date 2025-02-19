@@ -10,7 +10,7 @@ import TabSwitcher from "@/components/features/companyPage/TabSwitcher";
 import ChatView from "@/components/features/companyPage/ChatView";
 import QAListView from "@/components/features/companyPage/QAListView";
 
-// ページ本体
+// ページ本体だ
 export default function CompanyDetailPage() {
   const params = useParams();
   const companyId = params.id as string;
