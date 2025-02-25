@@ -1,5 +1,5 @@
 /**
- * @file qa.ts
+types/qa.ts
  * @description QA関連APIのリクエスト/レスポンス型定義
  */
 

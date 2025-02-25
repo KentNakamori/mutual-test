@@ -1,5 +1,5 @@
 /**
- * @file company.ts
+ types/company.ts
  * @description 企業関連APIのリクエスト/レスポンス型定義
  */
 

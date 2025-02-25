@@ -1,5 +1,5 @@
 /**
- * @file chat.ts
+ types/chat.ts
  * @description チャット関連APIのリクエスト/レスポンス型定義
  */
 

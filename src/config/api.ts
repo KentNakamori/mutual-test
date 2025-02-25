@@ -1,5 +1,5 @@
 /**
- * @file config/api.ts
+ config/api.ts
  * @description APIエンドポイントのベースURLや設定値を管理
  */
 

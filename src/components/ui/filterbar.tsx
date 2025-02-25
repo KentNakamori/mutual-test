@@ -1,12 +1,7 @@
-/**
- * @file components/ui/FilterBar.tsx
- * @description 複数のフィルタ項目をまとめて表示し、選択内容をonFilterChangeで通知
- */
 import React, { useState } from "react";
-import{ Select} from "./select";
-import {Input }from "./input";
-import{Button} from "./button";
-// shadcnのcheckboxなども適宜import
+import { Select } from "./select";
+import { Input } from "./input";
+import { Button } from "./button";
 
 type FilterItem = {
   type: "select" | "checkbox" | "radio" | "input";
@@ -16,7 +11,7 @@ type FilterItem = {
 };
 
 type FilterBarProps = {
-  filters: FilterItem[];
+  filters: FilterItem[];  // required
   onFilterChange: (updated: Record<string, any>) => void;
   onReset?: () => void;
   layout?: "horizontal" | "vertical";
@@ -24,13 +19,18 @@ type FilterBarProps = {
 };
 
 const FilterBar: React.FC<FilterBarProps> = ({
-  filters,
+  filters = [],  // デフォルト値を設定
   onFilterChange,
   onReset,
   layout = "horizontal",
   compact = false,
 }) => {
   const [selectedFilters, setSelectedFilters] = useState<Record<string, any>>({});
+
+  // filtersが未定義またはemptyの場合の早期リターン
+  if (!filters || filters.length === 0) {
+    return null;
+  }
 
   const handleChange = (name: string, value: any) => {
     const updated = { ...selectedFilters, [name]: value };
@@ -43,7 +43,9 @@ const FilterBar: React.FC<FilterBarProps> = ({
     if (onReset) onReset();
   };
 
-  const containerClasses = layout === "horizontal" ? "flex items-center space-x-4" : "flex flex-col space-y-4";
+  const containerClasses = layout === "horizontal" 
+    ? "flex items-center space-x-4" 
+    : "flex flex-col space-y-4";
   const labelClass = compact ? "text-sm" : "text-base";
 
   return (
@@ -53,7 +55,9 @@ const FilterBar: React.FC<FilterBarProps> = ({
           const currentVal = selectedFilters[filter.name] ?? "";
           return (
             <div key={filter.name} className="flex flex-col">
-              <label className={`${labelClass} font-semibold mb-1`}>{filter.label}</label>
+              <label className={`${labelClass} font-semibold mb-1`}>
+                {filter.label}
+              </label>
               {filter.type === "select" && (
                 <Select
                   options={filter.options || []}
@@ -64,10 +68,9 @@ const FilterBar: React.FC<FilterBarProps> = ({
               {filter.type === "input" && (
                 <Input
                   value={currentVal}
-                  onChange={(val) => handleChange(filter.name, val)}
+                  onChange={(e) => handleChange(filter.name, e.target.value)}
                 />
               )}
-              {/* ここでcheckboxやradioの実装を省略 (shadcn Checkboxなど) */}
             </div>
           );
         })}
@@ -75,11 +78,12 @@ const FilterBar: React.FC<FilterBarProps> = ({
 
       {onReset && (
         <Button
-          label="リセット"
-          variant="outline"
           onClick={handleReset}
+          variant="outline"
           className="mt-2"
-        />
+        >
+          リセット
+        </Button>
       )}
     </div>
   );

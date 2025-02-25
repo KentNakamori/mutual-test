@@ -1,5 +1,5 @@
 /**
- * @file index.ts
+types/index.ts
  * @description api配下の型をまとめて再エクスポート
  */
 

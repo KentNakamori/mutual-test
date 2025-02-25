@@ -1,5 +1,5 @@
 /**
- * @file user.ts
+types/user.ts
  * @description ユーザー管理/マイページ系APIのリクエスト/レスポンス型定義
  */
 

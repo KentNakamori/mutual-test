@@ -1,5 +1,5 @@
 /**
- * @file auth.ts
+ types/auth.ts
  * @description 認証系APIのリクエスト/レスポンス型定義
  */
 

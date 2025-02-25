@@ -1,5 +1,5 @@
 /**
- * @file libs/api.ts
+src/libs/api.ts
  * @description フロントエンドからの HTTP 通信（fetch）を集約し、各エンドポイントを関数化
  * 
  * - 認証トークンの付与やリフレッシュトークンによる再認証処理はこのレイヤーで行う想定
