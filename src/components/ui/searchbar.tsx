@@ -1,46 +1,58 @@
 /**
- * @file components/ui/SearchBar.tsx
- * @description 検索キーワード入力や検索ボタンをまとめたUI
+ * SearchBarコンポーネント
+ * - テキスト入力 + ボタンをまとめたシンプルな検索バー
+ * - 内部的に Input, Button(shadcn) を組み合わせる例
  */
 
-import React from "react";
-import {Input} from "./input";
-import {Button}from "./button";
+import React, { useState } from "react";
+import Input from "./Input";
+import { Button } from "@/components/ui/Button";
 
 type SearchBarProps = {
+  /** 初期値 */
+  defaultValue?: string;
+  /** 検索実行コールバック */
+  onSearch: (keyword: string) => void;
+  /** プレースホルダ */
   placeholder?: string;
-  value: string;
-  onChange: (val: string) => void;
-  onSearch: () => void;
-  onClear?: () => void;
+  /** ボタンラベル */
+  buttonLabel?: string;
 };
 
 const SearchBar: React.FC<SearchBarProps> = ({
-  placeholder = "キーワードを入力",
-  value,
-  onChange,
+  defaultValue = "",
   onSearch,
-  onClear,
+  placeholder = "Search...",
+  buttonLabel = "Search",
 }) => {
+  const [keyword, setKeyword] = useState(defaultValue);
+
+  const handleSearch = () => {
+    onSearch(keyword);
+  };
+
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter") {
-      onSearch();
+      onSearch(keyword);
     }
   };
 
   return (
     <div className="flex items-center space-x-2">
-      <Input
-        value={value}
-        onChange={onChange}
-        placeholder={placeholder}
-        onKeyDown={handleKeyDown}
-        className="flex-1"
-      />
-      {onClear && value && (
-        <Button variant="ghost" label="クリア" onClick={onClear} />
-      )}
-      <Button label="検索" onClick={onSearch} />
+      <div className="flex-1">
+        <Input
+          value={keyword}
+          onChange={(e) => setKeyword(e.target.value)}
+          placeholder={placeholder}
+          onKeyDown={handleKeyDown}
+        />
+      </div>
+      <Button
+        variant="default"
+        onClick={handleSearch}
+      >
+        {buttonLabel}
+      </Button>
     </div>
   );
 };

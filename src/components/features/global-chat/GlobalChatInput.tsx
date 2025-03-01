@@ -1,42 +1,62 @@
 "use client";
 
-import React, { useState } from "react";
-import { ChatInputBoxProps } from "@/types/components";
+import React, { useState, KeyboardEvent } from "react";
+import { Button } from "@/components/ui/Button";
+import Input from "@/components/ui/Input";
+
+interface GlobalChatInputProps {
+  /** メッセージ送信時のハンドラ */
+  onSendMessage: (text: string) => void;
+  /** 入力を無効化するか (AI回答待ち時など) */
+  disabled?: boolean;
+  /** プレースホルダ */
+  placeholder?: string;
+}
 
 /**
- * 全体チャット入力欄
+ * チャットの送信用フォーム
  */
-const GlobalChatInput: React.FC<ChatInputBoxProps> = ({
-  onSubmit,
-  isDisabled,
+const GlobalChatInput: React.FC<GlobalChatInputProps> = ({
+  onSendMessage,
+  disabled = false,
+  placeholder,
 }) => {
-  const [text, setText] = useState("");
+  const [inputValue, setInputValue] = useState("");
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!text.trim()) return;
-    onSubmit(text.trim());
-    setText("");
+  // Enter押下で送信するかどうかは運用次第
+  const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      handleSend();
+    }
+  };
+
+  const handleSend = () => {
+    if (!inputValue.trim()) return;
+    onSendMessage(inputValue);
+    setInputValue("");
   };
 
   return (
-    <form onSubmit={handleSubmit} className="flex items-center gap-2">
-      <input
-        className="flex-1 border border-gray-300 rounded px-3 py-2 text-sm"
-        type="text"
-        placeholder="質問を入力..."
-        value={text}
-        onChange={(e) => setText(e.target.value)}
-        disabled={isDisabled}
-      />
-      <button
-        type="submit"
-        className="bg-black text-white px-4 py-2 rounded hover:bg-gray-800 transition-colors duration-200 disabled:opacity-50"
-        disabled={isDisabled}
+    <div className="flex items-center space-x-2">
+      <div className="flex-1">
+        <Input
+          disabled={disabled}
+          value={inputValue}
+          placeholder={placeholder || "メッセージを入力"}
+          onKeyDown={handleKeyDown}
+          onChange={(e) => setInputValue(e.target.value)}
+        />
+      </div>
+      <Button
+        variant="default"
+        onClick={handleSend}
+        disabled={disabled}
+        className="whitespace-nowrap"
       >
         送信
-      </button>
-    </form>
+      </Button>
+    </div>
   );
 };
 

@@ -1,40 +1,37 @@
 /**
- * @file components/ui/SwitchToggle.tsx
- * @description ON/OFFの二択を切り替えるスイッチUI
+ * SwitchToggleコンポーネント
+ * - ON/OFFを切り替えるトグルUI。shadcnのSwitchをラップ
  */
+
 import React from "react";
-import { Switch as ShadcnSwitch } from "@/components/ui/switch";
+import { Switch as ShadcnSwitch } from "@/components/ui/shadcn/switch"; 
+// ↑ 実際のshadcn Switch実装へのパスを調整してください
 
 type SwitchToggleProps = {
+  /** スイッチのON/OFF状態 */
   checked: boolean;
-  onChange: (newVal: boolean) => void;
-  disabled?: boolean;
+  /** 切り替え時のハンドラ */
+  onChange: (checked: boolean) => void;
+  /** ラベル(左側 or 右側に配置したい場合などはラップ側でコントロールしてもOK) */
   label?: string;
-  size?: "sm" | "md" | "lg";
+  /** スイッチを無効化するか */
+  disabled?: boolean;
 };
 
 const SwitchToggle: React.FC<SwitchToggleProps> = ({
   checked,
   onChange,
-  disabled,
   label,
-  size = "md",
+  disabled,
 }) => {
-  const handleToggle = (val: boolean) => {
-    onChange(val);
-  };
-
-  const sizeClass = size === "sm" ? "h-4 w-8" : size === "lg" ? "h-6 w-12" : "h-5 w-10";
-
   return (
-    <label className="flex items-center space-x-2">
+    <label className="inline-flex items-center space-x-2">
+      {label && <span className="text-sm text-gray-700">{label}</span>}
       <ShadcnSwitch
         checked={checked}
-        onCheckedChange={handleToggle}
+        onCheckedChange={onChange}
         disabled={disabled}
-        className={sizeClass}
       />
-      {label && <span>{label}</span>}
     </label>
   );
 };

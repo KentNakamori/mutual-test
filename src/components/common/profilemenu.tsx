@@ -1,9 +1,17 @@
 /**
- * @file components/common/ProfileMenu.tsx
- * @description ログインユーザーのプロフィール画像や名前を表示し、クリックするとドロップダウンメニューを開く例
+ * ProfileMenuコンポーネント
+ * - ユーザー名やアバターを表示し、クリックするとshadcnのDropdownMenuで各種メニューを表示
  */
 
-import React, { useState } from "react";
+import React from "react";
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuLabel,
+  DropdownMenuItem,
+} from "@/components/ui/shadcn/dropdown-menu"; // shadcn
+import Image from "next/image";
 
 type MenuItem = {
   label: string;
@@ -12,60 +20,60 @@ type MenuItem = {
 
 type ProfileMenuProps = {
   userName: string;
-  userAvatarUrl: string;
+  userAvatarUrl?: string;
   menuItems: MenuItem[];
-  onSelectMenuItem?: (itemValue: string) => void;
+  onSelectMenuItem: (value: string) => void;
 };
 
+/**
+ * ProfileMenu
+ */
 const ProfileMenu: React.FC<ProfileMenuProps> = ({
   userName,
   userAvatarUrl,
   menuItems,
   onSelectMenuItem,
 }) => {
-  const [isOpen, setIsOpen] = useState(false);
-
-  const handleToggle = () => setIsOpen((prev) => !prev);
-
-  const handleSelect = (val: string) => {
-    if (onSelectMenuItem) {
-      onSelectMenuItem(val);
-    }
-    setIsOpen(false);
-  };
-
   return (
-    <div className="relative inline-block">
-      <button
-        className="flex items-center space-x-2"
-        onClick={handleToggle}
-      >
-        {userAvatarUrl ? (
-          <img
-            src={userAvatarUrl}
-            alt="Avatar"
-            className="w-8 h-8 rounded-full"
-          />
-        ) : (
-          <span className="w-8 h-8 bg-gray-300 rounded-full" />
-        )}
-        <span className="text-sm">{userName}</span>
-      </button>
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <button
+          className="flex items-center space-x-2 focus:outline-none"
+          aria-label="Open user menu"
+        >
+          {/* アバター */}
+          {userAvatarUrl ? (
+            <Image
+              src={userAvatarUrl}
+              alt={userName}
+              width={32}
+              height={32}
+              className="rounded-full"
+            />
+          ) : (
+            <div className="w-8 h-8 bg-gray-300 rounded-full" />
+          )}
+          <span className="text-sm font-medium text-gray-700">{userName}</span>
+        </button>
+      </DropdownMenuTrigger>
 
-      {isOpen && (
-        <div className="absolute right-0 mt-2 w-40 bg-white border rounded shadow-md">
+      <DropdownMenuContent align="end" className="w-48">
+        <DropdownMenuLabel className="text-gray-500">
+          Hello, {userName}
+        </DropdownMenuLabel>
+        <div className="py-1">
           {menuItems.map((item) => (
-            <button
+            <DropdownMenuItem
               key={item.value}
-              className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
-              onClick={() => handleSelect(item.value)}
+              onClick={() => onSelectMenuItem(item.value)}
+              className="cursor-pointer"
             >
               {item.label}
-            </button>
+            </DropdownMenuItem>
           ))}
         </div>
-      )}
-    </div>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 };
 

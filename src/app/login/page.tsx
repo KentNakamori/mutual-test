@@ -1,32 +1,27 @@
-"use client";
-
-import React, { useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { useAuth } from "@/hooks/useAuth"; // AuthContextを利用するフック
+// src/app/login/page.tsx
+import React from "react";
 import SimpleHeader from "@/components/features/login/SimpleHeader";
+import MainSectionClient from "@/components/features/login/MainSection";
 import SimpleFooter from "@/components/features/login/SimpleFooter";
-import MainSection from "@/components/features/login/MainSection";
 
+/**
+ * LoginPage (Server Component)
+ * - ヘッダー / フッター などの骨格はここに直接置きつつ、
+ *   実際のフォーム操作は Client Component に分割する
+ */
 export default function LoginPage() {
-  const { isAuthenticated } = useAuth();
-  const router = useRouter();
-
-  // もし認証済みなら、トップページなどへリダイレクト
-  useEffect(() => {
-    if (isAuthenticated) {
-      router.replace("/");
-    }
-  }, [isAuthenticated, router]);
-
   return (
-    <div className="bg-white text-black min-h-screen flex flex-col">
+    <div className="flex flex-col min-h-screen">
       {/* シンプルヘッダー */}
       <SimpleHeader />
 
-      {/* メインセクション */}
-      <MainSection />
+      {/* メインセクション (クライアントコンポーネント) */}
+      {/* SSRでユーザ状態を取得してリダイレクトする等の処理が必要なら、Server Component側で判定して分岐します */}
+      <main className="flex-grow">
+        <MainSectionClient />
+      </main>
 
-      {/* フッター */}
+      {/* シンプルフッター */}
       <SimpleFooter />
     </div>
   );

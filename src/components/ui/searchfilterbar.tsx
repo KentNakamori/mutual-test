@@ -1,71 +1,80 @@
 /**
- * @file components/ui/SearchFilterBar.tsx
- * @description SearchBar + FilterBar をひとまとめにして、検索と複数フィルタを同時に扱う
+ * SearchFilterBarコンポーネント
+ * - SearchBar + FilterBar をひとまとめにし、検索キーワード & フィルタを同時に扱う複合UI
  */
 
 import React, { useState } from "react";
-import SearchBar from "./searchbar";
-import FilterBar from "./filterbar";
-
-type FilterItem = {
-  type: "select" | "checkbox" | "radio" | "input";
-  label: string;
-  name: string;
-  options?: { label: string; value: string | number }[];
-};
+import SearchBar from "@/components/ui/SearchBar";
+import FilterBar, { FilterBarProps } from "@/components/ui/FilterBar";
 
 type SearchFilterBarProps = {
+  /** SearchBarのプレースホルダ */
   searchPlaceholder?: string;
-  filters: FilterItem[];
-  onSearch: (keyword: string, filterState: Record<string, any>) => void;
+  /** 初期キーワード値 */
+  defaultKeyword?: string;
+  /** 検索実行ハンドラ (キーワードとフィルタ条件を渡す) */
+  onSearch: (payload: {
+    keyword: string;
+    filters: FilterBarProps["filters"];
+  }) => void;
+
+  /** フィルタ定義 (FilterBarにそのまま渡す) */
+  filters: FilterBarProps["filters"];
+
+  /** フィルタをリセット(全部クリア)などしたときのハンドラ */
   onReset?: () => void;
-  layout?: "horizontal" | "vertical";
-  compact?: boolean;
 };
 
+/**
+ * SearchFilterBar
+ */
 const SearchFilterBar: React.FC<SearchFilterBarProps> = ({
-  searchPlaceholder = "検索キーワード",
-  filters,
+  searchPlaceholder = "キーワードを入力",
+  defaultKeyword = "",
   onSearch,
+  filters,
   onReset,
-  layout = "vertical",
-  compact = false,
 }) => {
-  const [keyword, setKeyword] = useState("");
-  const [filterState, setFilterState] = useState<Record<string, any>>({});
+  const [keyword, setKeyword] = useState(defaultKeyword);
+  const [currentFilters, setCurrentFilters] = useState(filters);
 
-  const handleFilterChange = (updated: Record<string, any>) => {
-    setFilterState(updated);
-    // 必要なら即時検索 onSearch(keyword, updated);
+  // フィルタが変わったとき
+  const handleFilterChange = (updated: FilterBarProps["filters"]) => {
+    setCurrentFilters(updated);
   };
 
-  const handleSearchClick = () => {
-    onSearch(keyword, filterState);
+  // 検索ボタン or Enter押下時
+  const handleSearch = (k: string) => {
+    onSearch({
+      keyword: k,
+      filters: currentFilters,
+    });
   };
 
-  const handleResetAll = () => {
+  // リセット: キーワード + フィルタを全てクリア
+  const handleReset = () => {
     setKeyword("");
-    setFilterState({});
-    if (onReset) {
-      onReset();
-    }
+    setCurrentFilters(
+      currentFilters.map((f) => ({ ...f, value: f.type === "checkbox" ? false : "" }))
+    );
+    if (onReset) onReset();
   };
 
   return (
     <div className="space-y-4">
+      {/* 検索バー (キーワード) */}
       <SearchBar
+        defaultValue={keyword}
         placeholder={searchPlaceholder}
-        value={keyword}
-        onChange={(val) => setKeyword(val)}
-        onSearch={handleSearchClick}
-        onClear={keyword ? () => setKeyword("") : undefined}
+        onSearch={(kw) => handleSearch(kw)}
+        buttonLabel="Search"
       />
+
+      {/* フィルタバー */}
       <FilterBar
-        filters={filters}
+        filters={currentFilters}
         onFilterChange={handleFilterChange}
-        onReset={onReset ? handleResetAll : undefined}
-        layout={layout}
-        compact={compact}
+        onReset={handleReset}
       />
     </div>
   );

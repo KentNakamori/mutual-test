@@ -1,27 +1,49 @@
 "use client";
 
 import React from "react";
+import { useAuth } from "@/hooks/useAuth";
 import GlobalChatMain from "@/components/features/global-chat/GlobalChatMain";
 
 /**
  * 全体チャットページ (GlobalChatPage)
- * - 企業横断でQ&Aできるチャット機能を想定
- * - ログインユーザーでもゲストユーザーでも利用できるケースを想定
+ * - Next.js 13+ のappディレクトリでのルーティング例: /global-chat
  */
 export default function GlobalChatPage() {
-  // Next.js 13+ でCSRを用いる例 (AIチャットはリアルタイムに動作させたい想定)
-  // もしSSR等を適用する場合、`export const getServerSideProps = ...` ではなく
-  // Route Handlersなどで実装検討
+  const { isAuthenticated, isLoading } = useAuth();
+
+  // もし認証必須のページなら、ログインチェックの上でリダイレクトなど行う処理を入れる
+  // 例: ログイン必須 → 未ログインなら /login へ遷移 ...など
+
+  if (isLoading) {
+    return (
+      <div className="p-4 text-center text-gray-500">
+        ログイン状態を確認しています...
+      </div>
+    );
+  }
 
   return (
-    <div className="max-w-4xl mx-auto p-4">
-      <h1 className="text-2xl font-semibold mb-4">グローバルチャット</h1>
-      <p className="text-gray-600 mb-6">
-        ここでは、企業横断のQ&AをAIチャット形式で利用できます。
-      </p>
+    <div className="min-h-screen flex flex-col">
+      {/* --- ヘッダーやサイドバーを共通Layoutで使う場合は、
+             このページ内で <Layout>ラップ してもOKです ---
+          <Layout>
+            <GlobalChatMain />
+          </Layout>
+         のように構成する場合もあり
+      */}
 
-      {/* ページ固有のメインコンポーネント */}
-      <GlobalChatMain />
+      {/* シンプルにコンテンツだけ表示する例 */}
+      <header className="bg-white border-b border-gray-200 p-4">
+        <h1 className="text-xl font-semibold">全体チャット (GlobalChat)</h1>
+      </header>
+
+      <main className="flex-1 p-4">
+        <GlobalChatMain />
+      </main>
+
+      <footer className="bg-white border-t border-gray-200 p-4 text-sm text-center text-gray-500">
+        © 2025 MyAwesomeApp
+      </footer>
     </div>
   );
 }

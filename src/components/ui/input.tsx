@@ -1,22 +1,64 @@
-import * as React from "react"
+/**
+ * Inputコンポーネント
+ * - shadcnのInputをラップし、プロジェクト固有のバリアントやエラーメッセージ表示をサポート
+ */
 
-import { cn } from "@/lib/utils"
+import * as React from "react";
+import { Input as ShadcnInput } from "@/components/ui/shadcn/input"; 
+// ↑ 実際のshadcn Input実装へのパスを調整してください
 
-const Input = React.forwardRef<HTMLInputElement, React.ComponentProps<"input">>(
-  ({ className, type, ...props }, ref) => {
+import { cn } from "@/libs/utils";
+
+export type CustomInputProps = React.InputHTMLAttributes<HTMLInputElement> & {
+  /** ラベル文字列 */
+  label?: string;
+  /** エラー文言 (表示したい場合に設定) */
+  errorMessage?: string;
+  /** インラインのHelperText(補足説明など) */
+  helperText?: string;
+};
+
+/**
+ * プロジェクト用 Input
+ */
+const Input = React.forwardRef<HTMLInputElement, CustomInputProps>(
+  (
+    { label, errorMessage, helperText, className, ...props },
+    ref
+  ) => {
     return (
-      <input
-        type={type}
-        className={cn(
-          "flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-base ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 md:text-sm",
-          className
+      <div className="w-full mb-4">
+        {/* ラベル */}
+        {label && (
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            {label}
+          </label>
         )}
-        ref={ref}
-        {...props}
-      />
-    )
-  }
-)
-Input.displayName = "Input"
 
-export { Input }
+        {/* Input本体 (shadcnのInput) */}
+        <ShadcnInput
+          ref={ref}
+          className={cn(
+            "bg-white text-gray-700 focus:ring-black focus:border-black",
+            errorMessage && "border-red-600",
+            className
+          )}
+          {...props}
+        />
+
+        {/* エラー or 補足説明 */}
+        {errorMessage ? (
+          <p className="mt-1 text-sm text-red-600">{errorMessage}</p>
+        ) : (
+          helperText && (
+            <p className="mt-1 text-sm text-gray-500">{helperText}</p>
+          )
+        )}
+      </div>
+    );
+  }
+);
+
+Input.displayName = "Input";
+
+export default Input;

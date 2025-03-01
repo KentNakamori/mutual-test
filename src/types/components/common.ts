@@ -1,6 +1,6 @@
 /**
  * @file common.ts
- * @description 共通コンポーネントのProps型定義 (ヘッダー、フッターなど)
+ * @description 共通コンポーネントのProps型定義 (ヘッダー、フッター、レイアウト、他)
  */
 
 import React from "react";
@@ -157,4 +157,32 @@ export interface ChatBubbleProps {
   timestamp: string;
   references?: string[];
   onClickReference?: (reference: string) => void;
+}
+
+/* ------------------------------------------------------------------
+ * フィルタバーコンポーネントProps
+ * 例: SearchFilterBarやFilterBarで使用する型
+ * ------------------------------------------------------------------ */
+export interface FilterItem {
+  /** フィルタのユニークキー */
+  key: string; // e.g. "industry" / "followed"
+  /** 表示ラベル */
+  label: string; // e.g. "業種" / "フォロー中のみ"
+  /** UI種別 */
+  type: "select" | "checkbox";
+  /** Selectの場合に選択可能な候補 */
+  options?: string[];
+  /** 選択されている値（selectの場合はstring, checkboxの場合はboolean） */
+  value?: string | boolean;
+}
+
+/**
+ * FilterBarProps
+ * - フィルタバーの表示・選択変更・リセットなどを扱う
+ */
+export interface FilterBarProps {
+  filters: FilterItem[];
+  onFilterChange: (updatedFilters: FilterItem[]) => void;
+  onReset?: () => void;
+  layout?: "horizontal" | "vertical";
 }

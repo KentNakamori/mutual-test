@@ -1,55 +1,88 @@
 /**
- * @file components/common/Header.tsx
- * @description 全ページ共通のヘッダー。ロゴやナビゲーション、右上のプロフィール等
+ * Headerコンポーネント
+ * - アプリ全体のヘッダーとして、ロゴやナビゲーションメニュー、ProfileMenu等を表示
+ * - Tailwindでスタイルを当てつつ、shadcnコンポーネントを適宜利用可
  */
 
 import React from "react";
-import ProfileMenu from "./profilemenu";
+import Link from "next/link";
+// プロフィールメニューなどをヘッダー内で使う場合
+import ProfileMenu from "./ProfileMenu";
 
-type HeaderProps = {
-  /** ユーザー種別で表示切り替えたい場合に使用 */
-  userType?: string;
-  /** ロゴをクリックした際の動作 */
-  onLogoClick?: () => void;
-  /** プロフィールアイコンクリック時の開閉など (例示) */
-  onProfileClick?: () => void;
-  /** ナビリンククリック時に使うかもしれないコールバック */
-  onNavigate?: (path: string) => void;
+type NavigationLink = {
+  label: string;
+  href: string;
 };
 
+type HeaderProps = {
+  /** ヘッダーに表示するナビリンク配列 */
+  navigationLinks: NavigationLink[];
+  /** ロゴクリック時の動作 (トップへ移動など) */
+  onLogoClick?: () => void;
+  /** ログインユーザーかどうかを示す (未ログインならProfileMenuを非表示にする等) */
+  isLoggedIn?: boolean;
+};
+
+/**
+ * Header
+ * @param props HeaderProps
+ */
 const Header: React.FC<HeaderProps> = ({
-  userType = "guest",
+  navigationLinks,
   onLogoClick,
-  onProfileClick,
-  onNavigate,
+  isLoggedIn = false,
 }) => {
   return (
-    <header className="w-full h-14 flex items-center justify-between px-4 border-b bg-white">
-      {/* 左：ロゴ */}
-      <div onClick={onLogoClick} className="cursor-pointer font-bold text-lg">
-        MyLogo
-      </div>
+    <header className="bg-white text-black shadow-sm w-full">
+      <div className="max-w-6xl mx-auto px-4 py-3 flex items-center justify-between">
+        {/* Logo */}
+        <div
+          className="cursor-pointer font-bold text-xl"
+          onClick={onLogoClick}
+          aria-label="Go to top page"
+        >
+          MyAppLogo
+        </div>
 
-      {/* 右：プロフィール or ログインボタン */}
-      <div>
-        {userType === "guest" ? (
-          <button
-            className="text-sm text-gray-600 hover:underline"
-            onClick={() => onNavigate && onNavigate("/login")}
-          >
-            ログイン
-          </button>
-        ) : (
-          <ProfileMenu
-            userName="Sample User"
-            userAvatarUrl=""
-            menuItems={[
-              { label: "マイページ", value: "mypage" },
-              { label: "ログアウト", value: "logout" },
-            ]}
-            onSelectMenuItem={(val) => console.log("選択:", val)}
-          />
-        )}
+        {/* Global Navigation */}
+        <nav className="flex space-x-6">
+          {navigationLinks.map((link) => (
+            <Link
+              key={link.href}
+              href={link.href}
+              className="text-gray-600 hover:text-black transition-colors duration-200"
+            >
+              {link.label}
+            </Link>
+          ))}
+        </nav>
+
+        {/* Profile Menu (ログイン時のみ表示) */}
+        <div>
+          {isLoggedIn ? (
+            <ProfileMenu
+              userName="John Doe"
+              userAvatarUrl="https://example.com/avatar.jpg"
+              menuItems={[
+                { label: "My Page", value: "mypage" },
+                { label: "Logout", value: "logout" },
+              ]}
+              onSelectMenuItem={(itemValue) => {
+                if (itemValue === "logout") {
+                  // ここでログアウト処理呼び出しなど
+                }
+              }}
+            />
+          ) : (
+            // 未ログインならサインインボタン等
+            <Link
+              href="/login"
+              className="text-sm font-medium text-gray-600 hover:text-black"
+            >
+              Sign In
+            </Link>
+          )}
+        </div>
       </div>
     </header>
   );

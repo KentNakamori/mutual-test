@@ -1,89 +1,105 @@
-import React, { useState } from "react";
-import { Select } from "./select";
-import { Input } from "./input";
-import { Button } from "./button";
+/**
+ * FilterBarコンポーネント
+ * - 一覧画面などで使用する複数のフィルタ項目(業種、フォロー中のみ、並び替えなど)をまとめて設定するUI
+ * - 下記は最小限の例です。プロジェクトに合わせて拡張してください。
+ */
 
+import React from "react";
+
+// フィルタ1つぶんの定義例 (typeや構造は自由に拡張可能)
 type FilterItem = {
-  type: "select" | "checkbox" | "radio" | "input";
-  label: string;
-  name: string;
-  options?: { label: string; value: string | number }[];
+  key: string;                  // "industry" / "followed" / "sort" etc
+  label: string;                // "業種" / "フォローのみ" など
+  type: "select" | "checkbox";  // UI種類 (例)
+  options?: string[];           // Selectの場合の候補
+  value?: string | boolean;     // 選択値
 };
 
-type FilterBarProps = {
-  filters: FilterItem[];  // required
-  onFilterChange: (updated: Record<string, any>) => void;
+export type FilterBarProps = {
+  /** フィルタ項目の配列 */
+  filters: FilterItem[];
+  /** フィルタが変更されたら呼ばれるコールバック */
+  onFilterChange: (updatedFilters: FilterItem[]) => void;
+  /** フィルタをリセット(全部クリア)などしたい場合、オプションでボタンを表示 */
   onReset?: () => void;
+  /** レイアウトを水平 or 垂直に切り替えたい場合など */
   layout?: "horizontal" | "vertical";
-  compact?: boolean;
 };
 
+/**
+ * FilterBar
+ */
 const FilterBar: React.FC<FilterBarProps> = ({
-  filters = [],  // デフォルト値を設定
+  filters,
   onFilterChange,
   onReset,
   layout = "horizontal",
-  compact = false,
 }) => {
-  const [selectedFilters, setSelectedFilters] = useState<Record<string, any>>({});
-
-  // filtersが未定義またはemptyの場合の早期リターン
-  if (!filters || filters.length === 0) {
-    return null;
-  }
-
-  const handleChange = (name: string, value: any) => {
-    const updated = { ...selectedFilters, [name]: value };
-    setSelectedFilters(updated);
+  // フィルタ変更時
+  const handleChange = (
+    filterKey: string,
+    newValue: string | boolean
+  ) => {
+    const updated = filters.map((f) => {
+      if (f.key === filterKey) {
+        return { ...f, value: newValue };
+      }
+      return f;
+    });
     onFilterChange(updated);
   };
 
-  const handleReset = () => {
-    setSelectedFilters({});
-    if (onReset) onReset();
-  };
-
-  const containerClasses = layout === "horizontal" 
-    ? "flex items-center space-x-4" 
-    : "flex flex-col space-y-4";
-  const labelClass = compact ? "text-sm" : "text-base";
-
   return (
-    <div className="border p-4 rounded-md">
-      <div className={containerClasses}>
-        {filters.map((filter) => {
-          const currentVal = selectedFilters[filter.name] ?? "";
+    <div
+      className={
+        layout === "horizontal" ? "flex items-center space-x-4" : "space-y-4"
+      }
+    >
+      {filters.map((filter) => {
+        if (filter.type === "select") {
           return (
-            <div key={filter.name} className="flex flex-col">
-              <label className={`${labelClass} font-semibold mb-1`}>
-                {filter.label}
-              </label>
-              {filter.type === "select" && (
-                <Select
-                  options={filter.options || []}
-                  value={currentVal}
-                  onChange={(val) => handleChange(filter.name, val)}
-                />
-              )}
-              {filter.type === "input" && (
-                <Input
-                  value={currentVal}
-                  onChange={(e) => handleChange(filter.name, e.target.value)}
-                />
-              )}
+            <div key={filter.key} className="flex items-center space-x-2">
+              <label className="text-sm text-gray-700">{filter.label}:</label>
+              <select
+                className="border border-gray-300 rounded p-1 text-sm focus:ring-black focus:border-black"
+                value={typeof filter.value === "string" ? filter.value : ""}
+                onChange={(e) => handleChange(filter.key, e.target.value)}
+              >
+                <option value="">-- 選択 --</option>
+                {filter.options?.map((opt) => (
+                  <option key={opt} value={opt}>
+                    {opt}
+                  </option>
+                ))}
+              </select>
             </div>
           );
-        })}
-      </div>
+        }
+
+        if (filter.type === "checkbox") {
+          return (
+            <div key={filter.key} className="flex items-center space-x-2">
+              <input
+                type="checkbox"
+                className="h-4 w-4 text-black border-gray-300"
+                checked={filter.value === true}
+                onChange={(e) => handleChange(filter.key, e.target.checked)}
+              />
+              <label className="text-sm text-gray-700">{filter.label}</label>
+            </div>
+          );
+        }
+
+        return null; // 他typeがあれば拡張
+      })}
 
       {onReset && (
-        <Button
-          onClick={handleReset}
-          variant="outline"
-          className="mt-2"
+        <button
+          onClick={onReset}
+          className="ml-2 px-3 py-1 text-sm border border-gray-300 rounded hover:bg-gray-100"
         >
-          リセット
-        </Button>
+          Reset
+        </button>
       )}
     </div>
   );

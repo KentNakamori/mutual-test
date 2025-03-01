@@ -64,3 +64,12 @@ body {
   outline: 2px solid var(--color-black);
   outline-offset: 2px;
 }
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}

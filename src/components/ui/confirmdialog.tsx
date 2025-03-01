@@ -1,7 +1,9 @@
 /**
- * @file components/ui/ConfirmDialog.tsx
- * @description 削除など「本当に実行していいか」最終確認用のダイアログ
+ * ConfirmDialogコンポーネント
+ * - 「本当に削除してよいですか？」などの確認ダイアログを簡単に実装
+ * - shadcnのAlertDialogを利用
  */
+
 import React from "react";
 import {
   AlertDialog,
@@ -11,43 +13,53 @@ import {
   AlertDialogFooter,
   AlertDialogTitle,
   AlertDialogDescription,
-  AlertDialogAction,
   AlertDialogCancel,
-} from "@/components/ui/alert-dialog";
-import {Button}from "./button";
+  AlertDialogAction,
+} from "@/components/ui/shadcn/alert-dialog";
 
 type ConfirmDialogProps = {
+  /** ダイアログが開いているかどうか */
   isOpen: boolean;
-  title: string;
-  message: string;
+  /** タイトル (例: "Are you sure?") */
+  title?: string;
+  /** メッセージ (例: "This action cannot be undone!") */
+  message?: string;
+  /** OKボタンの文言 (例: "Yes, Delete") */
   confirmLabel?: string;
+  /** キャンセルボタンの文言 (例: "Cancel") */
   cancelLabel?: string;
+  /** OK押下時のハンドラ */
   onConfirm: () => void;
+  /** キャンセル時のハンドラ(ダイアログを閉じる) */
   onCancel: () => void;
 };
 
+/**
+ * ConfirmDialog
+ */
 const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
   isOpen,
-  title,
-  message,
+  title = "Confirm",
+  message = "Are you sure?",
   confirmLabel = "OK",
-  cancelLabel = "キャンセル",
+  cancelLabel = "Cancel",
   onConfirm,
   onCancel,
 }) => {
   return (
     <AlertDialog open={isOpen} onOpenChange={(open) => !open && onCancel()}>
+      {/* Triggerは外から制御する想定 */}
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>{title}</AlertDialogTitle>
           <AlertDialogDescription>{message}</AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel asChild>
-            <Button variant="outline" label={cancelLabel} />
+          <AlertDialogCancel onClick={onCancel}>
+            {cancelLabel}
           </AlertDialogCancel>
-          <AlertDialogAction asChild>
-            <Button variant="destructive" label={confirmLabel} onClick={onConfirm} />
+          <AlertDialogAction onClick={onConfirm}>
+            {confirmLabel}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

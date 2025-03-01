@@ -1,15 +1,24 @@
 "use client";
-
 import React from "react";
 
+/**
+ * SimpleFooter
+ * - ログインページ用の簡易フッター
+ */
 export default function SimpleFooter() {
   return (
-    <footer className="w-full border-t border-gray-200 p-4 mt-8">
-      <div className="max-w-6xl mx-auto text-sm text-gray-500 flex justify-between">
-        <p>&copy; 2025 MyCompany Inc. All Rights Reserved.</p>
-        <a href="/terms" className="underline hover:text-gray-600">
-          利用規約
-        </a>
+    <footer className="bg-white border-t border-gray-200 px-4 py-3 mt-8">
+      <div className="max-w-6xl mx-auto text-center text-sm text-gray-500">
+        <p className="mb-2">
+          <a href="/terms" className="hover:underline">
+            利用規約
+          </a>
+          {" | "}
+          <a href="/privacy" className="hover:underline">
+            プライバシーポリシー
+          </a>
+        </p>
+        <p className="text-xs">© 2025 My Awesome App</p>
       </div>
     </footer>
   );
