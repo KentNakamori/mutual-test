@@ -12,7 +12,7 @@ const HomePage: React.FC = () => {
         <h2 className="text-xl font-semibold mb-6 text-center">ログインページを選択</h2>
         
         <div className="flex flex-col space-y-4">
-          <Link href="/company_login" className="px-6 py-3 bg-blue-600 text-white rounded hover:bg-blue-700 text-center">
+          <Link href="/corporate/login" className="px-6 py-3 bg-blue-600 text-white rounded hover:bg-blue-700 text-center">
             企業ログイン
           </Link>
           <Link href="/investor_login" className="px-6 py-3 bg-green-600 text-white rounded hover:bg-green-700 text-center">
