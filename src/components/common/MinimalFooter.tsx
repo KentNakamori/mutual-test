@@ -6,6 +6,8 @@ export interface MinimalFooterProps {
   footerLinks?: { label: string; href: string }[];
   /** コピーライトテキスト */
   copyrightText: string;
+  /** リンククリック時のコールバック（任意） */
+  onSelectLink?: (href: string) => void;
 }
 
 /**
@@ -15,6 +17,7 @@ export interface MinimalFooterProps {
 const MinimalFooter: React.FC<MinimalFooterProps> = ({
   footerLinks = [],
   copyrightText,
+  onSelectLink,
 }) => {
   return (
     <footer className="bg-gray-50 text-gray-600 py-2 px-4 flex flex-col items-center">
@@ -23,7 +26,17 @@ const MinimalFooter: React.FC<MinimalFooterProps> = ({
       </div>
       <div className="flex space-x-2">
         {footerLinks.map((link, index) => (
-          <a key={index} href={link.href} className="text-xs hover:underline">
+          <a
+            key={index}
+            href={link.href}
+            onClick={(e) => {
+              if (onSelectLink) {
+                e.preventDefault();
+                onSelectLink(link.href);
+              }
+            }}
+            className="text-xs hover:underline"
+          >
             {link.label}
           </a>
         ))}
