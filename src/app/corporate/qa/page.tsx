@@ -47,6 +47,7 @@ const sidebarMenuItems = [
   { label: "Dashboard", link: "/corporate/dashboard" },
   { label: "Q&A管理", link: "/corporate/qa" },
   { label: "IRチャット", link: "/corporate/irchat" },
+  { label: '設定', link: '/corporate/settings' },
 ];
 
 const QaPage: React.FC = () => {
