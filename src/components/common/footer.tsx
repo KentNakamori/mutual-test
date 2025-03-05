@@ -1,47 +1,40 @@
+// components/common/Footer.tsx
+import React from 'react';
+
+export interface FooterProps {
+  /** フッターに表示するリンクリスト（例: 利用規約、問い合わせなど） */
+  footerLinks?: { label: string; href: string }[];
+  /** コピーライトテキスト */
+  copyrightText: string;
+  /** リンククリック時のコールバック（任意） */
+  onSelectLink?: (href: string) => void;
+}
+
 /**
- * Footerコンポーネント
- * - アプリ全体のフッターとして、コピーライト表記や利用規約等のリンクを表示
+ * Footer コンポーネント
+ * ページ下部にコピーライトやフッターリンクを表示します。
  */
-
-import React from "react";
-
-type FooterLink = {
-  label: string;
-  href: string;
-};
-
-type FooterProps = {
-  /** 利用規約やポリシー等のリンク */
-  links?: FooterLink[];
-  /** コピーライト表記に表示する年や文言 */
-  copyright?: string;
-};
-
 const Footer: React.FC<FooterProps> = ({
-  links = [],
-  copyright,
+  footerLinks = [],
+  copyrightText,
+  onSelectLink,
 }) => {
   return (
-    <footer className="border-t border-gray-200 bg-white">
-      <div className="max-w-6xl mx-auto px-4 py-4 flex flex-col md:flex-row md:items-center md:justify-between space-y-2 md:space-y-0">
-        {/* Footer Links */}
-        <ul className="flex space-x-4 text-sm text-gray-600">
-          {links.map((link) => (
-            <li key={link.href}>
-              <a
-                href={link.href}
-                className="hover:text-black transition-colors duration-200"
-              >
-                {link.label}
-              </a>
-            </li>
-          ))}
-        </ul>
-
-        {/* Copyright */}
-        <div className="text-sm text-gray-500">
-          {copyright || "© 2025 My Awesome App"}
-        </div>
+    <footer className="bg-gray-50 text-gray-600 py-4 px-6 flex flex-col items-center">
+      <div className="flex space-x-4 mb-2">
+        {footerLinks.map((link, index) => (
+          <a
+            key={index}
+            href={link.href}
+            onClick={() => onSelectLink && onSelectLink(link.href)}
+            className="text-sm hover:underline"
+          >
+            {link.label}
+          </a>
+        ))}
+      </div>
+      <div className="text-xs">
+        &copy; {new Date().getFullYear()} {copyrightText}
       </div>
     </footer>
   );

@@ -10,7 +10,7 @@ import {
   DropdownMenuContent,
   DropdownMenuLabel,
   DropdownMenuItem,
-} from "@/components/ui/shadcn/dropdown-menu"; // shadcn
+} from "@/components/common/shadcn/dropdown-menu"; // shadcn
 import Image from "next/image";
 
 type MenuItem = {
