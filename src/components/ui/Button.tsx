@@ -5,23 +5,21 @@ export interface ButtonProps {
   /** ボタンに表示するテキスト */
   label: string;
   /** クリック時のハンドラ */
-  onClick?: () => void;
+  onClick?: (e: React.MouseEvent<HTMLButtonElement>) => void;
   /** 無効状態フラグ */
   disabled?: boolean;
   /** ボタンのバリアント（primary: 黒背景＋白文字、destructive: 赤系など） */
   variant?: 'primary' | 'destructive' | 'outline' | 'link';
+  /** ボタンの種類 */
+  type?: "button" | "submit" | "reset";
 }
 
-/**
- * Button コンポーネント
- * Tailwind CSSのユーティリティとshadcn UIの考え方に基づいて、
- * 主にアクション操作に利用するボタンを実装します。
- */
 const Button: React.FC<ButtonProps> = ({
   label,
   onClick,
   disabled = false,
   variant = 'primary',
+  type = "button",
 }) => {
   const baseClasses =
     "py-2 px-4 rounded focus:outline-none focus:ring-2 focus:ring-offset-2 transition-colors duration-200";
@@ -46,6 +44,7 @@ const Button: React.FC<ButtonProps> = ({
 
   return (
     <button
+      type={type}
       onClick={onClick}
       disabled={disabled}
       className={`${baseClasses} ${variantClasses} ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}

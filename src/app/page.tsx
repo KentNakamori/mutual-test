@@ -15,7 +15,7 @@ const HomePage: React.FC = () => {
           <Link href="/corporate/login" className="px-6 py-3 bg-blue-600 text-white rounded hover:bg-blue-700 text-center">
             企業ログイン
           </Link>
-          <Link href="/investor_login" className="px-6 py-3 bg-green-600 text-white rounded hover:bg-green-700 text-center">
+          <Link href="/investor/login" className="px-6 py-3 bg-green-600 text-white rounded hover:bg-green-700 text-center">
             投資家ログイン
           </Link>
           <Link href="/guest_login" className="px-6 py-3 bg-gray-600 text-white rounded hover:bg-gray-700 text-center">

@@ -1,4 +1,7 @@
 // components/common/Sidebar.tsx
+"use client";
+
+
 import React, { useState } from 'react';
 
 export interface SidebarMenuItem {

@@ -1,3 +1,5 @@
+//src\components\features\corporate\login\PasswordResetLink.tsx
+
 import React from 'react';
 import Link from 'next/link';
 
