@@ -1,3 +1,4 @@
+//src\components\features\investor\chat\ChatLogItem.tsx
 import React, { useState } from 'react';
 import { ChatLog } from '@/types';
 import Button from '@/components/ui/Button';

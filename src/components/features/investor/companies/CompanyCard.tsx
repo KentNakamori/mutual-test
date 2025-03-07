@@ -1,4 +1,4 @@
-// src/components/features/companies/CompanyCard.tsx
+// src/components/features/investor/companies/CompanyCard.tsx
 import React, { useState } from 'react';
 import Card from '../../../ui/Card';
 import Button from '../../../ui/Button';

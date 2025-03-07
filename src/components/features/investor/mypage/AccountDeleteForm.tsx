@@ -1,4 +1,4 @@
-// src/components/features/mypage/AccountDeleteForm.tsx
+// src/components/features/investor//mypage/AccountDeleteForm.tsx
 import React, { useState } from 'react';
 import Input from '../../../ui/Input';
 import Button from '../../../ui/Button';

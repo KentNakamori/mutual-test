@@ -1,3 +1,4 @@
+//src\app\investor\chat-logs\page.tsx
 "use client";
 
 import React, { useState, useEffect, useCallback } from 'react';

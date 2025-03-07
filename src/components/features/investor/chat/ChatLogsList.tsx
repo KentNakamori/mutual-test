@@ -1,3 +1,4 @@
+//src\components\features\investor\chat\ChatLogsList.tsx
 import React from 'react';
 import { ChatLog } from '@/types';
 import ChatLogItem from './ChatLogItem';

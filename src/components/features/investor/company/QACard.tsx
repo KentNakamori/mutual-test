@@ -1,3 +1,5 @@
+//src\components\features\investor\company\QACard.tsx
+
 import React from 'react';
 import Card from '@/components/ui/Card';
 import { QAItem } from './QATabView';

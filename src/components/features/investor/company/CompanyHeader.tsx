@@ -1,3 +1,5 @@
+//src\components\features\investor\company\CompanyHeader.tsx
+
 import React from 'react';
 
 interface Company {

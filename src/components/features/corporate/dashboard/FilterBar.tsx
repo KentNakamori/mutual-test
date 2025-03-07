@@ -1,4 +1,4 @@
-// src/components/features/dashboard/FilterBar.tsx
+// src/components/features/corporate/dashboard/FilterBar.tsx
 import React, { useState } from "react";
 import Select from "@/components/ui/Select";
 import Button from "@/components/ui/Button";

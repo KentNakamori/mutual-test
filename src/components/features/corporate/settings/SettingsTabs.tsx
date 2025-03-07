@@ -1,4 +1,4 @@
-// src/components/features/corporate/SettingsTabs.tsx
+// src/components/features/corporate/settings/SettingsTabs.tsx
 "use client";
 
 import React, { useState } from 'react';

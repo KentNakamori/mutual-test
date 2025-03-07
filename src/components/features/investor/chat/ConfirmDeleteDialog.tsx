@@ -1,3 +1,4 @@
+//src\components\features\investor\chat\ConfirmDeleteDialog.tsx
 import React from 'react';
 import ConfirmDialog from '@/components/ui/ConfirmDialog';
 

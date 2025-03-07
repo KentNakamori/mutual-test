@@ -1,4 +1,4 @@
-// src/components/features/investor/LoginForm.tsx
+// src/components/features/investor/login/LoginForm.tsx
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { investorLogin } from '@/libs/api';

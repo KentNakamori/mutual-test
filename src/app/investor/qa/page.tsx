@@ -1,3 +1,4 @@
+//src\app\investor\qa\page.tsx
 "use client";
 
 import React, { useState, useCallback } from 'react';

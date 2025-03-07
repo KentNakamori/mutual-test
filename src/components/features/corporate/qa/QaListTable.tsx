@@ -1,4 +1,4 @@
-// src/components/features/qa/QaListTable.tsx
+// src/components/features/investor/qa/QaListTable.tsx
 import React from 'react';
 import Table from '@/components/ui/Table';
 import { QA } from '@/types';

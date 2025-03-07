@@ -1,4 +1,4 @@
-// src/components/features/qa/UploadModal.tsx
+// src/components/features/corporate/qa/UploadModal.tsx
 import React, { useState } from 'react';
 import Dialog from '@/components/ui/Dialog';
 import UploadForm from './UploadForm';

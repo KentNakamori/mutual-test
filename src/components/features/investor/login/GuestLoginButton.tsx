@@ -1,4 +1,4 @@
-// src/components/features/investor/GuestLoginButton.tsx
+// src/components/features/investor/login/GuestLoginButton.tsx
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';

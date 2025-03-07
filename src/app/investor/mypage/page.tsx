@@ -1,3 +1,4 @@
+//src\app\investor\mypage\page.tsx
 "use client";
 
 import React, { useState } from "react";

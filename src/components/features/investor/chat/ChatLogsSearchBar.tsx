@@ -1,3 +1,4 @@
+//src\components\features\investor\chat\ChatLogsSearchBar.tsx
 import React, { useState, FormEvent } from 'react';
 import { FilterType } from '@/types';
 import Input from '@/components/ui/Input';

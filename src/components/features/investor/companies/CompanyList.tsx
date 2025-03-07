@@ -1,4 +1,4 @@
-// src/components/features/companies/CompanyList.tsx
+// src/components/features/investor/companies/CompanyList.tsx
 import React from 'react';
 import { Company } from '../../../../types';
 import CompanyCard from './CompanyCard';

@@ -1,4 +1,4 @@
-// src/components/features/investor/LinkToSignup.tsx
+// src/components/features/investor/login/LinkToSignup.tsx
 import React from 'react';
 import Link from 'next/link';
 

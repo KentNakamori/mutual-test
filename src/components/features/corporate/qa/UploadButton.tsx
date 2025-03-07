@@ -1,4 +1,4 @@
-// src/components/features/qa/UploadButton.tsx
+// src/components/features/corporate/qa/UploadButton.tsx
 import React from 'react';
 import Button from '@/components/ui/Button';
 

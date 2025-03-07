@@ -1,4 +1,4 @@
-// src/components/features/qa/QaTableRow.tsx
+// src/components/features/corporate/qa/QaTableRow.tsx
 import React from 'react';
 import { QA } from '@/types';
 import Button from '@/components/ui/Button';

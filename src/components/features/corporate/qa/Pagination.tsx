@@ -1,4 +1,4 @@
-// src/components/features/qa/Pagination.tsx
+// src/components/features/corporate/qa/Pagination.tsx
 import React from 'react';
 import Button from '@/components/ui/Button';
 

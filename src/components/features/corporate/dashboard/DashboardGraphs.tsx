@@ -1,4 +1,4 @@
-// src/components/features/dashboard/DashboardGraphs.tsx
+// src/components/features/corporate/dashboard/DashboardGraphs.tsx
 import React from "react";
 
 interface GraphDataItem {

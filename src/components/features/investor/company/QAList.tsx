@@ -1,3 +1,5 @@
+//src\components\features\investor\company\QAList.tsx
+
 import React from 'react';
 import { QAItem } from './QATabView';
 import QACard from './QACard';

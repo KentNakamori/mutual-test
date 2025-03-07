@@ -1,3 +1,5 @@
+//src\components\features\investor\company\FAQPanel.tsx
+
 import React from 'react';
 
 export interface FaqItem {

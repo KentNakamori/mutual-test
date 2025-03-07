@@ -1,3 +1,5 @@
+//src\components\features\investor\company\ChatTabView.tsx
+
 import React, { useState } from 'react';
 import FAQPanel from './FAQPanel';
 import ChatHistory from './ChatHistory';

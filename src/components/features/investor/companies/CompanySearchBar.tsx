@@ -1,4 +1,4 @@
-// src/components/features/companies/CompanySearchBar.tsx
+// src/components/features/investor/companies/CompanySearchBar.tsx
 import React, { useState } from 'react';
 import Input from '../../../ui/Input';
 import Select from '../../../ui/Select';

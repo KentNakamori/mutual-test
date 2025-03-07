@@ -1,4 +1,4 @@
-// src/components/features/qa/TopActionBar.tsx
+// src/components/features/corporate/qa/TopActionBar.tsx
 import React from 'react';
 import SearchForm from './SearchForm';
 import UploadButton from './UploadButton';

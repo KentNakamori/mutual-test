@@ -1,4 +1,4 @@
-// src/components/features/qa/QaEditModal.tsx
+// src/components/features/corporate/qa/QaEditModal.tsx
 import React, { useState, useEffect } from 'react';
 import Dialog from '@/components/ui/Dialog';
 import Input from '@/components/ui/Input';

@@ -1,3 +1,5 @@
+//src\components\features\investor\company\ChatHistory.tsx
+
 import React, { useEffect, useRef } from 'react';
 import { ChatMessage } from './ChatTabView';
 

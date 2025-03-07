@@ -1,3 +1,5 @@
+//src\components\features\investor\company\ChatInputBox.tsx
+
 import React, { useState } from 'react';
 import Button from '@/components/ui/Button';
 import Textarea from '@/components/ui/Textarea';

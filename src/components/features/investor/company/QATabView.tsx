@@ -1,3 +1,5 @@
+//src\components\features\investor\company\QATabView.tsx
+
 import React, { useState } from 'react';
 import QASearchBar from './QASearchBar';
 import QAList from './QAList';

@@ -1,4 +1,4 @@
-// src/components/features/dashboard/DashboardStats.tsx
+// src/components/features/corporate/dashboard/DashboardStats.tsx
 import React from "react";
 import Card from "@/components/ui/Card";
 

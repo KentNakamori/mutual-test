@@ -1,4 +1,4 @@
-// src/components/features/qa/GeneratedQaList.tsx
+// src/components/features/corporate/qa/GeneratedQaList.tsx
 import React from 'react';
 import Button from '@/components/ui/Button';
 import { QA } from '@/types';

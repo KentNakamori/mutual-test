@@ -1,4 +1,4 @@
-// src/components/features/corporate/LogoutButton.tsx
+// src/components/features/corporate/settings/LogoutButton.tsx
 import React from 'react';
 import Button from '../../../ui/Button';
 import { useAuth } from '../../../../hooks/useAuth';

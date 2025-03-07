@@ -1,3 +1,5 @@
+//src\components\features\investor\company\TabSwitcher.tsx
+
 import React from 'react';
 
 interface TabSwitcherProps {

@@ -1,4 +1,4 @@
-// src/components/features/corporate/CompanyInfoForm.tsx
+// src/components/features/corporate/settings/CompanyInfoForm.tsx
 import React, { useState } from 'react';
 import Input from '../../../ui/Input';
 import Button from '../../../ui/Button';

@@ -1,3 +1,5 @@
+//src\components\features\investor\company\QADetailModal.tsx
+
 import React from 'react';
 import Dialog from '@/components/ui/Dialog';
 import Button from '@/components/ui/Button';

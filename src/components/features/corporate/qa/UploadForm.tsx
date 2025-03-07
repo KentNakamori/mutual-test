@@ -1,4 +1,4 @@
-// src/components/features/qa/UploadForm.tsx
+// src/components/features/corporate/qa/UploadForm.tsx
 import React, { useState } from 'react';
 import Button from '@/components/ui/Button';
 
