@@ -2,7 +2,6 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import Header from '../../../common/Header';
 import Sidebar from '../../../common/Sidebar';
 import Footer from '../../../common/Footer';
 import DraftList from './DraftList';
@@ -39,11 +38,6 @@ const sidebarMenuItems = [
   { label: 'Q&A管理', link: '/corporate/qa' },
   { label: 'チャット', link: '/corporate/irchat' },
   { label: '設定', link: '/corporate/settings' },
-];
-
-const navigationLinks = [
-  { label: 'ホーム', href: '/' },
-  { label: '企業情報', href: '/corporate/info' },
 ];
 
 export default function IrChatPage() {
@@ -103,8 +97,6 @@ export default function IrChatPage() {
 
   return (
     <div className="min-h-screen flex flex-col">
-      {/* 共通Header */}
-      <Header navigationLinks={navigationLinks} userStatus={{ isLoggedIn: true, userName: '担当者A' }} onClickLogo={() => window.location.assign('/')} />
       <div className="flex flex-1">
         {/* 共通Sidebar */}
         <Sidebar menuItems={sidebarMenuItems} selectedItem="/corporate/irchat" onSelectMenuItem={(link) => window.location.assign(link)} />

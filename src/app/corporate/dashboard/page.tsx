@@ -6,7 +6,6 @@ import { useQuery } from "react-query";
 import { useRouter } from "next/navigation";
 
 // 共通コンポーネントのインポート
-import Header from "@/components/common/Header";
 import Sidebar from "@/components/common/Sidebar";
 import Footer from "@/components/common/Footer";
 
@@ -112,16 +111,7 @@ const DashboardPage: React.FC = () => {
 
   return (
     <div className="min-h-screen flex flex-col">
-      {/* ヘッダー */}
-      <Header
-        navigationLinks={[
-          { label: "Dashboard", href: "/corporate/dashboard" },
-          { label: "Q&A", href: "/corporate/qa" },
-          { label: "Settings", href: "/corporate/settings" },
-        ]}
-        userStatus={{ isLoggedIn: true, userName: "企業ユーザー" }}
-        onClickLogo={() => router.push("/corporate/dashboard")}
-      />
+      
       <div className="flex flex-1">
         {/* サイドバー */}
         <Sidebar

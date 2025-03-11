@@ -5,7 +5,6 @@ import React from "react";
 import { useRouter } from "next/navigation";
 
 // 共通コンポーネントのインポート
-import Header from "@/components/common/Header";
 import Sidebar from "@/components/common/Sidebar";
 import Footer from "@/components/common/Footer";
 
@@ -25,17 +24,6 @@ const SettingsPage: React.FC = () => {
 
   return (
     <div className="min-h-screen flex flex-col">
-      {/* ヘッダー */}
-      <Header
-        navigationLinks={[
-          { label: "Dashboard", href: "/corporate/dashboard" },
-          { label: "Q&A管理", href: "/corporate/qa" },
-          { label: "設定", href: "/corporate/settings" },
-        ]}
-        userStatus={{ isLoggedIn: true, userName: "企業ユーザー" }}
-        onClickLogo={() => router.push("/corporate/dashboard")}
-      />
-
       <div className="flex flex-1">
         {/* サイドバー（Dashboardと全く同じ実装） */}
         <Sidebar

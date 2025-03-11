@@ -5,7 +5,6 @@ import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 
 // 共通コンポーネントのインポート
-import Header from "@/components/common/Header";
 import Sidebar from "@/components/common/Sidebar";
 import Footer from "@/components/common/Footer";
 
@@ -99,16 +98,6 @@ const QaPage: React.FC = () => {
 
   return (
     <div className="min-h-screen flex flex-col">
-      {/* ヘッダー */}
-      <Header
-        navigationLinks={[
-          { label: "ホーム", href: "/" },
-          { label: "Q&A", href: "/qa" },
-          { label: "設定", href: "/settings" },
-        ]}
-        userStatus={{ isLoggedIn: true, userName: "ユーザー名" }}
-        onClickLogo={() => router.push("/qa")}
-      />
       {/* サイドバーとメインコンテンツの横並びレイアウト */}
       <div className="flex flex-1">
         {/* サイドバー */}

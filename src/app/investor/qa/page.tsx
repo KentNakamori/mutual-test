@@ -3,8 +3,8 @@
 
 import React, { useState, useCallback } from 'react';
 import { useQuery } from 'react-query';
-import CommonHeader from '@/components/common/Header';
-import CommonFooter from '@/components/common/Footer';
+import Sidebar from '@/components/common/Sidebar';
+import Footer from '@/components/common/Footer';
 import QASearchBar from '@/components/features/investor/qa/QASearchBar';
 import QAResultList from '@/components/features/investor/qa/QAResultList';
 import QADetailModal from '@/components/features/investor/qa/QADetailModal';
@@ -12,17 +12,19 @@ import { QA, FilterType } from '@/types';
 import { useAuth } from '@/hooks/useAuth';
 import { searchInvestorQa } from '@/libs/api';
 
-/**
- * 投資家向け Q&A 検索ページ
- * ・検索キーワード、フィルター情報を管理し、API（またはモック）から Q&A 一覧を取得・表示します。
- */
 const QASearchPage: React.FC = () => {
-  // 検索キーワード、フィルター、モーダル表示対象 Q&A の状態管理
+  // サイドバーのメニュー項目
+  const menuItems = [
+    { label: 'マイページ', link: '/investor/mypage' },
+    { label: 'Q&A', link: '/investor/qa' },
+    { label: 'チャットログ', link: '/investor/chat-logs' },
+    { label: '企業一覧', link: '/investor/companies' },
+  ];
+
   const [searchKeyword, setSearchKeyword] = useState<string>('');
   const [filters, setFilters] = useState<FilterType>({});
   const [selectedQA, setSelectedQA] = useState<QA | null>(null);
 
-  // 認証情報（投資家用として想定）
   const { token } = useAuth();
 
   // バックエンド未接続時用のモックデータ
@@ -49,11 +51,9 @@ const QASearchPage: React.FC = () => {
     }
   ];
 
-  // React Query によるデータ取得
   const { data, refetch, isLoading, error } = useQuery<{ results: QA[]; totalCount: number }>(
     ['investorQaSearch', searchKeyword, filters],
     () => {
-      // filters 内の各値を文字列に変換してクエリパラメータを組み立てる
       const query: Record<string, string> = {
         keyword: searchKeyword,
         ...(filters.likeMin !== undefined ? { likeMin: filters.likeMin.toString() } : {}),
@@ -68,13 +68,12 @@ const QASearchPage: React.FC = () => {
         : Promise.resolve({ results: mockQAData, totalCount: mockQAData.length });
     },
     {
-      enabled: !!token, // token が存在する場合のみ API 呼び出し
+      enabled: !!token,
     }
   );
 
   const qaItems: QA[] = data?.results || mockQAData;
 
-  // 検索バーからの検索パラメータ更新
   const handleSearchSubmit = useCallback(
     (keyword: string, newFilters: FilterType) => {
       setSearchKeyword(keyword);
@@ -84,17 +83,14 @@ const QASearchPage: React.FC = () => {
     [refetch]
   );
 
-  // Q&A 項目クリックで詳細モーダルを表示
   const handleItemClick = useCallback((qa: QA) => {
     setSelectedQA(qa);
   }, []);
 
-  // モーダルを閉じる
   const handleCloseModal = useCallback(() => {
     setSelectedQA(null);
   }, []);
 
-  // いいね、ブックマーク操作のダミーハンドラ（実際は API 呼び出し処理を追加）
   const handleLike = useCallback((qaId: string) => {
     console.log('いいね：', qaId);
   }, []);
@@ -105,39 +101,40 @@ const QASearchPage: React.FC = () => {
 
   return (
     <div className="min-h-screen flex flex-col">
-      <CommonHeader 
-        navigationLinks={[
-          { label: 'ホーム', href: '/' },
-          { label: 'Q&A', href: '/investor/qa' }
-        ]}
-        userStatus={{ isLoggedIn: true, userName: '投資家ユーザー' }}
-        onClickLogo={() => {}}
-      />
-      <main className="flex-1 container mx-auto p-4">
-        <QASearchBar onSearchSubmit={handleSearchSubmit} />
-        {isLoading && <p>読み込み中…</p>}
-        {error && <p>エラーが発生しました: {(error as Error).message}</p>}
-        <QAResultList 
-          items={qaItems} 
-          onItemClick={handleItemClick} 
-          onLike={handleLike} 
-          onBookmark={handleBookmark} 
+      {/* ヘッダー削除 → サイドバーに置き換え */}
+      <div className="flex flex-1">
+        <Sidebar
+          isCollapsible
+          menuItems={menuItems}
+          selectedItem="/investor/qa"
+          onSelectMenuItem={(link) => (window.location.href = link)}
         />
-        {selectedQA && (
-          <QADetailModal 
-            qa={selectedQA} 
-            onClose={handleCloseModal} 
+        <main className="flex-1 container mx-auto p-4">
+          <QASearchBar onSearchSubmit={handleSearchSubmit} />
+          {isLoading && <p>読み込み中…</p>}
+          {error && <p>エラーが発生しました: {(error as Error).message}</p>}
+          <QAResultList 
+            items={qaItems} 
+            onItemClick={handleItemClick} 
             onLike={handleLike} 
             onBookmark={handleBookmark} 
           />
-        )}
-      </main>
-      <CommonFooter 
-        copyrightText="株式会社サンプル"
+          {selectedQA && (
+            <QADetailModal 
+              qa={selectedQA} 
+              onClose={handleCloseModal} 
+              onLike={handleLike} 
+              onBookmark={handleBookmark} 
+            />
+          )}
+        </main>
+      </div>
+      <Footer 
         footerLinks={[
           { label: '利用規約', href: '/terms' },
           { label: 'お問い合わせ', href: '/contact' }
         ]}
+        copyrightText="株式会社サンプル"
       />
     </div>
   );

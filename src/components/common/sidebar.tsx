@@ -1,31 +1,20 @@
 // components/common/Sidebar.tsx
-"use client";
-
-
 import React, { useState } from 'react';
+import { FaBars, FaTimes } from 'react-icons/fa';
 
 export interface SidebarMenuItem {
   label: string;
-  /** 必要に応じてアイコン（shadcnのIconコンポーネント等）を設定可能 */
   icon?: React.ReactNode;
   link: string;
 }
 
 export interface SidebarProps {
-  /** サイドバーに表示するメニュー項目 */
   menuItems: SidebarMenuItem[];
-  /** 折りたたみ可能かどうか */
   isCollapsible?: boolean;
-  /** 選択中のメニュー項目（リンクのURLなど） */
   selectedItem?: string;
-  /** メニュー項目選択時のコールバック */
   onSelectMenuItem?: (link: string) => void;
 }
 
-/**
- * Sidebar コンポーネント
- * サイドバーとしてグループ化されたナビゲーションメニューを表示します。
- */
 const Sidebar: React.FC<SidebarProps> = ({
   menuItems,
   isCollapsible = false,
@@ -35,32 +24,51 @@ const Sidebar: React.FC<SidebarProps> = ({
   const [isOpen, setIsOpen] = useState(true);
 
   const handleToggleSidebar = () => {
-    if (isCollapsible) setIsOpen(!isOpen);
+    if (isCollapsible) {
+      setIsOpen(!isOpen);
+    }
   };
 
   return (
-    <aside className="bg-gray-100 text-gray-700 w-64 p-4">
-      {isCollapsible && (
-        <button className="mb-4 text-sm text-blue-600 hover:underline" onClick={handleToggleSidebar}>
-          {isOpen ? 'Collapse' : 'Expand'}
+    <aside
+      className={`
+        bg-gray-100 text-gray-700 h-screen 
+        transition-all duration-300 
+        ${isOpen ? 'w-64' : 'w-16'} 
+        flex flex-col
+      `}
+    >
+      {/* ロゴと開閉ボタン */}
+      <div className="flex items-center justify-between p-4 border-b border-gray-300">
+        {isOpen && (
+          <img
+            src="/path/to/logo.png"
+            alt="Logo"
+            className="h-8 w-auto"
+          />
+        )}
+        <button onClick={handleToggleSidebar} aria-label="Toggle Sidebar">
+          {isOpen ? <FaTimes /> : <FaBars />}
         </button>
-      )}
-      {isOpen && (
-        <ul className="space-y-2">
-          {menuItems.map((item, index) => (
-            <li
-              key={index}
-              className={`p-2 rounded hover:bg-gray-200 cursor-pointer ${selectedItem === item.link ? 'bg-gray-300' : ''}`}
-              onClick={() => onSelectMenuItem && onSelectMenuItem(item.link)}
-            >
-              <div className="flex items-center space-x-2">
-                {item.icon && <span>{item.icon}</span>}
-                <span>{item.label}</span>
-              </div>
-            </li>
-          ))}
-        </ul>
-      )}
+      </div>
+
+      {/* メニュー項目 */}
+      <ul className="flex-1 overflow-y-auto mt-2">
+        {menuItems.map((item, index) => (
+          <li
+            key={index}
+            className={`
+              flex items-center p-2 cursor-pointer 
+              hover:bg-gray-200 
+              ${selectedItem === item.link ? 'bg-gray-300' : ''}
+            `}
+            onClick={() => onSelectMenuItem && onSelectMenuItem(item.link)}
+          >
+            {item.icon && <span className="mr-2">{item.icon}</span>}
+            {isOpen && <span>{item.label}</span>}
+          </li>
+        ))}
+      </ul>
     </aside>
   );
 };
