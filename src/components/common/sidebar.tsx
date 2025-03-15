@@ -1,4 +1,4 @@
-// components/common/Sidebar.tsx
+// components/common/sidebar.tsx
 import React, { useState } from 'react';
 import Image from 'next/image';
 import { FaBars, FaTimes } from 'react-icons/fa';
