@@ -8,6 +8,7 @@ import { useRouter } from "next/navigation";
 import Sidebar from "@/components/common/sidebar";
 import Footer from "@/components/common/Footer";
 
+
 // ページ固有コンポーネントのインポート
 import SettingsTabs from "@/components/features/corporate/settings/SettingsTabs";
 
