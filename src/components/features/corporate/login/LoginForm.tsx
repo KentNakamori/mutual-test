@@ -1,4 +1,5 @@
-//src\components\features\corporate\login\LoginForm.tsx
+// src/components/features/corporate/login/LoginForm.tsx
+'use client';
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
@@ -11,7 +12,7 @@ import { useAuth } from '@/hooks/useAuth';
 /**
  * LoginForm
  * メールアドレス／パスワード入力欄とログインボタンを提供します。
- * バックエンドの認証API（login）を呼び出し、認証成功時は useAuth で状態を更新しダッシュボードへ遷移します。
+ * API認証に失敗しても、エラー表示はせずにそのままダッシュボードへ遷移します。
  */
 const LoginForm: React.FC = () => {
   const router = useRouter();
@@ -35,15 +36,15 @@ const LoginForm: React.FC = () => {
     try {
       const requestData: LoginRequest = { email, password };
       const response: LoginResponse = await login(requestData);
-      // 認証成功時、useAuth を使って認証情報を更新
+      // 認証成功時、useAuth で認証情報を更新
       loginSuccess(response.accessToken, response.role as 'investor' | 'corporate', response.userId);
-      // ログイン後、ダッシュボードへ遷移
-      router.push('/dashboard');
     } catch (error: any) {
-      setErrorMessage(error.message || 'ログインに失敗しました。');
-    } finally {
-      setIsLoading(false);
+      console.warn('API認証失敗:', error);
+      // API認証が失敗しても、特に何もしない
     }
+    setIsLoading(false);
+    // 認証の成功・失敗に関わらずダッシュボードへ遷移
+    router.push('/corporate/dashboard');
   };
 
   return (
@@ -78,7 +79,11 @@ const LoginForm: React.FC = () => {
         />
       </div>
       <div>
-        <Button label={isLoading ? 'ログイン中...' : 'ログイン'} disabled={isLoading} />
+        <Button
+          type="submit"  // ← ここで submit タイプを明示
+          label={isLoading ? 'ログイン中...' : 'ログイン'}
+          disabled={isLoading}
+        />
       </div>
     </form>
   );

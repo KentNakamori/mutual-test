@@ -5,7 +5,7 @@ import React, { useState } from "react";
 import { useRouter } from "next/navigation";
 
 // 共通コンポーネントのインポート
-import Sidebar from "@/components/common/Sidebar";
+import Sidebar from "@/components/common/sidebar";
 import Footer from "@/components/common/Footer";
 
 // Q&A ページ固有コンポーネントのインポート
@@ -109,6 +109,10 @@ const QaPage: React.FC = () => {
         />
         {/* メインコンテンツ */}
         <main className="flex-1 p-6 bg-gray-50">
+          {/* ページタイトル */}
+          <div className="mb-6">
+            <h1 className="text-2xl font-bold">QA データベース・資料登録</h1>
+          </div>
           <TopActionBar onSearch={handleSearch} onUploadClick={handleOpenUploadModal} />
           <QaListTable qaItems={qas} onEdit={handleOpenEditModal} onDelete={handleDeleteQa} />
         </main>

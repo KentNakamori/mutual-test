@@ -1,5 +1,6 @@
-// components/common/Sidebar.tsx
+// components/common/sidebar.tsx
 import React, { useState } from 'react';
+import Image from 'next/image';
 import { FaBars, FaTimes } from 'react-icons/fa';
 
 export interface SidebarMenuItem {
@@ -23,6 +24,7 @@ const Sidebar: React.FC<SidebarProps> = ({
 }) => {
   const [isOpen, setIsOpen] = useState(true);
 
+  // サイドバー開閉
   const handleToggleSidebar = () => {
     if (isCollapsible) {
       setIsOpen(!isOpen);
@@ -32,43 +34,53 @@ const Sidebar: React.FC<SidebarProps> = ({
   return (
     <aside
       className={`
-        bg-gray-100 text-gray-700 h-screen 
-        transition-all duration-300 
-        ${isOpen ? 'w-64' : 'w-16'} 
-        flex flex-col
+        bg-gray-100 text-gray-700 p-4
+        ${isOpen ? 'w-64' : 'w-16'}   // 開閉に応じて幅を変更したい場合
+        transition-all duration-300   // スムーズなアニメーション
       `}
     >
-      {/* ロゴと開閉ボタン */}
-      <div className="flex items-center justify-between p-4 border-b border-gray-300">
-        {isOpen && (
-          <img
-            src="/path/to/logo.png"
-            alt="Logo"
-            className="h-8 w-auto"
-          />
-        )}
-        <button onClick={handleToggleSidebar} aria-label="Toggle Sidebar">
-          {isOpen ? <FaTimes /> : <FaBars />}
+      {/* 上部にアイコンを配置して開閉 */}
+      {isCollapsible && (
+        <button
+          className="mb-4 flex items-center justify-center text-gray-600 hover:text-gray-800"
+          onClick={handleToggleSidebar}
+        >
+          {isOpen ? <FaTimes size={24} /> : <FaBars size={24} />}
         </button>
-      </div>
+      )}
+
+      {/* ロゴ表示部分 */}
+      {isOpen && (
+        <div className="flex items-center justify-center mb-4">
+          <Image
+            src="/images/qa-station-logo.png"
+            alt="QA Station Logo"
+            width={200}
+            height={50}
+            priority
+          />
+        </div>
+      )}
 
       {/* メニュー項目 */}
-      <ul className="flex-1 overflow-y-auto mt-2">
-        {menuItems.map((item, index) => (
-          <li
-            key={index}
-            className={`
-              flex items-center p-2 cursor-pointer 
-              hover:bg-gray-200 
-              ${selectedItem === item.link ? 'bg-gray-300' : ''}
-            `}
-            onClick={() => onSelectMenuItem && onSelectMenuItem(item.link)}
-          >
-            {item.icon && <span className="mr-2">{item.icon}</span>}
-            {isOpen && <span>{item.label}</span>}
-          </li>
-        ))}
-      </ul>
+      {isOpen && (
+        <ul className="space-y-2">
+          {menuItems.map((item, index) => (
+            <li
+              key={index}
+              className={`p-2 rounded hover:bg-gray-200 cursor-pointer ${
+                selectedItem === item.link ? 'bg-gray-300' : ''
+              }`}
+              onClick={() => onSelectMenuItem && onSelectMenuItem(item.link)}
+            >
+              <div className="flex items-center space-x-2">
+                {item.icon && <span>{item.icon}</span>}
+                <span>{item.label}</span>
+              </div>
+            </li>
+          ))}
+        </ul>
+      )}
     </aside>
   );
 };
