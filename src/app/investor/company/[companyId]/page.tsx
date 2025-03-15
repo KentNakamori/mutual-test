@@ -3,7 +3,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
-import Sidebar from '@/components/common/Sidebar';
+import Sidebar from '@/components/common/sidebar';
 import Footer from '@/components/common/Footer';
 import CompanyHeader from '@/components/features/investor/company/CompanyHeader';
 import TabSwitcher from '@/components/features/investor/company/TabSwitcher';

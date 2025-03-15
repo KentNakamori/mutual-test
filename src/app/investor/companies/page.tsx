@@ -2,7 +2,7 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import Sidebar from '@/components/common/Sidebar';
+import Sidebar from '@/components/common/sidebar';
 import Footer from '@/components/common/Footer';
 import CompanySearchBar from '@/components/features/investor/companies/CompanySearchBar';
 import CompanyList from '@/components/features/investor/companies/CompanyList';

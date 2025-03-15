@@ -2,7 +2,7 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from 'react';
-import Sidebar from '@/components/common/Sidebar';
+import Sidebar from '@/components/common/sidebar';
 import Footer from '@/components/common/Footer';
 import ChatLogsSearchBar from '@/components/features/investor/chat/ChatLogsSearchBar';
 import ChatLogsList from '@/components/features/investor/chat/ChatLogsList';

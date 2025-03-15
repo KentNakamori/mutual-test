@@ -3,7 +3,7 @@
 
 import React, { useState, useCallback } from 'react';
 import { useQuery } from 'react-query';
-import Sidebar from '@/components/common/Sidebar';
+import Sidebar from '@/components/common/sidebar';
 import Footer from '@/components/common/Footer';
 import QASearchBar from '@/components/features/investor/qa/QASearchBar';
 import QAResultList from '@/components/features/investor/qa/QAResultList';

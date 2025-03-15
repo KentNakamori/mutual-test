@@ -2,7 +2,7 @@
 "use client";
 
 import React, { useState } from "react";
-import Sidebar from "@/components/common/Sidebar";
+import Sidebar from "@/components/common/sidebar";
 import Footer from "@/components/common/Footer";
 import MyPageTabMenu from "@/components/features/investor/mypage/MyPageTabMenu";
 import { useUserProfile } from "@/hooks/useUserProfile";

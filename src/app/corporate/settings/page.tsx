@@ -5,7 +5,7 @@ import React from "react";
 import { useRouter } from "next/navigation";
 
 // 共通コンポーネントのインポート
-import Sidebar from "@/components/common/Sidebar";
+import Sidebar from "@/components/common/sidebar";
 import Footer from "@/components/common/Footer";
 
 // ページ固有コンポーネントのインポート

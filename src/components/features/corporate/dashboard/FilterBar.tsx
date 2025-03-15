@@ -45,7 +45,8 @@ const FilterBar: React.FC<FilterBarProps> = ({ initialFilter, onFilterChange }) 
   ];
 
   return (
-    <div className="flex items-center space-x-4 mb-6">
+    // items-center → items-end に変更して、全要素を下揃えに
+    <div className="flex items-end space-x-4 mb-6">
       <div className="flex-1">
         <label className="block mb-1 text-sm font-medium">期間</label>
         <Select options={periodOptions} value={localFilter.period} onChange={handlePeriodChange} />

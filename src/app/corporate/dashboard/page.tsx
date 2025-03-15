@@ -6,7 +6,7 @@ import { useQuery } from "react-query";
 import { useRouter } from "next/navigation";
 
 // 共通コンポーネントのインポート
-import Sidebar from "@/components/common/Sidebar";
+import Sidebar from "@/components/common/sidebar";
 import Footer from "@/components/common/Footer";
 
 // ダッシュボード固有コンポーネントのインポート
@@ -20,7 +20,6 @@ import { getCorporateDashboard } from "@/libs/api";
 import { useAuth } from "@/hooks/useAuth";
 
 // --- 型定義 ---
-// Q&A の各項目型
 interface QAItem {
   id: string;
   title: string;
@@ -28,14 +27,12 @@ interface QAItem {
   views: number;
 }
 
-// グラフデータの各項目型
 export interface GraphDataItem {
   date: string;
   access: number;
   chatCount: number;
 }
 
-// ダッシュボード全体のデータ型
 interface DashboardData {
   stats: {
     label: string;
@@ -54,13 +51,11 @@ const DashboardPage: React.FC = () => {
   const { token } = useAuth();
   const router = useRouter();
 
-  // フィルター状態（集計期間・種別）
   const [filter, setFilter] = useState<{ period: string; type: string }>({
     period: "monthly",
     type: "all",
   });
 
-  // useQuery でダッシュボードデータを取得（型を DashboardData, エラー型を Error と指定）
   const { data, isLoading, error } = useQuery<DashboardData, Error>(
     ["dashboardData", filter],
     () => {
@@ -73,17 +68,15 @@ const DashboardPage: React.FC = () => {
     }
   );
 
-  // フィルタ変更時のハンドラ
   const handleFilterChange = (newFilter: { period: string; type: string }) => {
     setFilter(newFilter);
   };
 
-  // Q&Aカードクリック時のハンドラ（詳細ページへの遷移）
   const handleQACardClick = (qaId: string) => {
     router.push(`/corporate/qa/${qaId}`);
   };
 
-  // バックエンド接続がない場合用のモックデータ（DashboardData 型に合わせる）
+  // バックエンド接続がない場合用のモックデータ
   const dashboardData: DashboardData = data || {
     stats: [
       { label: "アクセス数", value: 1200, unit: "回" },
@@ -111,7 +104,6 @@ const DashboardPage: React.FC = () => {
 
   return (
     <div className="min-h-screen flex flex-col">
-      
       <div className="flex flex-1">
         {/* サイドバー */}
         <Sidebar
@@ -119,7 +111,7 @@ const DashboardPage: React.FC = () => {
             { label: "Dashboard", link: "/corporate/dashboard" },
             { label: "Q&A管理", link: "/corporate/qa" },
             { label: "IRチャット", link: "/corporate/irchat" },
-            { label: '設定', link: '/corporate/settings' },
+            { label: "設定", link: "/corporate/settings" },
           ]}
           isCollapsible
           selectedItem="/corporate/dashboard"
@@ -127,6 +119,10 @@ const DashboardPage: React.FC = () => {
         />
         {/* メインコンテンツ */}
         <main className="flex-1 p-6 bg-gray-50">
+          {/* タイトルと上部余白 */}
+          <div className="mb-8">
+            <h1 className="text-3xl font-bold">ダッシュボード</h1>
+          </div>
           <FilterBar initialFilter={filter} onFilterChange={handleFilterChange} />
           <DashboardStats statsData={dashboardData.stats} />
           <DashboardGraphs graphData={dashboardData.graphData} />
