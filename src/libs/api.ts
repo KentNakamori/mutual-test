@@ -174,7 +174,7 @@ export async function corporateLogout(requestData: LogoutRequest, token: string)
  * ダッシュボード表示 API
  * GET /corporate/dashboard?period=...&type=...
  */
-export async function getCorporateDashboard(token: string, query: { period: string; type: string }): Promise<any> {
+export async function getCorporateDashboard(token: string, query: { period: string }): Promise<any> {
   const queryString = new URLSearchParams(query as any).toString();
   return apiFetch<any>(`${ENDPOINTS.corporateDashboard}?${queryString}`, "GET", undefined, token);
 }

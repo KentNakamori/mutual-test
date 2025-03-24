@@ -5,7 +5,6 @@ import Button from "@/components/ui/Button";
 
 interface Filter {
   period: string;
-  type: string;
 }
 
 interface FilterBarProps {
@@ -24,10 +23,6 @@ const FilterBar: React.FC<FilterBarProps> = ({ initialFilter, onFilterChange }) 
     setLocalFilter((prev) => ({ ...prev, period: value }));
   };
 
-  const handleTypeChange = (value: string) => {
-    setLocalFilter((prev) => ({ ...prev, type: value }));
-  };
-
   const applyFilter = () => {
     onFilterChange(localFilter);
   };
@@ -38,11 +33,6 @@ const FilterBar: React.FC<FilterBarProps> = ({ initialFilter, onFilterChange }) 
     { label: "月別", value: "monthly" },
   ];
 
-  const typeOptions = [
-    { label: "全体", value: "all" },
-    { label: "アクセス数", value: "access" },
-    { label: "チャット質問数", value: "chat" },
-  ];
 
   return (
     // items-center → items-end に変更して、全要素を下揃えに
@@ -50,10 +40,6 @@ const FilterBar: React.FC<FilterBarProps> = ({ initialFilter, onFilterChange }) 
       <div className="flex-1">
         <label className="block mb-1 text-sm font-medium">期間</label>
         <Select options={periodOptions} value={localFilter.period} onChange={handlePeriodChange} />
-      </div>
-      <div className="flex-1">
-        <label className="block mb-1 text-sm font-medium">種別</label>
-        <Select options={typeOptions} value={localFilter.type} onChange={handleTypeChange} />
       </div>
       <div>
         <Button label="変更を適用" onClick={applyFilter} />

@@ -50,11 +50,11 @@ interface DashboardData {
 const DashboardPage: React.FC = () => {
   const { token } = useAuth();
   const router = useRouter();
-
-  const [filter, setFilter] = useState<{ period: string; type: string }>({
+ 
+  const [filter, setFilter] = useState<{ period: string }>({
     period: "monthly",
-    type: "all",
   });
+
 
   const { data, isLoading, error } = useQuery<DashboardData, Error>(
     ["dashboardData", filter],
@@ -68,9 +68,10 @@ const DashboardPage: React.FC = () => {
     }
   );
 
-  const handleFilterChange = (newFilter: { period: string; type: string }) => {
+  const handleFilterChange = (newFilter: { period: string }) => {
     setFilter(newFilter);
   };
+  
 
   const handleQACardClick = (qaId: string) => {
     router.push(`/corporate/qa/${qaId}`);
