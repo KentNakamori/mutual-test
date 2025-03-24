@@ -1,4 +1,4 @@
-// src/app/corporate/dashboard/page.tsx
+// src/app/corporate/dashboard/page.tsxあああああああああああ
 "use client";
 
 import React, { useState } from "react";
@@ -23,7 +23,7 @@ import { useAuth } from "@/hooks/useAuth";
 interface QAItem {
   id: string;
   title: string;
-  createdAt: string;
+  createdAt: string;あああああああああああ
   views: number;
 }
 
