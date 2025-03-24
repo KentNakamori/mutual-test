@@ -6,6 +6,8 @@ export interface MinimalHeaderProps {
   onClickLogo: () => void;
   /** 表示するロゴテキスト（任意） */
   logoText?: string;
+  /** ロゴ画像のパス（任意） */
+  logoSrc?: string;
   /** 最小限のリンクリスト */
   links?: { label: string; href: string }[];
 }
@@ -17,12 +19,17 @@ export interface MinimalHeaderProps {
 const MinimalHeader: React.FC<MinimalHeaderProps> = ({
   onClickLogo,
   logoText = "MyApp",
+  logoSrc = "/images/qa-station-logo.png",
   links = [],
 }) => {
   return (
     <header className="bg-white text-black py-3 px-4 flex justify-between items-center">
-      <div className="cursor-pointer" onClick={onClickLogo}>
-        <span className="text-xl font-bold">{logoText}</span>
+      <div className="cursor-pointer flex items-center" onClick={onClickLogo}>
+        {logoSrc ? (
+          <img src={logoSrc} alt="Logo" className="h-8 w-auto" />
+        ) : (
+          <span className="text-xl font-bold">{logoText}</span>
+        )}
       </div>
       <nav className="flex space-x-2">
         {links.map((link, index) => (
@@ -36,3 +43,4 @@ const MinimalHeader: React.FC<MinimalHeaderProps> = ({
 };
 
 export default MinimalHeader;
+

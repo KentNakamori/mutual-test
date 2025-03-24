@@ -1,7 +1,7 @@
 // components/common/sidebar.tsx
 import React, { useState } from 'react';
 import Image from 'next/image';
-import { FaBars, FaTimes } from 'react-icons/fa';
+import { FaBars, FaAngleDoubleLeft } from 'react-icons/fa';
 
 export interface SidebarMenuItem {
   label: string;
@@ -45,7 +45,7 @@ const Sidebar: React.FC<SidebarProps> = ({
           className="mb-4 flex items-center justify-center text-gray-600 hover:text-gray-800"
           onClick={handleToggleSidebar}
         >
-          {isOpen ? <FaTimes size={24} /> : <FaBars size={24} />}
+          {isOpen ? <FaAngleDoubleLeft size={24} /> : <FaBars size={24} />}
         </button>
       )}
 

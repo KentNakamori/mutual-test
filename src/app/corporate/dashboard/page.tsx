@@ -7,7 +7,7 @@ import { useRouter } from "next/navigation";
 
 // 共通コンポーネントのインポート
 import Sidebar from "@/components/common/sidebar";
-import Footer from "@/components/common/Footer";
+import Footer from "@/components/common/footer";
 
 // ダッシュボード固有コンポーネントのインポート
 import DashboardStats from "@/components/features/corporate/dashboard/DashboardStats";
