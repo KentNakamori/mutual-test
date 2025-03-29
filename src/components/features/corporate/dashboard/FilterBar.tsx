@@ -1,7 +1,6 @@
 // src/components/features/corporate/dashboard/FilterBar.tsx
 import React, { useState } from "react";
 import Select from "@/components/ui/Select";
-import Button from "@/components/ui/Button";
 
 interface Filter {
   period: string;
@@ -20,13 +19,12 @@ const FilterBar: React.FC<FilterBarProps> = ({ initialFilter, onFilterChange }) 
   const [localFilter, setLocalFilter] = useState<Filter>(initialFilter);
 
   const handlePeriodChange = (value: string) => {
-    setLocalFilter((prev) => ({ ...prev, period: value }));
+    const newFilter = { ...localFilter, period: value };
+    setLocalFilter(newFilter);
+    // 選択変更時に即時フィルターを反映
+    onFilterChange(newFilter);
   };
-
-  const applyFilter = () => {
-    onFilterChange(localFilter);
-  };
-
+  
   const periodOptions = [
     { label: "日別", value: "daily" },
     { label: "週別", value: "weekly" },
@@ -40,9 +38,6 @@ const FilterBar: React.FC<FilterBarProps> = ({ initialFilter, onFilterChange }) 
       <div className="flex-1">
         <label className="block mb-1 text-sm font-medium">期間</label>
         <Select options={periodOptions} value={localFilter.period} onChange={handlePeriodChange} />
-      </div>
-      <div>
-        <Button label="変更を適用" onClick={applyFilter} />
       </div>
     </div>
   );

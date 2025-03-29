@@ -43,7 +43,7 @@ const mockQas: QA[] = [
 
 // サイドバーのメニュー定義（corporate/dashboard/page.tsx と同じ実装）
 const sidebarMenuItems = [
-  { label: "Dashboard", link: "/corporate/dashboard" },
+  { label: "ダッシュボード", link: "/corporate/dashboard" },
   { label: "Q&A管理", link: "/corporate/qa" },
   { label: "IRチャット", link: "/corporate/irchat" },
   { label: '設定', link: '/corporate/settings' },

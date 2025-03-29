@@ -34,9 +34,9 @@ const mockMessages: ChatMessage[] = [
 ];
 
 const sidebarMenuItems = [
-  { label: 'dashboard', link: '/corporate/dashboard' },
+  { label: 'ダッシュボード', link: '/corporate/dashboard' },
   { label: 'Q&A管理', link: '/corporate/qa' },
-  { label: 'チャット', link: '/corporate/irchat' },
+  { label: 'IRチャット', link: '/corporate/irchat' },
   { label: '設定', link: '/corporate/settings' },
 ];
 
