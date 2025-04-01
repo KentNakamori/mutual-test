@@ -4,7 +4,6 @@
 import React, { useState } from 'react';
 import Tabs from '../../../ui/Tabs';
 import CompanyInfoForm from './CompanyInfoForm';
-import AccountSettingsForm from './AccountSettingsForm';
 import LogoutButton from './LogoutButton';
 import { CompanyInfo } from '../../../../types';
 
@@ -23,11 +22,7 @@ const SettingsTabs: React.FC<SettingsTabsProps> = ({ companyInfo, refetchCompany
       label: '企業情報',
       content: <CompanyInfoForm initialData={companyInfo} onSaveSuccess={refetchCompanyInfo} />,
     },
-    {
-      id: 'account',
-      label: 'アカウント設定',
-      content: <AccountSettingsForm />,
-    },
+   
     {
       id: 'logout',
       label: 'ログアウト',

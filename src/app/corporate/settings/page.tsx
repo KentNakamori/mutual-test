@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 
 // 共通コンポーネントのインポート
 import Sidebar from "@/components/common/sidebar";
-import Footer from "@/components/common/Footer";
+import Footer from "@/components/common/footer";
 
 
 // ページ固有コンポーネントのインポート

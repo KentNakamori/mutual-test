@@ -10,6 +10,7 @@ export interface DialogProps {
   title?: string;
   /** ダイアログ内に表示するコンテンツ */
   children: React.ReactNode;
+  className?: string; 
 }
 
 /**

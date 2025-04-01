@@ -14,6 +14,9 @@ export interface UploadModalProps {
 const UploadModal: React.FC<UploadModalProps> = ({ onClose, onConfirm }) => {
   const [step, setStep] = useState<'upload' | 'review'>('upload');
   const [generatedQas, setGeneratedQas] = useState<QA[]>([]);
+  
+  // 新たに資料種類選択用の state を追加
+  const [materialType, setMaterialType] = useState('マニュアル');
 
   const handleUploadSuccess = (qas: QA[]) => {
     setGeneratedQas(qas);
@@ -25,12 +28,26 @@ const UploadModal: React.FC<UploadModalProps> = ({ onClose, onConfirm }) => {
   };
 
   return (
-    <Dialog isOpen={true} onClose={onClose} title="資料アップロード">
+    <Dialog isOpen={true} onClose={onClose} title="資料アップロード" className="max-w-4xl">
       {step === 'upload' && (
-        <UploadForm onUploadSuccess={handleUploadSuccess} onUploadError={(error) => console.error(error)} />
+        <>
+          {/* ステップ表示 */}
+          <div className="mb-4">
+            <h4 className="text-lg font-semibold">Step 1: ファイルアップロード</h4>
+          </div>
+          <UploadForm 
+            materialType={materialType}
+            onMaterialTypeChange={setMaterialType}
+            onUploadSuccess={handleUploadSuccess} 
+            onUploadError={(error) => console.error(error)} 
+          />
+        </>
       )}
       {step === 'review' && (
         <>
+          <div className="mb-4">
+            <h4 className="text-lg font-semibold">Step 3: 生成候補のレビュー・一括登録</h4>
+          </div>
           <GeneratedQaList
             qaDrafts={generatedQas}
             onUpdateDraft={(index, updatedQa) => {

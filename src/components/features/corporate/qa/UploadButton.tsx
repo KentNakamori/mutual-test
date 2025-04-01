@@ -7,7 +7,7 @@ export interface UploadButtonProps {
 }
 
 const UploadButton: React.FC<UploadButtonProps> = ({ onClick }) => {
-  return <Button label="資料をアップロード" onClick={onClick} variant="primary" />;
+  return <Button label="資料をアップロード" onClick={onClick} variant="gradient" />;
 };
 
 export default UploadButton;

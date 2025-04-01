@@ -52,9 +52,7 @@ const MailDraftModal: React.FC<MailDraftModalProps> = ({ isOpen, onClose }) => {
           </div>
         )}
       </div>
-      <div className="mt-4 flex justify-end">
-        <Button label="閉じる" onClick={onClose} />
-      </div>
+      
     </Dialog>
   );
 };

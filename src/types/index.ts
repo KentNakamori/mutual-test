@@ -67,6 +67,9 @@ export interface QA {
   createdAt: DateString;
   updatedAt: DateString;
   isPublished: boolean;
+  views: number; 
+  tags?: string[];
+  genreTags?: string[];
 }
 
 /**
