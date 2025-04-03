@@ -1,16 +1,7 @@
 // components/common/MinimalHeader.tsx
 import React from 'react';
+import { MinimalHeaderProps } from '@/types';
 
-export interface MinimalHeaderProps {
-  /** ロゴクリック時の処理 */
-  onClickLogo: () => void;
-  /** 表示するロゴテキスト（任意） */
-  logoText?: string;
-  /** ロゴ画像のパス（任意） */
-  logoSrc?: string;
-  /** 最小限のリンクリスト */
-  links?: { label: string; href: string }[];
-}
 
 /**
  * MinimalHeader コンポーネント

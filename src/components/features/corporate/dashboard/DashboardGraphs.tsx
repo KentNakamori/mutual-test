@@ -1,4 +1,3 @@
-// src/components/features/corporate/dashboard/DashboardGraphs.tsx
 import React from "react";
 import {
   ResponsiveContainer,
@@ -11,15 +10,8 @@ import {
   Legend,
 } from "recharts";
 
-interface GraphDataItem {
-  date: string;
-  access: number;
-  chatCount: number;
-}
-
-interface DashboardGraphsProps {
-  graphData: GraphDataItem[];
-}
+// 型定義ファイルから GraphDataItem および DashboardGraphsProps をインポート
+import { GraphDataItem, DashboardGraphsProps } from "@/types";
 
 /**
  * DashboardGraphs コンポーネント

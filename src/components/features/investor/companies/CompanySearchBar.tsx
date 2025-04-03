@@ -2,11 +2,8 @@
 import React, { useState } from 'react';
 import Input from '../../../ui/Input';
 import Select from '../../../ui/Select';
+import { CompanySearchQuery } from '../../../../types';
 
-export interface CompanySearchQuery {
-  keyword: string;
-  industry?: string;
-}
 
 export interface CompanySearchBarProps {
   initialQuery: CompanySearchQuery;

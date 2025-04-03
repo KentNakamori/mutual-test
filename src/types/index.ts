@@ -402,19 +402,102 @@ export interface ApiResult<T> {
 
 // 3.1 共通UIコンポーネント
 
+// Header 用の型定義
+export type NavigationLink = {
+  label: string;
+  href: string;
+};
+
+export interface HeaderProps {
+  /** ヘッダーに表示するナビゲーションリンク */
+  navigationLinks: NavigationLink[];
+  /** ユーザーのログイン状態および名前（ログイン時のみ表示） */
+  userStatus: {
+    isLoggedIn: boolean;
+    userName?: string;
+  };
+  /** ロゴクリック時の遷移処理 */
+  onClickLogo: () => void;
+}
+
+
+// QACard 用の型定義
+export type QACardMode = 'preview' | 'detail' | 'edit';
+export type QACardRole = 'investor' | 'corporate';
+
+export interface QAData {
+  id: string;             // QACard では id プロパティを使用
+  title: string;
+  question: string;
+  answer: string;
+  createdAt: string;
+  views: number;
+  likeCount: number;
+  tags?: string[];
+  genreTags?: string[];
+  updatedAt?: string;
+}
+
+export interface QACardProps {
+  mode: QACardMode;
+  role: QACardRole;
+  qa: QAData;
+  onSelect?: (id: string) => void;
+  onLike?: (id: string) => void;
+  onEdit?: (id: string) => void;
+  onDelete?: (id: string) => void;
+  onCancelEdit?: () => void;
+  onSaveEdit?: (updatedQa: QAData) => void;
+}
+
+// QaDetailModal 用の型定義（必要に応じて）
+export interface QaDetailModalProps {
+  qa: QAData;
+  role: QACardRole;
+  onClose: () => void;
+  onLike?: (id: string) => void;
+  onDelete?: (id: string) => void;
+  onSaveEdit?: (updatedQa: QAData) => void;
+}
+
+export interface SidebarMenuItem {
+  label: string;
+  icon?: React.ReactNode;
+  link: string;
+}
+
+export interface SidebarProps {
+  menuItems: SidebarMenuItem[];
+  isCollapsible?: boolean;
+  selectedItem?: string;
+  onSelectMenuItem?: (link: string) => void;
+}
+
 export interface LayoutProps {
   children: React.ReactNode;
 }
 
-export interface HeaderProps {
-  isLoggedIn: boolean;
-  userName?: string;
-  // ユーザーメニューやログイン状態などのナビゲーション関連プロパティ
+export interface MinimalFooterProps {
+  /** 最小限のフッターリンクリスト（任意） */
+  footerLinks?: { label: string; href: string }[];
+  /** コピーライトテキスト */
+  copyrightText: string;
+  /** リンククリック時のコールバック（任意） */
+  onSelectLink?: (href: string) => void;
 }
 
-export interface SidebarProps {
-  menuItems: { label: string; link: string }[];
+export interface MinimalHeaderProps {
+  /** ロゴクリック時の処理 */
+  onClickLogo: () => void;
+  /** 表示するロゴテキスト（任意） */
+  logoText?: string;
+  /** ロゴ画像のパス（任意） */
+  logoSrc?: string;
+  /** 最小限のリンクリスト */
+  links?: { label: string; href: string }[];
 }
+
+
 
 export interface FooterProps {
   copyright: string;
@@ -444,6 +527,70 @@ export interface DialogProps {
 
 // 3.2 企業向けページ コンポーネント Props
 
+export interface GraphDataItem {
+  date: string;
+  access: number;
+  chatCount: number;
+}
+
+export interface DashboardQA {
+  qaId: string;
+  title: string;
+  question: string;
+  answer: string;
+  companyId: string;
+  likeCount: number;
+  tags: string[];
+  genre: string[];
+  fiscalPeriod: string;
+  createdAt: string;
+  updatedAt: string;
+  isPublished: boolean;
+}
+
+export interface DashboardData {
+  stats: {
+    daily: { label: string; value: number; unit: string }[];
+    weekly: { label: string; value: number; unit: string }[];
+    monthly: { label: string; value: number; unit: string }[];
+  };
+  graphData: {
+    daily: GraphDataItem[];
+    weekly: GraphDataItem[];
+    monthly: GraphDataItem[];
+  };
+  qas: {
+    published: DashboardQA[];
+  };
+}
+//ダッシュボードのフィルター
+export type Period = "daily" | "weekly" | "monthly";
+
+export interface Filter {
+  period: Period;
+}
+
+export interface DashboardQnAListProps {
+  publishedQAs: DashboardQA[];
+}
+
+export interface Stat {
+  label: string;
+  value: number;
+  unit?: string;
+}
+
+export interface DashboardStatsProps {
+  statsData: Stat[];
+}
+
+
+export interface FilterBarProps {
+  initialFilter: Filter;
+  onFilterChange: (newFilter: Filter) => void;
+}
+
+
 export interface LoginCardProps {
   // 企業ログイン画面用のカード（内部状態完結の場合はほぼ不要）
 }
@@ -461,9 +608,9 @@ export interface DashboardStatsProps {
   statsData: { label: string; value: number; unit?: string }[];
 }
 
-export interface FilterBarProps {
-  initialFilter: FilterType;
-  onFilterChange: (newFilter: FilterType) => void;
+
+export interface DashboardGraphsProps {
+  graphData: GraphDataItem[];
 }
 
 export interface QaEditModalProps {
@@ -492,6 +639,62 @@ export interface ChatWindowProps {
   onSendMessage: (message: string) => void;
 }
 
+export interface ChatInputAreaProps {
+  onSend: (text: string) => void;
+}
+
+export interface ChatMessage {
+  messageId: string;
+  role: 'user' | 'ai';
+  text: string;
+  timestamp: string;
+}
+
+export interface ChatWindowProps {
+  messages: ChatMessage[];
+  onSendMessage: (text: string) => void;
+  onRegisterQA: () => void;
+  onCreateMailDraft: () => void;
+}
+
+export interface DraftActionBarProps {
+  onRegisterQA: () => void;
+  onCreateMailDraft: () => void;
+}
+export interface Draft {
+  draftId: string;
+  title: string;
+  createdAt: string;
+}
+
+export interface DraftItemProps {
+  draft: Draft;
+  isSelected: boolean;
+  onClick: () => void;
+}
+
+export interface DraftListProps {
+  drafts: Draft[];
+  selectedDraftId: string | null;
+  onSelectDraft: (draftId: string) => void;
+}
+
+export interface MailDraftModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  // onDraftGenerateなどのAPI連携も必要であれば追加可能
+}
+
+
+export interface MessageBubbleProps {
+  message: ChatMessage;
+}
+
+export interface MessageListProps {
+  messages: ChatMessage[];
+}
+
+
 export interface SettingsTabsProps {
   activeTab: string;
   onTabChange: (tab: string) => void;
@@ -507,7 +710,272 @@ export interface AccountSettingsFormProps {
   onSaveProfile: (updated: ProfileData) => Promise<void>;
 }
 
+export interface PasswordResetLinkProps {
+  /** パスワード再設定ページへのリンクURL */
+  href: string;
+}
+
+export interface FileAttachmentSectionProps {
+  attachedFiles: FileReference[];
+  onAddFile: (file: File) => void;
+  onRemoveFile: (fileId: string) => void;
+}
+
+export interface GeneratedQaListProps {
+  qaDrafts: QA[];
+  onUpdateDraft: (index: number, updatedQa: QA) => void;
+  onDeleteDraft: (index: number) => void;
+}
+
+export interface PaginationProps {
+  currentPage: number;
+  totalPages: number;
+  onChangePage: (page: number) => void;
+}
+
+export interface QaListCardsProps {
+  qaItems: QA[];
+  onSelect?: (qaId: string) => void;
+  onEdit: (id: string) => void;
+  onDelete: (id: string) => void;
+}
+
+export interface QaListTableProps {
+  qaItems: QA[];
+  onEdit: (qaId: string) => void;
+  onDelete: (qaId: string) => void;
+}
+
+export interface QaTableRowProps {
+  qaItem: QA;
+  onEdit: (qaId: string) => void;
+  onDelete: (qaId: string) => void;
+}
+
+export interface SearchFormProps {
+  initialQuery?: string;
+  onSearch: (params: { query: string; filter?: string; sortOrder?: 'asc' | 'desc' }) => void;
+}
+
+export interface TopActionBarProps {
+  onSearch: (params: { query: string; theme?: string }) => void;
+  onUploadClick: () => void;
+}
+export interface UploadButtonProps {
+  onClick: () => void;
+}
+export interface UploadFormProps {
+  onUploadSuccess: (qas: any[]) => void;
+  onUploadError: (error: Error) => void;
+  // 新たに資料種類選択用のプロップスを追加
+  materialType: string;
+  onMaterialTypeChange: (type: string) => void;
+}
+
+export interface UploadModalProps {
+  onClose: () => void;
+  onConfirm: (newQas: QA[]) => void;
+}
+
+
+export interface SettingsTabsProps {
+  companyInfo: CompanyInfo;
+  refetchCompanyInfo: () => void;
+}
+
+export interface CompanyInfoFormProps {
+  initialData: CompanyInfo;
+  onSaveSuccess: () => void;
+}
+
+
+
 // 3.3 投資家向けページ コンポーネント Props
+
+export interface ChatLogItemProps {
+  log: ChatLog;
+  onDelete?: (chatId: string) => void;
+  onArchive?: (chatId: string) => void;
+}
+
+export interface ChatLogsListProps {
+  logs: ChatLog[];
+  onDeleteLog: (chatId: string) => void;
+  onArchiveLog: (chatId: string) => void;
+}
+
+export interface ChatLogsSearchBarProps {
+  onSearch: (keyword: string, filter: FilterType) => void;
+  initialKeyword?: string;
+}
+
+export interface ConfirmDeleteDialogProps {
+  isOpen: boolean;
+  onConfirm: () => void;
+  onCancel: () => void;
+  title?: string;
+  description?: string;
+}
+
+export interface CompanyCardProps {
+  company: Company;
+  onFollowToggle: (companyId: string, nextState: boolean) => void;
+}
+
+export interface CompanyListProps {
+  companies: Company[];
+  onFollowToggle: (companyId: string, nextState: boolean) => void;
+}
+
+export interface CompanySearchQuery {
+  keyword: string;
+  industry?: string;
+}
+
+export interface ChatHistoryProps {
+  messages: ChatMessage[];
+  loading: boolean;
+}
+
+export interface ChatInputBoxProps {
+  onSendMessage: (message: string) => void;
+}
+
+// チャットメッセージの型定義
+export interface ChatMessage {
+  messageId: string;
+  sender: 'user' | 'ai';
+  text: string;
+  timestamp: string;
+}
+
+export interface ChatTabViewProps {
+  companyId: string;
+}
+
+export interface Company {
+  companyId: string;
+  companyName: string;
+  industry: string;
+  logoUrl?: string;
+}
+
+export interface CompanyHeaderProps {
+  company: Company;
+}
+
+export interface FaqItem {
+  id: string;
+  question: string;
+}
+
+export interface FAQPanelProps {
+  onSelectFAQ: (faqText: string) => void;
+}
+
+export interface QACardProps {
+  qa: QAItem;
+  onClick: () => void;
+}
+
+export interface QADetailModalProps {
+  qa: QAItem | null;
+  open: boolean;
+  onClose: () => void;
+  onLike?: (qaId: string) => void; // オプション：いいね処理用ハンドラ
+}
+
+export interface QAListProps {
+  items: QAItem[];
+  onSelectQA: (qa: QAItem) => void;
+}
+
+export interface QASearchBarProps {
+  onSearch: (keyword: string) => void;
+}
+
+export interface QAItem {
+  id: string;
+  question: string;
+  answer: string;
+  likeCount: number;
+}
+
+export interface TabSwitcherProps {
+  activeTab: "chat" | "qa";
+  onChangeTab: (tab: "chat" | "qa") => void;
+}
+
+export interface AccountDeleteFormProps {
+  onDeleteAccount: (password: string) => Promise<void>;
+}
+
+export interface MyPageTabMenuProps {
+  activeTab: "profile" | "password" | "notification" | "delete";
+  onChangeTab: (tab: "profile" | "password" | "notification" | "delete") => void;
+  profileData: ProfileData;
+  onSaveProfile: (updatedProfile: ProfileData) => Promise<void>;
+  onChangePassword: (
+    currentPass: string,
+    newPass: string
+  ) => Promise<void>;
+  onSaveNotification: (
+    newSetting: NotificationSetting
+  ) => Promise<void>;
+  onDeleteAccount: (password: string) => Promise<void>;
+}
+
+export interface NotificationSettingFormProps {
+  initialSetting: NotificationSetting;
+  onSaveSetting: (newSetting: NotificationSetting) => Promise<void>;
+}
+
+export interface PasswordChangeFormProps {
+  onChangePassword: (
+    currentPass: string,
+    newPass: string
+  ) => Promise<void>;
+}
+
+export interface ProfileFormProps {
+  initialProfile: ProfileData;
+  onSaveProfile: (updatedProfile: ProfileData) => Promise<void>;
+}
+
+export interface FilterControlsProps {
+  /** 現在のフィルター状態 */
+  filters: FilterType;
+  /** フィルター変更時のコールバック */
+  onChangeFilters: (filters: FilterType) => void;
+}
+
+export interface QADetailModalProps {
+  /** 表示対象のQAデータ。nullの場合は非表示とみなす。 */
+  qa: QA;
+  /** モーダルを閉じるためのコールバック */
+  onClose: () => void;
+  /** いいね操作ハンドラ */
+  onLike: (qaId: string) => void;
+  /** ブックマーク操作ハンドラ */
+  onBookmark: (qaId: string) => void;
+}
+
+export interface QAResultListProps {
+  /** 検索結果のQ&Aリスト */
+  items: QA[];
+  /** Q&A項目クリック時のハンドラ */
+  onItemClick: (qa: QA) => void;
+  /** いいね操作ハンドラ */
+  onLike: (qaId: string) => void;
+  /** ブックマーク操作ハンドラ */
+  onBookmark: (qaId: string) => void;
+}
+
+export interface QASearchBarProps {
+  /** 検索キーワードとフィルター情報を親コンポーネントへ渡すコールバック */
+  onSearchSubmit: (keyword: string, filters: FilterType) => void;
+}
+
 
 export interface InvestorLoginPageProps {
   // 投資家向けログインページの必要なプロパティ

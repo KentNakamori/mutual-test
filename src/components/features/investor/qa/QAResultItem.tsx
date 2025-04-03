@@ -1,8 +1,8 @@
-//src/components/features/investor/qa/QAResultItem.tsx
+// src/components/features/investor/qa/QAResultItem.tsx
 "use client";
 
 import React from 'react';
-import Button from '@/components/ui/Button';
+import QACard, { QAData } from '@/components/ui/QACard';
 import { QA } from '@/types';
 
 export interface QAResultItemProps {
@@ -12,41 +12,31 @@ export interface QAResultItemProps {
   onClickItem: () => void;
   /** いいね操作ハンドラ */
   onLike: (qaId: string) => void;
-  /** ブックマーク操作ハンドラ */
-  onBookmark: (qaId: string) => void;
 }
 
-/**
- * QAResultItem コンポーネント
- * ・Q&A の質問と回答の抜粋、いいね数を表示し、各種操作ボタンを提供します。
- */
-const QAResultItem: React.FC<QAResultItemProps> = ({ qa, onClickItem, onLike, onBookmark }) => {
-  // 質問・回答の抜粋（50文字以内）
-  const questionSnippet = qa.question.length > 50 ? qa.question.substring(0, 50) + '…' : qa.question;
-  const answerSnippet = qa.answer.length > 50 ? qa.answer.substring(0, 50) + '…' : qa.answer;
-  
+const QAResultItem: React.FC<QAResultItemProps> = ({ qa, onClickItem, onLike }) => {
+  // QA 型から共通QAカード用の型（QAData）への変換
+  const qaData: QAData = {
+    id: qa.qaId,
+    title: qa.question, // タイトルがない場合は質問文をタイトルとして利用
+    question: qa.question,
+    answer: qa.answer,
+    createdAt: qa.createdAt,
+    views: qa.views,
+    likeCount: qa.likeCount,
+    tags: qa.tags || [],
+    genreTags: qa.genreTags || [],
+    updatedAt: qa.updatedAt,
+  };
+
   return (
-    <div 
-      className="p-4 border rounded hover:shadow-md cursor-pointer"
-      onClick={onClickItem}
-    >
-      <h3 className="text-lg font-semibold mb-2">{questionSnippet}</h3>
-      <p className="text-sm text-gray-600 mb-2">{answerSnippet}</p>
-      <div className="flex items-center justify-between">
-        <span className="text-sm">いいね: {qa.likeCount}</span>
-        <div className="flex space-x-2">
-          <Button 
-            label="いいね" 
-            onClick={(e) => { e.stopPropagation(); onLike(qa.qaId); }} 
-            variant="primary" 
-          />
-          <Button 
-            label="ブックマーク" 
-            onClick={(e) => { e.stopPropagation(); onBookmark(qa.qaId); }} 
-            variant="outline" 
-          />
-        </div>
-      </div>
+    <div onClick={onClickItem}>
+      <QACard
+        mode="preview"
+        role="investor"  // 投資家向けとして編集機能が非表示になる
+        qa={qaData}
+        onLike={onLike}
+      />
     </div>
   );
 };

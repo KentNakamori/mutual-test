@@ -3,10 +3,8 @@ import React, { useState } from 'react';
 import Input from '../../../ui/Input';
 import Button from '../../../ui/Button';
 import Checkbox from '../../../ui/Checkbox';
+import { AccountDeleteFormProps } from '../../../../types';
 
-export interface AccountDeleteFormProps {
-  onDeleteAccount: (password: string) => Promise<void>;
-}
 
 const AccountDeleteForm: React.FC<AccountDeleteFormProps> = ({ onDeleteAccount }) => {
   const [password, setPassword] = useState('');

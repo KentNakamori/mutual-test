@@ -2,12 +2,9 @@
 import React, { useState } from 'react';
 import Card from '../../../ui/Card';
 import Button from '../../../ui/Button';
-import { Company } from '../../../../types';
+import { Company, CompanyCardProps} from '../../../../types';
 
-export interface CompanyCardProps {
-  company: Company;
-  onFollowToggle: (companyId: string, nextState: boolean) => void;
-}
+
 
 /**
  * CompanyCard コンポーネント

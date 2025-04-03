@@ -41,10 +41,11 @@ const mockCompanies: Company[] = [
 
 // サイドバーのメニュー項目
 const menuItems = [
-  { label: 'マイページ', link: '/investor/mypage' },
+  { label: 'トップページ', link: '/investor/companies' },
+  { label: "フォロー済み企業", link: "/investor/companies/followed" },
   { label: 'Q&A', link: '/investor/qa' },
   { label: 'チャットログ', link: '/investor/chat-logs' },
-  { label: '企業一覧', link: '/investor/companies' },
+  { label: 'マイページ', link: '/investor/mypage' },
 ];
 
 const CompaniesPage: React.FC = () => {

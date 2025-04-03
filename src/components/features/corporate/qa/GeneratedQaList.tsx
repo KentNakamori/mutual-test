@@ -1,15 +1,10 @@
 // src/components/features/corporate/qa/GeneratedQaList.tsx
 import React, { useState } from 'react';
 import Button from '@/components/ui/Button';
-import { QA } from '@/types';
+import { QA, GeneratedQaListProps} from '@/types';
 import Input from '@/components/ui/Input';
 import Textarea from '@/components/ui/Textarea';
 
-export interface GeneratedQaListProps {
-  qaDrafts: QA[];
-  onUpdateDraft: (index: number, updatedQa: QA) => void;
-  onDeleteDraft: (index: number) => void;
-}
 
 const itemsPerPage = 1; // 1問ずつ表示
 

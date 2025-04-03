@@ -14,133 +14,138 @@ import FilterBar from "@/components/features/corporate/dashboard/FilterBar";
 import DashboardGraphs from "@/components/features/corporate/dashboard/DashboardGraphs";
 import DashboardQnAList from "@/components/features/corporate/dashboard/DashboardQnAList";
 
-// --- 型定義 ---
-// --- 型定義 ---
-interface QAItem {
-  id: string;
-  title: string;
-  createdAt: string;
-  views: number;
-}
+import { GraphDataItem, DashboardData, Filter, Period  } from "@/types"
 
-export interface GraphDataItem {
-  date: string;
-  access: number;
-  chatCount: number;
-}
 
-interface DashboardData {
-  stats: {
-    label: string;
-    value: number;
-    unit?: string;
-  }[];
-  graphData: GraphDataItem[];
-  qas: {
-    published: QAItem[];
-    drafts: QAItem[];
-    hot: QAItem[];
+// 新しいAPI出力に合わせたモックデータ
+const getMockDashboardData = (period: Period): DashboardData => {
+  return {
+    stats: {
+      daily: [
+        { label: "アクセス数", value: 0, unit: "回" },
+        { label: "チャット質問数", value: 2, unit: "件" },
+        { label: "公開Q&A数", value: 4, unit: "件" },
+      ],
+      weekly: [
+        { label: "アクセス数", value: 0, unit: "回" },
+        { label: "チャット質問数", value: 5, unit: "件" },
+        { label: "公開Q&A数", value: 9, unit: "件" },
+      ],
+      monthly: [
+        { label: "アクセス数", value: 0, unit: "回" },
+        { label: "チャット質問数", value: 6, unit: "件" },
+        { label: "公開Q&A数", value: 10, unit: "件" },
+      ],
+    },
+    graphData: {
+      daily: [
+        { date: "2025-03-27", access: 0, chatCount: 1 },
+        { date: "2025-03-30", access: 0, chatCount: 1 },
+      ],
+      weekly: [
+        { date: "2025-10", access: 0, chatCount: 1 },
+        { date: "2025-11", access: 0, chatCount: 2 },
+        { date: "2025-12", access: 0, chatCount: 1 },
+        { date: "2025-13", access: 0, chatCount: 1 },
+      ],
+      monthly: [
+        { date: "2025-03", access: 0, chatCount: 6 },
+      ],
+    },
+    qas: {
+      published: [
+        {
+          qaId: "67ee2e69f0a6b85c7d42fbf1",
+          title: "QAタイトル 10",
+          question: "質問文 10 for company 67ee2e68f0a6b85c7d42fbdf",
+          answer: "回答文 10 for company 67ee2e68f0a6b85c7d42fbdf",
+          companyId: "67ee2e68f0a6b85c7d42fbdf",
+          likeCount: 0,
+          tags: ["tag2"],
+          genre: ["genre2"],
+          fiscalPeriod: "2025-Q4",
+          createdAt: "2025-03-11T19:17:33.636000",
+          updatedAt: "2025-04-02T00:33:58.636000",
+          isPublished: true,
+        },
+        {
+          qaId: "67ee2e69f0a6b85c7d42fbf0",
+          title: "QAタイトル 9",
+          question: "質問文 9 for company 67ee2e68f0a6b85c7d42fbdf",
+          answer: "回答文 9 for company 67ee2e68f0a6b85c7d42fbdf",
+          companyId: "67ee2e68f0a6b85c7d42fbdf",
+          likeCount: 6,
+          tags: ["tag2"],
+          genre: ["genre3"],
+          fiscalPeriod: "2025-Q1",
+          createdAt: "2025-03-25T17:14:45.636000",
+          updatedAt: "2025-03-25T04:00:49.636000",
+          isPublished: true,
+        },
+        {
+          qaId: "67ee2e69f0a6b85c7d42fbef",
+          title: "QAタイトル 8",
+          question: "質問文 8 for company 67ee2e68f0a6b85c7d42fbdf",
+          answer: "回答文 8 for company 67ee2e68f0a6b85c7d42fbdf",
+          companyId: "67ee2e68f0a6b85c7d42fbdf",
+          likeCount: 16,
+          tags: ["tag1"],
+          genre: ["genre3"],
+          fiscalPeriod: "2025-Q4",
+          createdAt: "2025-03-31T22:11:25.636000",
+          updatedAt: "2025-03-21T22:06:42.636000",
+          isPublished: true,
+        },
+        {
+          qaId: "67ee2e69f0a6b85c7d42fbec",
+          title: "QAタイトル 5",
+          question: "質問文 5 for company 67ee2e68f0a6b85c7d42fbdf",
+          answer: "回答文 5 for company 67ee2e68f0a6b85c7d42fbdf",
+          companyId: "67ee2e68f0a6b85c7d42fbdf",
+          likeCount: 13,
+          tags: ["tag3"],
+          genre: ["genre1"],
+          fiscalPeriod: "2025-Q1",
+          createdAt: "2025-04-01T08:47:04.636000",
+          updatedAt: "2025-03-21T16:13:14.636000",
+          isPublished: true,
+        },
+        {
+          qaId: "67ee2e69f0a6b85c7d42fbeb",
+          title: "QAタイトル 4",
+          question: "質問文 4 for company 67ee2e68f0a6b85c7d42fbdf",
+          answer: "回答文 4 for company 67ee2e68f0a6b85c7d42fbdf",
+          companyId: "67ee2e68f0a6b85c7d42fbdf",
+          likeCount: 18,
+          tags: ["tag3"],
+          genre: ["genre1"],
+          fiscalPeriod: "2025-Q1",
+          createdAt: "2025-03-05T12:49:28.636000",
+          updatedAt: "2025-03-19T01:09:54.636000",
+          isPublished: true,
+        },
+      ],
+    },
   };
-}
-
-// モック用のグラフデータ
-const mockGraphDataDaily: GraphDataItem[] = [
-  { date: "2025-03-01", access: 100, chatCount: 10 },
-  { date: "2025-03-02", access: 120, chatCount: 12 },
-  { date: "2025-03-03", access: 90, chatCount: 8 },
-  { date: "2025-03-04", access: 130, chatCount: 15 },
-  { date: "2025-03-05", access: 110, chatCount: 9 },
-];
-
-const mockGraphDataWeekly: GraphDataItem[] = [
-  { date: "2025-W09", access: 1500, chatCount: 70 },
-  { date: "2025-W10", access: 1800, chatCount: 90 },
-  { date: "2025-W11", access: 2000, chatCount: 100 },
-  { date: "2025-W12", access: 1700, chatCount: 80 },
-];
-
-const mockGraphDataMonthly: GraphDataItem[] = [
-  { date: "2025-02", access: 10000, chatCount: 500 },
-  { date: "2025-03", access: 12000, chatCount: 600 },
-  { date: "2025-04", access: 8000, chatCount: 400 },
-];
-
-// フィルター値に応じたモックデータを返す関数
-const getMockDashboardData = (period: string): DashboardData => {
-  switch (period) {
-    case "daily":
-      return {
-        stats: [
-          { label: "アクセス数", value: 1000, unit: "回" },
-          { label: "チャット質問数", value: 50, unit: "件" },
-          { label: "公開Q&A数", value: 30, unit: "件" },
-        ],
-        graphData: mockGraphDataDaily,
-        qas: {
-          published: [
-            { id: "qa1", title: "日別 Q&A 1", createdAt: "2025-03-02", views: 100 },
-            { id: "qa2", title: "日別 Q&A 2", createdAt: "2025-03-03", views: 150 },
-          ],
-          drafts: [{ id: "qa3", title: "Draft Q&A", createdAt: "2025-03-04", views: 0 }],
-          hot: [{ id: "qa2", title: "日別 Q&A 2", createdAt: "2025-03-03", views: 150 }],
-        },
-      };
-    case "weekly":
-      return {
-        stats: [
-          { label: "アクセス数", value: 7000, unit: "回" },
-          { label: "チャット質問数", value: 350, unit: "件" },
-          { label: "公開Q&A数", value: 210, unit: "件" },
-        ],
-        graphData: mockGraphDataWeekly,
-        qas: {
-          published: [
-            { id: "qa1", title: "週別 Q&A 1", createdAt: "2025-03-10", views: 300 },
-            { id: "qa2", title: "週別 Q&A 2", createdAt: "2025-03-12", views: 400 },
-          ],
-          drafts: [{ id: "qa3", title: "Draft Q&A", createdAt: "2025-03-14", views: 0 }],
-          hot: [{ id: "qa2", title: "週別 Q&A 2", createdAt: "2025-03-12", views: 400 }],
-        },
-      };
-    case "monthly":
-    default:
-      return {
-        stats: [
-          { label: "アクセス数", value: 30000, unit: "回" },
-          { label: "チャット質問数", value: 1500, unit: "件" },
-          { label: "公開Q&A数", value: 800, unit: "件" },
-        ],
-        graphData: mockGraphDataMonthly,
-        qas: {
-          published: [
-            { id: "qa1", title: "月別 Q&A 1", createdAt: "2025-02-15", views: 500 },
-            { id: "qa2", title: "月別 Q&A 2", createdAt: "2025-02-20", views: 650 },
-          ],
-          drafts: [{ id: "qa3", title: "Draft Q&A", createdAt: "2025-02-25", views: 0 }],
-          hot: [{ id: "qa2", title: "月別 Q&A 2", createdAt: "2025-02-20", views: 650 }],
-        },
-      };
-  }
 };
-
 
 const DashboardPage: React.FC = () => {
   const router = useRouter();
- 
-  const [filter, setFilter] = useState<{ period: string }>({
+
+  const [filter, setFilter] = useState<Filter>({
     period: "monthly",
   });
 
-  const handleFilterChange = (newFilter: { period: string }) => {
+  // 選択された期間のデータのみを利用
+  const dashboardData: DashboardData = getMockDashboardData(filter.period);
+
+  const handleFilterChange = (newFilter: Filter) => {
     setFilter(newFilter);
   };
-  
+
   const handleQACardClick = (qaId: string) => {
     router.push(`/corporate/qa/${qaId}`);
   };
-
-  // バックエンド接続なしのため、モックデータを使用
-  const dashboardData: DashboardData = getMockDashboardData(filter.period);
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -161,12 +166,10 @@ const DashboardPage: React.FC = () => {
             <h1 className="text-3xl font-bold">ダッシュボード</h1>
           </div>
           <FilterBar initialFilter={filter} onFilterChange={handleFilterChange} />
-          <DashboardStats statsData={dashboardData.stats} />
-          <DashboardGraphs graphData={dashboardData.graphData} />
+          <DashboardStats statsData={dashboardData.stats[filter.period]} />
+          <DashboardGraphs graphData={dashboardData.graphData[filter.period]} />
           <DashboardQnAList
             publishedQAs={dashboardData.qas.published}
-            draftQAs={dashboardData.qas.drafts}
-            hotQAs={dashboardData.qas.hot}
             onSelectQA={handleQACardClick}
           />
         </main>

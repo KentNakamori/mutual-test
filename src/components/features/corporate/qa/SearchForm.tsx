@@ -3,11 +3,8 @@ import React, { useState } from 'react';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';
 import { FaFilter, FaSortAmountDown } from 'react-icons/fa';
+import { SearchFormProps} from '@/types';
 
-export interface SearchFormProps {
-  initialQuery?: string;
-  onSearch: (params: { query: string; filter?: string; sortOrder?: 'asc' | 'desc' }) => void;
-}
 
 const SearchForm: React.FC<SearchFormProps> = ({ initialQuery = '', onSearch }) => {
   const [query, setQuery] = useState(initialQuery);

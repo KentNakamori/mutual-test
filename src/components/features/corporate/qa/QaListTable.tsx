@@ -1,13 +1,9 @@
 // src/components/features/investor/qa/QaListTable.tsx
 import React from 'react';
 import Table from '@/components/ui/Table';
-import { QA } from '@/types';
+import { QA, QaListTableProps} from '@/types';
 
-export interface QaListTableProps {
-  qaItems: QA[];
-  onEdit: (qaId: string) => void;
-  onDelete: (qaId: string) => void;
-}
+
 
 const QaListTable: React.FC<QaListTableProps> = ({ qaItems, onEdit, onDelete }) => {
   const columns = [

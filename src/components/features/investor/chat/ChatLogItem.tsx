@@ -1,14 +1,10 @@
 //src\components\features\investor\chat\ChatLogItem.tsx
 import React, { useState } from 'react';
-import { ChatLog } from '@/types';
+import { ChatLog, ChatLogItemProps} from '@/types';
 import Button from '@/components/ui/Button';
 import ConfirmDeleteDialog from './ConfirmDeleteDialog';
 
-export interface ChatLogItemProps {
-  log: ChatLog;
-  onDelete?: (chatId: string) => void;
-  onArchive?: (chatId: string) => void;
-}
+
 
 /**
  * ChatLogItem コンポーネント

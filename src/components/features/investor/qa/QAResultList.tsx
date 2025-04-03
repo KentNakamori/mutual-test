@@ -2,19 +2,10 @@
 "use client";
 
 import React from 'react';
-import { QA } from '@/types';
+import { QA, QAResultListProps} from '@/types';
 import QAResultItem from './QAResultItem';
 
-export interface QAResultListProps {
-  /** 検索結果のQ&Aリスト */
-  items: QA[];
-  /** Q&A項目クリック時のハンドラ */
-  onItemClick: (qa: QA) => void;
-  /** いいね操作ハンドラ */
-  onLike: (qaId: string) => void;
-  /** ブックマーク操作ハンドラ */
-  onBookmark: (qaId: string) => void;
-}
+
 
 /**
  * QAResultList コンポーネント

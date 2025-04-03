@@ -3,7 +3,7 @@
 
 import React, { useState } from "react";
 import Sidebar from "@/components/common/sidebar";
-import Footer from "@/components/common/Footer";
+import Footer from "@/components/common/footer";
 import MyPageTabMenu from "@/components/features/investor/mypage/MyPageTabMenu";
 import { useUserProfile } from "@/hooks/useUserProfile";
 import { ProfileData, NotificationSetting } from "@/types";
@@ -19,10 +19,11 @@ const MOCK_PROFILE: ProfileData = {
 
 // サイドバーのメニュー項目
 const menuItems = [
-  { label: 'マイページ', link: '/investor/mypage' },
+  { label: 'トップページ', link: '/investor/companies' },
+  { label: "フォロー済み企業", link: "/investor/companies/followed" },
   { label: 'Q&A', link: '/investor/qa' },
   { label: 'チャットログ', link: '/investor/chat-logs' },
-  { label: '企業一覧', link: '/investor/companies' },
+  { label: 'マイページ', link: '/investor/mypage' },
 ];
 
 const MyPage = () => {

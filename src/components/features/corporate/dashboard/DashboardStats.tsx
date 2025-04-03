@@ -1,16 +1,7 @@
 // src/components/features/corporate/dashboard/DashboardStats.tsx
 import React from "react";
 import Card from "@/components/ui/Card";
-
-interface Stat {
-  label: string;
-  value: number;
-  unit?: string;
-}
-
-interface DashboardStatsProps {
-  statsData: Stat[];
-}
+import { Stat, DashboardStatsProps } from "@/types";
 
 /**
  * DashboardStats コンポーネント

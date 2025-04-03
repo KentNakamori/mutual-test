@@ -1,17 +1,16 @@
 import React from "react";
 import QACard, { QAData } from "@/components/ui/QACard";
 import QaDetailModal from "@/components/ui/QaDetailModal"; // 共通QA詳細モーダル
+import { DashboardQA,  DashboardQnAListProps } from "@/types"; // 型定義ファイルからインポート
 
-interface DashboardQnAListProps {
-  publishedQAs: QAData[];
-}
+
 
 const DashboardQnAList: React.FC<DashboardQnAListProps> = ({ publishedQAs }) => {
-  const [selectedQA, setSelectedQA] = React.useState<QAData | null>(null);
+  const [selectedQA, setSelectedQA] = React.useState<DashboardQA | null>(null);
 
   // QAカードがクリックされたときに呼ばれるハンドラ
   const handleCardSelect = (id: string) => {
-    const qa = publishedQAs.find((q) => q.id === id) || null;
+    const qa = publishedQAs.find((q) => q.qaId === id) || null;
     setSelectedQA(qa);
   };
 
@@ -21,17 +20,20 @@ const DashboardQnAList: React.FC<DashboardQnAListProps> = ({ publishedQAs }) => 
       <div className="grid grid-cols-1 gap-4">
         {publishedQAs.map((qa) => (
           <QACard
-            key={qa.id}
+            key={qa.qaId}
             mode="preview"
             role="corporate"
-            qa={qa}
+            // QACard が期待する QAData 型は、id プロパティと views プロパティを持つため、
+            // DashboardQA の qaId を id に変換して渡します
+            qa={{ ...qa, id: qa.qaId }}
             onSelect={handleCardSelect}
           />
         ))}
       </div>
       {selectedQA && (
         <QaDetailModal
-          qa={selectedQA}
+          // 同様に変換して渡す
+          qa={{ ...selectedQA, id: selectedQA.qaId }}
           role="corporate"
           onClose={() => setSelectedQA(null)}
           onLike={(id: string) => {
@@ -45,5 +47,3 @@ const DashboardQnAList: React.FC<DashboardQnAListProps> = ({ publishedQAs }) => 
 };
 
 export default DashboardQnAList;
-
-

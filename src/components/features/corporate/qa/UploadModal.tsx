@@ -4,12 +4,9 @@ import Dialog from '@/components/ui/Dialog';
 import UploadForm from './UploadForm';
 import GeneratedQaList from './GeneratedQaList';
 import Button from '@/components/ui/Button';
-import { QA } from '@/types';
+import { QA, UploadModalProps} from '@/types';
 
-export interface UploadModalProps {
-  onClose: () => void;
-  onConfirm: (newQas: QA[]) => void;
-}
+
 
 const UploadModal: React.FC<UploadModalProps> = ({ onClose, onConfirm }) => {
   const [step, setStep] = useState<'upload' | 'review'>('upload');

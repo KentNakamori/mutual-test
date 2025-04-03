@@ -4,13 +4,9 @@ import React, { useState } from 'react';
 import QASearchBar from './QASearchBar';
 import QAList from './QAList';
 import QADetailModal from './QADetailModal';
+import { QAItem } from '../../../../types';
 
-export interface QAItem {
-  id: string;
-  question: string;
-  answer: string;
-  likeCount: number;
-}
+
 
 // モックのQAデータ
 const mockQAItems: QAItem[] = [

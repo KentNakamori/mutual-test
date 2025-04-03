@@ -1,17 +1,8 @@
 //src\components\features\investor\company\CompanyHeader.tsx
 
 import React from 'react';
+import { Company, CompanyHeaderProps } from '../../../../types';
 
-interface Company {
-  companyId: string;
-  companyName: string;
-  industry: string;
-  logoUrl?: string;
-}
-
-interface CompanyHeaderProps {
-  company: Company;
-}
 
 /**
  * CompanyHeader コンポーネント

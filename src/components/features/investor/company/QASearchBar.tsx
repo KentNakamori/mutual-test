@@ -3,10 +3,9 @@
 import React, { useState } from 'react';
 import Input from '@/components/ui/Input';
 import Button from '@/components/ui/Button';
+import { QASearchBarProps } from '../../../../types';
 
-interface QASearchBarProps {
-  onSearch: (keyword: string) => void;
-}
+
 
 /**
  * QASearchBar コンポーネント

@@ -2,19 +2,7 @@
 import React, { useState } from 'react';
 import Image from 'next/image';
 import { FaBars, FaAngleDoubleLeft } from 'react-icons/fa';
-
-export interface SidebarMenuItem {
-  label: string;
-  icon?: React.ReactNode;
-  link: string;
-}
-
-export interface SidebarProps {
-  menuItems: SidebarMenuItem[];
-  isCollapsible?: boolean;
-  selectedItem?: string;
-  onSelectMenuItem?: (link: string) => void;
-}
+import { SidebarMenuItem, SidebarProps } from '@/types';
 
 const Sidebar: React.FC<SidebarProps> = ({
   menuItems,

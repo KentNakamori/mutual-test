@@ -2,11 +2,8 @@
 
 import React, { useEffect, useRef } from 'react';
 import { ChatMessage } from './ChatTabView';
+import { ChatHistoryProps } from '../../../../types';
 
-interface ChatHistoryProps {
-  messages: ChatMessage[];
-  loading: boolean;
-}
 
 /**
  * ChatHistory コンポーネント

@@ -2,11 +2,8 @@
 
 import React from 'react';
 import Link from 'next/link';
+import { PasswordResetLinkProps } from "@/types";
 
-export interface PasswordResetLinkProps {
-  /** パスワード再設定ページへのリンクURL */
-  href: string;
-}
 
 /**
  * PasswordResetLink

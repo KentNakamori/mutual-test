@@ -2,14 +2,9 @@
 import React, { useState, useCallback } from 'react';
 import Button from '@/components/ui/Button';
 import Select, { Option } from '@/components/ui/Select';
+import { UploadFormProps} from '@/types';
 
-export interface UploadFormProps {
-  onUploadSuccess: (qas: any[]) => void;
-  onUploadError: (error: Error) => void;
-  // 新たに資料種類選択用のプロップスを追加
-  materialType: string;
-  onMaterialTypeChange: (type: string) => void;
-}
+
 
 const materialTypeOptions: Option[] = [
   { label: 'マニュアル', value: 'マニュアル' },

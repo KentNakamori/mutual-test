@@ -4,13 +4,9 @@
 import React, { useState } from "react";
 import Input from "../../../../components/ui/Input";
 import Button from "../../../../components/ui/Button";
+import { PasswordChangeFormProps} from "../../../../types";
 
-export interface PasswordChangeFormProps {
-  onChangePassword: (
-    currentPass: string,
-    newPass: string
-  ) => Promise<void>;
-}
+
 
 const PasswordChangeForm: React.FC<PasswordChangeFormProps> = ({
   onChangePassword,

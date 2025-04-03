@@ -1,27 +1,6 @@
-// components/common/Header.tsx
 import React from 'react';
+import { HeaderProps } from '@/types';
 
-export type NavigationLink = {
-  label: string;
-  href: string;
-};
-
-export interface HeaderProps {
-  /** ヘッダーに表示するナビゲーションリンク */
-  navigationLinks: NavigationLink[];
-  /** ユーザーのログイン状態および名前（ログイン時のみ表示） */
-  userStatus: {
-    isLoggedIn: boolean;
-    userName?: string;
-  };
-  /** ロゴクリック時の遷移処理 */
-  onClickLogo: () => void;
-}
-
-/**
- * Header コンポーネント
- * 画面上部に固定表示され、ロゴ、ナビゲーション、ユーザー情報を表示します。
- */
 const Header: React.FC<HeaderProps> = ({ navigationLinks, userStatus, onClickLogo }) => {
   return (
     <header className="bg-white text-black shadow-md py-4 px-6 flex justify-between items-center">

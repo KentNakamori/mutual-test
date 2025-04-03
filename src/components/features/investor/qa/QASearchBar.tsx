@@ -5,12 +5,9 @@ import React, { useState } from 'react';
 import Input from '@/components/ui/Input';
 import Button from '@/components/ui/Button';
 import FilterControls from './FilterControls';
-import { FilterType } from '@/types';
+import { FilterType, QASearchBarProps} from '@/types';
 
-export interface QASearchBarProps {
-  /** 検索キーワードとフィルター情報を親コンポーネントへ渡すコールバック */
-  onSearchSubmit: (keyword: string, filters: FilterType) => void;
-}
+
 
 /**
  * QASearchBar コンポーネント

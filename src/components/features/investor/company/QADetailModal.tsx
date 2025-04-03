@@ -4,13 +4,8 @@ import React from 'react';
 import Dialog from '@/components/ui/Dialog';
 import Button from '@/components/ui/Button';
 import { QAItem } from './QATabView';
+import { QADetailModalProps } from '../../../../types';
 
-interface QADetailModalProps {
-  qa: QAItem | null;
-  open: boolean;
-  onClose: () => void;
-  onLike?: (qaId: string) => void; // オプション：いいね処理用ハンドラ
-}
 
 /**
  * QADetailModal コンポーネント

@@ -2,11 +2,8 @@
 import React from 'react';
 import SearchForm from './SearchForm';
 import UploadButton from './UploadButton';
+import { TopActionBarProps} from '@/types';
 
-export interface TopActionBarProps {
-  onSearch: (params: { query: string; theme?: string }) => void;
-  onUploadClick: () => void;
-}
 
 const TopActionBar: React.FC<TopActionBarProps> = ({ onSearch, onUploadClick }) => {
   return (

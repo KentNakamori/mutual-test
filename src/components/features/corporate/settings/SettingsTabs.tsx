@@ -5,12 +5,8 @@ import React, { useState } from 'react';
 import Tabs from '../../../ui/Tabs';
 import CompanyInfoForm from './CompanyInfoForm';
 import LogoutButton from './LogoutButton';
-import { CompanyInfo } from '../../../../types';
+import { CompanyInfo, SettingsTabsProps} from '../../../../types';
 
-export interface SettingsTabsProps {
-  companyInfo: CompanyInfo;
-  refetchCompanyInfo: () => void;
-}
 
 const SettingsTabs: React.FC<SettingsTabsProps> = ({ companyInfo, refetchCompanyInfo }) => {
   const [activeTab, setActiveTab] = useState('company');

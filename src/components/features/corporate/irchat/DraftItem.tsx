@@ -1,17 +1,8 @@
 // src/components/features/corporate/irchat/DraftItem.tsx
 import React from 'react';
+import { Draft, DraftItemProps } from "@/types"; 
 
-interface Draft {
-  draftId: string;
-  title: string;
-  createdAt: string;
-}
 
-interface DraftItemProps {
-  draft: Draft;
-  isSelected: boolean;
-  onClick: () => void;
-}
 
 /**
  * DraftItem コンポーネント

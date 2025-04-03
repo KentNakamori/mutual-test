@@ -1,14 +1,12 @@
 // src/components/features/corporate/irchat/ChatInputArea.tsx
 import React, { useState, useCallback } from 'react';
 import Button from '../../../ui/Button';
-
+import { ChatInputAreaProps } from "@/types"; 
 /**
  * ChatInputArea コンポーネント
  * テキストエリアと送信ボタンを表示し、ユーザーの入力を受け付けます。
  */
-interface ChatInputAreaProps {
-  onSend: (text: string) => void;
-}
+
 
 const ChatInputArea: React.FC<ChatInputAreaProps> = ({ onSend }) => {
   const [inputText, setInputText] = useState('');

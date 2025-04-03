@@ -4,14 +4,9 @@
 import React from 'react';
 import Input from '@/components/ui/Input';
 import Select from '@/components/ui/Select';
-import { FilterType } from '@/types';
+import { FilterType, FilterControlsProps} from '@/types';
 
-export interface FilterControlsProps {
-  /** 現在のフィルター状態 */
-  filters: FilterType;
-  /** フィルター変更時のコールバック */
-  onChangeFilters: (filters: FilterType) => void;
-}
+
 
 /**
  * FilterControls コンポーネント

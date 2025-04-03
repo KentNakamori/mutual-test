@@ -7,22 +7,9 @@ import ProfileForm from "./ProfileForm";
 import PasswordChangeForm from "./PasswordChangeForm";
 import NotificationSettingForm from "./NotificationSettingForm";
 import AccountDeleteForm from "./AccountDeleteForm";
-import { ProfileData, NotificationSetting } from "@/types";
+import { ProfileData, NotificationSetting, MyPageTabMenuProps } from "@/types";
 
-export interface MyPageTabMenuProps {
-  activeTab: "profile" | "password" | "notification" | "delete";
-  onChangeTab: (tab: "profile" | "password" | "notification" | "delete") => void;
-  profileData: ProfileData;
-  onSaveProfile: (updatedProfile: ProfileData) => Promise<void>;
-  onChangePassword: (
-    currentPass: string,
-    newPass: string
-  ) => Promise<void>;
-  onSaveNotification: (
-    newSetting: NotificationSetting
-  ) => Promise<void>;
-  onDeleteAccount: (password: string) => Promise<void>;
-}
+
 
 const MyPageTabMenu: React.FC<MyPageTabMenuProps> = ({
   activeTab,

@@ -2,18 +2,9 @@
 import React from 'react';
 import Dialog from '../../../ui/Dialog';
 import Button from '../../../ui/Button';
-import { QA } from '../../../../types';
+import { QA, QADetailModalProps} from '../../../../types';
 
-export interface QADetailModalProps {
-  /** 表示対象のQAデータ。nullの場合は非表示とみなす。 */
-  qa: QA;
-  /** モーダルを閉じるためのコールバック */
-  onClose: () => void;
-  /** いいね操作ハンドラ */
-  onLike: (qaId: string) => void;
-  /** ブックマーク操作ハンドラ */
-  onBookmark: (qaId: string) => void;
-}
+
 
 /**
  * QADetailModal コンポーネント

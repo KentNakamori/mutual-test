@@ -1,14 +1,9 @@
 // src/components/features/corporate/qa/QaListCards.tsx
 import React, { useState } from "react";
 import QACard, { QAData } from "@/components/ui/QACard";
-import { QA } from "@/types";
+import { QA, QaListCardsProps} from "@/types";
 
-interface QaListCardsProps {
-  qaItems: QA[];
-  onSelect?: (qaId: string) => void;
-  onEdit: (id: string) => void;
-  onDelete: (id: string) => void;
-}
+
 
 const itemsPerPage = 10;
 

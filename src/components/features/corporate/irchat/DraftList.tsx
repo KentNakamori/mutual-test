@@ -1,18 +1,8 @@
 // src/components/features/corporate/irchat/DraftList.tsx
 import React from 'react';
 import DraftItem from './DraftItem';
+import { Draft, DraftListProps } from "@/types"; 
 
-interface Draft {
-  draftId: string;
-  title: string;
-  createdAt: string;
-}
-
-interface DraftListProps {
-  drafts: Draft[];
-  selectedDraftId: string | null;
-  onSelectDraft: (draftId: string) => void;
-}
 
 /**
  * DraftList コンポーネント

@@ -2,14 +2,11 @@
 import React, { useState } from 'react';
 import Input from '../../../ui/Input';
 import Button from '../../../ui/Button';
-import { CompanyInfo } from '../../../../types';
+import { CompanyInfo, CompanyInfoFormProps} from '../../../../types';
 import { updateCorporateCompanySettings } from '../../../../libs/api';
 import { useAuth } from '../../../../hooks/useAuth';
 
-export interface CompanyInfoFormProps {
-  initialData: CompanyInfo;
-  onSaveSuccess: () => void;
-}
+
 
 const CompanyInfoForm: React.FC<CompanyInfoFormProps> = ({ initialData, onSaveSuccess }) => {
   const [formData, setFormData] = useState<CompanyInfo>(initialData);

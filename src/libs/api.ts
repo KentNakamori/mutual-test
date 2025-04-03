@@ -39,7 +39,7 @@ import {
   DeleteAccountResponse
 } from "../types";
 // 型定義済みの ChatMessage と CompanyInfo を利用
-import { ChatMessage, CompanyInfo } from "../types";
+import { ChatMessage, CompanyInfo, DashboardData } from "../types";
 
 /**
  * 共通の HTTP クライアント関数
@@ -174,9 +174,9 @@ export async function corporateLogout(requestData: LogoutRequest, token: string)
  * ダッシュボード表示 API
  * GET /corporate/dashboard?period=...&type=...
  */
-export async function getCorporateDashboard(token: string, query: { period: string }): Promise<any> {
+export async function getCorporateDashboard(token: string, query: { period: string }): Promise<DashboardData> {
   const queryString = new URLSearchParams(query as any).toString();
-  return apiFetch<any>(`${ENDPOINTS.corporateDashboard}?${queryString}`, "GET", undefined, token);
+  return apiFetch<DashboardData>(`${ENDPOINTS.corporateDashboard}?${queryString}`, "GET", undefined, token);
 }
 
 /**

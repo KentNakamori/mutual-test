@@ -2,16 +2,13 @@
 "use client";
 
 import React, { useState } from "react";
-import { NotificationSetting } from "../../../../types";
+import { NotificationSetting, NotificationSettingFormProps} from "../../../../types";
 import Input from "../../../../components/ui/Input";
 import Button from "../../../../components/ui/Button";
 import Checkbox from "../../../../components/ui/Checkbox";
 import Select from "../../../../components/ui/Select";
 
-export interface NotificationSettingFormProps {
-  initialSetting: NotificationSetting;
-  onSaveSetting: (newSetting: NotificationSetting) => Promise<void>;
-}
+
 
 const NotificationSettingForm: React.FC<NotificationSettingFormProps> = ({
   initialSetting,

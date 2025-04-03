@@ -1,33 +1,31 @@
-//src\app\investor\qa\page.tsx
+// src/app/investor/qa/page.tsx
 "use client";
 
 import React, { useState, useCallback } from 'react';
 import { useQuery } from 'react-query';
 import Sidebar from '@/components/common/sidebar';
-import Footer from '@/components/common/Footer';
+import Footer from '@/components/common/footer';
 import QASearchBar from '@/components/features/investor/qa/QASearchBar';
 import QAResultList from '@/components/features/investor/qa/QAResultList';
-import QADetailModal from '@/components/features/investor/qa/QADetailModal';
 import { QA, FilterType } from '@/types';
 import { useAuth } from '@/hooks/useAuth';
 import { searchInvestorQa } from '@/libs/api';
+import QaDetailModal from '@/components/ui/QaDetailModal'; // 共通コンポーネントのモーダルを使用
 
 const QASearchPage: React.FC = () => {
-  // サイドバーのメニュー項目
   const menuItems = [
-    { label: 'マイページ', link: '/investor/mypage' },
+    { label: 'トップページ', link: '/investor/companies' },
+    { label: "フォロー済み企業", link: "/investor/companies/followed" },
     { label: 'Q&A', link: '/investor/qa' },
     { label: 'チャットログ', link: '/investor/chat-logs' },
-    { label: '企業一覧', link: '/investor/companies' },
+    { label: 'マイページ', link: '/investor/mypage' },
   ];
 
   const [searchKeyword, setSearchKeyword] = useState<string>('');
   const [filters, setFilters] = useState<FilterType>({});
   const [selectedQA, setSelectedQA] = useState<QA | null>(null);
-
   const { token } = useAuth();
 
-  // バックエンド未接続時用のモックデータ
   const mockQAData: QA[] = [
     {
       qaId: '1',
@@ -35,6 +33,7 @@ const QASearchPage: React.FC = () => {
       answer: '当社のミッションは、革新を通じて最高のサービスを提供することです。',
       companyId: 'comp1',
       likeCount: 10,
+      views: 100,
       createdAt: '2023-01-01T00:00:00Z',
       updatedAt: '2023-01-01T00:00:00Z',
       isPublished: true,
@@ -45,6 +44,7 @@ const QASearchPage: React.FC = () => {
       answer: '電話やメールなど、24時間365日対応のサポート体制を整えています。',
       companyId: 'comp2',
       likeCount: 5,
+      views: 100,
       createdAt: '2023-02-01T00:00:00Z',
       updatedAt: '2023-02-01T00:00:00Z',
       isPublished: true,
@@ -67,9 +67,7 @@ const QASearchPage: React.FC = () => {
         ? searchInvestorQa(token, query)
         : Promise.resolve({ results: mockQAData, totalCount: mockQAData.length });
     },
-    {
-      enabled: !!token,
-    }
+    { enabled: !!token }
   );
 
   const qaItems: QA[] = data?.results || mockQAData;
@@ -95,13 +93,8 @@ const QASearchPage: React.FC = () => {
     console.log('いいね：', qaId);
   }, []);
 
-  const handleBookmark = useCallback((qaId: string) => {
-    console.log('ブックマーク：', qaId);
-  }, []);
-
   return (
     <div className="min-h-screen flex flex-col">
-      {/* ヘッダー削除 → サイドバーに置き換え */}
       <div className="flex flex-1">
         <Sidebar
           isCollapsible
@@ -112,19 +105,31 @@ const QASearchPage: React.FC = () => {
         <main className="flex-1 container mx-auto p-4">
           <QASearchBar onSearchSubmit={handleSearchSubmit} />
           {isLoading && <p>読み込み中…</p>}
-          {error && <p>エラーが発生しました: {(error as Error).message}</p>}
+          {error ? <p>エラーが発生しました: {(error as Error).message}</p> : null}
+
           <QAResultList 
             items={qaItems} 
             onItemClick={handleItemClick} 
-            onLike={handleLike} 
-            onBookmark={handleBookmark} 
+            onLike={handleLike}
+            onBookmark={() => {}}
           />
           {selectedQA && (
-            <QADetailModal 
-              qa={selectedQA} 
+            <QaDetailModal 
+              qa={{
+                id: selectedQA.qaId,
+                title: selectedQA.question,
+                question: selectedQA.question,
+                answer: selectedQA.answer,
+                createdAt: selectedQA.createdAt,
+                views: selectedQA.views,
+                likeCount: selectedQA.likeCount,
+                tags: selectedQA.tags || [],
+                genreTags: selectedQA.genreTags || [],
+                updatedAt: selectedQA.updatedAt,
+              }}
+              role="investor"
               onClose={handleCloseModal} 
-              onLike={handleLike} 
-              onBookmark={handleBookmark} 
+              onLike={handleLike}
             />
           )}
         </main>
