@@ -2,19 +2,9 @@
 import React from 'react';
 import ChatInputArea from '@/components/features/corporate/irchat/ChatInputArea';
 import MessageList from '@/components/features/corporate/irchat/MessageList';
+import{ ChatMessage, ChatAreaProps} from '@/types';
 
-export interface ChatMessage {
-  messageId: string;
-  role: 'user' | 'ai';
-  text: string;
-  timestamp: string;
-}
 
-export interface ChatAreaProps {
-  messages: ChatMessage[];
-  onSendMessage: (text: string) => void;
-  chatTitle: string;  // 新規追加
-}
 
 /**
  * ChatArea コンポーネント

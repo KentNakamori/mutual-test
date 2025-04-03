@@ -11,9 +11,11 @@ import UploadModal from "@/components/features/corporate/qa/UploadModal";
 import QaDetailModal from "@/components/ui/QaDetailModal";
 import { QA } from "@/types";
 
+// モックデータ（必要なプロパティを補完）
 const mockQas: QA[] = [
   {
     qaId: "1",
+    title: "この製品の動作について",
     question: "この製品はどのように動作しますか？",
     answer: "製品は最新のテクノロジーを活用して動作します。詳しい仕組みは…",
     companyId: "comp1",
@@ -21,10 +23,13 @@ const mockQas: QA[] = [
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
     isPublished: true,
-    views: 100,
+    tags: [],
+    genre: [],
+    fiscalPeriod: "2025年度",
   },
   {
     qaId: "2",
+    title: "保証期間について",
     question: "保証期間はどのくらいですか？",
     answer: "保証期間は1年間です。ご不明点があればお問い合わせください。",
     companyId: "comp1",
@@ -32,7 +37,9 @@ const mockQas: QA[] = [
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
     isPublished: true,
-    views: 150,
+    tags: [],
+    genre: [],
+    fiscalPeriod: "2025年度",
   },
 ];
 
@@ -42,21 +49,6 @@ const sidebarMenuItems = [
   { label: "IRチャット", link: "/corporate/irchat" },
   { label: "設定", link: "/corporate/settings" },
 ];
-
-const convertToQAData = (qa: QA) => {
-  return {
-    id: qa.qaId,
-    title: qa.question,
-    question: qa.question,
-    answer: qa.answer,
-    createdAt: qa.createdAt,
-    views: qa.views,
-    likeCount: qa.likeCount,
-    tags: qa.tags || [],
-    genreTags: qa.genreTags || [],
-    updatedAt: qa.updatedAt,
-  };
-};
 
 const QaPage: React.FC = () => {
   const router = useRouter();
@@ -121,14 +113,17 @@ const QaPage: React.FC = () => {
       {/* QA詳細モーダル（role="corporate"で編集ボタン付き） */}
       {selectedQa && (
         <QaDetailModal
-          qa={convertToQAData(selectedQa)}
+          qa={selectedQa}
+          isOpen={true}
           role="corporate"
           onClose={() => setSelectedQa(null)}
-          onLike={(id: string) => { console.log("いいね", id); }}
+          onLike={(id: string) => {
+            console.log("いいね", id);
+          }}
           onDelete={(id: string) => handleDeleteQa(id)}
           onSaveEdit={(updatedQa) => {
             setQas((prev) =>
-              prev.map((q) => (q.qaId === updatedQa.id ? { ...q, ...updatedQa } : q))
+              prev.map((q) => (q.qaId === updatedQa.qaId ? { ...q, ...updatedQa } : q))
             );
           }}
         />

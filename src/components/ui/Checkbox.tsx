@@ -1,16 +1,8 @@
 // components/ui/Checkbox.tsx
 import React from 'react';
+import{ CheckboxProps} from '@/types';
 
-export interface CheckboxProps {
-  /** チェック状態 */
-  checked: boolean;
-  /** チェック変更時のハンドラ */
-  onChange: (checked: boolean) => void;
-  /** チェックボックスのラベル */
-  label: string;
-  /** 無効状態 */
-  disabled?: boolean;
-}
+
 
 /**
  * Checkbox コンポーネント

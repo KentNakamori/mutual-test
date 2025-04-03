@@ -1,46 +1,50 @@
-// src/components/ui/QaDetailModal.tsx
+// components/ui/QaDetailModal.tsx
 import React, { useState } from 'react';
 import Dialog from '@/components/ui/Dialog';
-import QACard, { QAData, QACardMode, QACardRole } from '@/components/ui/QACard';
+import QACard, { QACardMode } from '@/components/ui/QACard';
+import { QADetailModalProps, QA, } from '@/types';
 
-export interface QaDetailModalProps {
-  qa: QAData;
-  role: QACardRole; // 追加：企業向け or 投資家向けを指定
-  onClose: () => void;
-  onLike?: (id: string) => void;
-  onDelete?: (id: string) => void;
-  onSaveEdit?: (updatedQa: QAData) => void;
-}
+const QaDetailModal: React.FC<QADetailModalProps> = ({
+  qa,
+  isOpen,
+  onClose,
+  role,
+  onLike,
+  onEdit,
+  onDelete,
+  onCancelEdit,
+  onSaveEdit,
+}) => {
+  const [mode, setMode] = useState<QACardMode>('detail');
 
-const QaDetailModal: React.FC<QaDetailModalProps> = ({ qa, role, onClose, onLike, onDelete, onSaveEdit }) => {
-  const [mode, setMode] = useState<QACardMode>("detail");
-
-  const handleEditClick = (id: string) => {
-    // 企業向けの場合のみ編集可能にする
+  // 企業向けの場合、編集ボタンで編集モードへ切替え
+  const handleEdit = (qaId: string) => {
     if (role === 'corporate') {
-      setMode("edit");
+      setMode('edit');
+      onEdit && onEdit(qaId);
     }
   };
 
+  // 編集保存後、詳細表示に戻す
+  const handleSaveEdit = (updatedQa: QA) => {
+    onSaveEdit && onSaveEdit(updatedQa);
+    setMode('detail');
+  };
+
+  // 編集キャンセル時、詳細表示に戻す
   const handleCancelEdit = () => {
-    setMode("detail");
-  };
-
-  const handleSaveEdit = (updatedQa: QAData) => {
-    if (onSaveEdit) {
-      onSaveEdit(updatedQa);
-    }
-    setMode("detail");
+    onCancelEdit && onCancelEdit();
+    setMode('detail');
   };
 
   return (
-    <Dialog isOpen={true} onClose={onClose} title="QA詳細">
+    <Dialog isOpen={isOpen} onClose={onClose} title="QA詳細">
       <QACard
         mode={mode}
-        role={role} // role をそのまま渡す
+        role={role}
         qa={qa}
         onLike={onLike}
-        onEdit={handleEditClick}
+        onEdit={handleEdit}
         onDelete={onDelete}
         onCancelEdit={handleCancelEdit}
         onSaveEdit={handleSaveEdit}

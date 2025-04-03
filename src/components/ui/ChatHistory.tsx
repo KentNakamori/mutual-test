@@ -1,19 +1,9 @@
 // src/components/ui/ChatHistory.tsx
 import React, { useState } from 'react';
 import { FaPlus, FaSearch } from 'react-icons/fa';
+import{ ChatSession, ChatHistoryProps} from '@/types';
 
-export interface ChatSession {
-  sessionId: string;
-  title: string;
-  lastMessageTimestamp: string;
-}
 
-export interface ChatHistoryProps {
-  sessions: ChatSession[];
-  selectedSessionId: string | null;
-  onSelectSession: (sessionId: string) => void;
-  onNewChat: () => void;
-}
 
 const ChatHistory: React.FC<ChatHistoryProps> = ({
   sessions,

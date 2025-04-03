@@ -1,18 +1,7 @@
 // components/ui/Button.tsx
 import React from 'react';
+import { ButtonProps} from '@/types';
 
-export interface ButtonProps {
-  /** ボタンに表示するテキスト */
-  label: string;
-  /** クリック時のハンドラ */
-  onClick?: (e: React.MouseEvent<HTMLButtonElement>) => void;
-  /** 無効状態フラグ */
-  disabled?: boolean;
-  /** ボタンのバリアント（primary: 黒背景＋白文字、destructive: 赤系など） */
-  variant?:  'primary' | 'destructive' | 'outline' | 'link' | 'gradient';
-  /** ボタンの種類 */
-  type?: "button" | "submit" | "reset";
-}
 
 const Button: React.FC<ButtonProps> = ({
   label,

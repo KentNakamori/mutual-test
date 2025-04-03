@@ -20,38 +20,39 @@ import { GraphDataItem, DashboardData, Filter, Period  } from "@/types"
 // 新しいAPI出力に合わせたモックデータ
 const getMockDashboardData = (period: Period): DashboardData => {
   return {
-    stats: {
-      daily: [
-        { label: "アクセス数", value: 0, unit: "回" },
-        { label: "チャット質問数", value: 2, unit: "件" },
-        { label: "公開Q&A数", value: 4, unit: "件" },
-      ],
-      weekly: [
-        { label: "アクセス数", value: 0, unit: "回" },
-        { label: "チャット質問数", value: 5, unit: "件" },
-        { label: "公開Q&A数", value: 9, unit: "件" },
-      ],
-      monthly: [
-        { label: "アクセス数", value: 0, unit: "回" },
-        { label: "チャット質問数", value: 6, unit: "件" },
-        { label: "公開Q&A数", value: 10, unit: "件" },
-      ],
-    },
-    graphData: {
-      daily: [
-        { date: "2025-03-27", access: 0, chatCount: 1 },
-        { date: "2025-03-30", access: 0, chatCount: 1 },
-      ],
-      weekly: [
-        { date: "2025-10", access: 0, chatCount: 1 },
-        { date: "2025-11", access: 0, chatCount: 2 },
-        { date: "2025-12", access: 0, chatCount: 1 },
-        { date: "2025-13", access: 0, chatCount: 1 },
-      ],
-      monthly: [
-        { date: "2025-03", access: 0, chatCount: 6 },
-      ],
-    },
+      stats: {
+        daily: [
+          { label: "いいね数", value: 15, unit: "回" },
+          { label: "チャット質問数", value: 8, unit: "件" },
+          { label: "公開Q&A数", value: 8, unit: "件" },
+        ],
+        weekly: [
+          { label: "いいね数", value: 102, unit: "回" },
+          { label: "チャット質問数", value: 32, unit: "件" },
+          { label: "公開Q&A数", value: 22, unit: "件" },
+        ],
+        monthly: [
+          { label: "いいね数", value: 420, unit: "回" },
+          { label: "チャット質問数", value: 123, unit: "件" },
+          { label: "公開Q&A数", value: 31, unit: "件" },
+        ],
+      },
+      graphData: {
+        daily: [
+          { date: "2025-03-27", likeCount: 7, chatCount: 3 },
+          { date: "2025-03-30", likeCount: 8, chatCount: 5 },
+        ],
+        weekly: [
+          { date: "2025-10", likeCount: 25, chatCount: 7 },
+          { date: "2025-11", likeCount: 25, chatCount: 8 },
+          { date: "2025-12", likeCount: 26, chatCount: 8 },
+          { date: "2025-13", likeCount: 26, chatCount: 9 },
+        ],
+        monthly: [
+          { date: "2025-03", likeCount: 420, chatCount: 123 },
+        ],
+      },
+    
     qas: {
       published: [
         {

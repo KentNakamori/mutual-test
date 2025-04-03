@@ -15,12 +15,12 @@ import { GraphDataItem, DashboardGraphsProps } from "@/types";
 
 /**
  * DashboardGraphs コンポーネント
- * モックデータを利用して、アクセス数とチャット質問数の推移を折れ線グラフで表示します。
+ * モックデータを利用して、いいね数とチャット質問数の推移を折れ線グラフで表示します。
  */
 const DashboardGraphs: React.FC<DashboardGraphsProps> = ({ graphData }) => {
   return (
     <div className="bg-white p-4 rounded shadow-md mb-6">
-      <h3 className="text-xl font-semibold mb-4">アクセス・チャット質問数推移</h3>
+      <h3 className="text-xl font-semibold mb-4">いいね数・チャット質問数推移</h3>
       <ResponsiveContainer width="100%" height={300}>
         <LineChart data={graphData}>
           <CartesianGrid strokeDasharray="3 3" />
@@ -30,8 +30,8 @@ const DashboardGraphs: React.FC<DashboardGraphsProps> = ({ graphData }) => {
           <Legend />
           <Line
             type="monotone"
-            dataKey="access"
-            name="アクセス数"
+            dataKey="likeCount"
+            name="いいね数"
             stroke="#8884d8"
             activeDot={{ r: 8 }}
           />

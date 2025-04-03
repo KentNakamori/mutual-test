@@ -1,21 +1,6 @@
 // components/ui/Select.tsx
 import React from 'react';
-
-export interface Option {
-  label: string;
-  value: string;
-}
-
-export interface SelectProps {
-  /** 選択肢リスト */
-  options: Option[];
-  /** 現在選択されている値 */
-  value: string;
-  /** 選択変更時のハンドラ */
-  onChange: (value: string) => void;
-  /** 無効状態 */
-  disabled?: boolean;
-}
+import{ Option, SelectProps} from '@/types';
 
 /**
  * Select コンポーネント

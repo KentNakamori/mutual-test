@@ -1,36 +1,12 @@
-import React from 'react';
+// components/ui/QACard.tsx
+import React, { useState } from 'react';
+import { QA, QACardProps,  } from '@/types';
+import Card from '@/components/ui/Card';
 
+// QACard 用のモード・ロール型（企業向けは "corporate"、投資家向けは "investor"）
 export type QACardMode = 'preview' | 'detail' | 'edit';
 export type QACardRole = 'investor' | 'corporate';
 
-export interface QAData {
-  id: string;
-  title: string;
-  question: string;
-  answer: string;
-  createdAt: string;
-  views: number;
-  likeCount: number;
-  tags?: string[];       // 資料からのタグ
-  genreTags?: string[];  // ジャンル分類用タグ
-  updatedAt?: string;
-}
-
-export interface QACardProps {
-  mode: QACardMode;
-  role: QACardRole;
-  qa: QAData;
-  // プレビュー/詳細用のハンドラ
-  onSelect?: (id: string) => void;
-  // 詳細モードで使用するハンドラ
-  onLike?: (id: string) => void;
-  // 企業向けの場合のハンドラ
-  onEdit?: (id: string) => void;
-  onDelete?: (id: string) => void;
-  // 編集モードで使用するハンドラ
-  onCancelEdit?: () => void;
-  onSaveEdit?: (updatedQa: QAData) => void;
-}
 
 const QACard: React.FC<QACardProps> = ({
   mode,
@@ -43,29 +19,30 @@ const QACard: React.FC<QACardProps> = ({
   onCancelEdit,
   onSaveEdit,
 }) => {
-  // プレビュー状態：タイトル、回答の一部、タグ、公開日、いいね数（いいねボタンは不要）
+  // プレビュー状態
   if (mode === 'preview') {
     return (
-      <div
-        className="border p-4 rounded cursor-pointer hover:shadow-lg transition-shadow duration-200"
-        onClick={() => onSelect && onSelect(qa.id)}
-      >
+      <Card onClick={() => onSelect && onSelect(qa.qaId)}>
         <h4 className="text-lg font-semibold">{qa.title}</h4>
-        <p className="text-sm"> {qa.answer ? qa.answer.substring(0, 100) : ""} …</p>
-
+        <p className="text-sm">
+          {qa.answer.substring(0, 100)}
+          {qa.answer.length > 100 ? '…' : ''}
+        </p>
         <div className="text-xs text-gray-500 mt-2">
-          <span>公開日: {qa.createdAt}</span>
-          {qa.tags && <span className="ml-2">タグ: {qa.tags.join(', ')}</span>}
-          <span className="ml-2">いいね: {qa.likeCount}</span>
+          <div>決算年度: {qa.fiscalPeriod}</div>
+          {qa.tags && qa.tags.length > 0 && <div>タグ: {qa.tags.join(', ')}</div>}
+          {qa.genre && qa.genre.length > 0 && <div>ジャンル: {qa.genre.join(', ')}</div>}
+          <div>公開日: {qa.createdAt}</div>
+          <div>いいね: {qa.likeCount}</div>
         </div>
-      </div>
+      </Card>
     );
   }
 
-  // 詳細状態：タイトル、質問、回答、タグ、ジャンルタグ、公開日、いいね数＋アクションボタン（いいねは共通。企業向けは編集/削除も）
+  // 詳細状態
   if (mode === 'detail') {
     return (
-      <div className="border p-4 rounded">
+      <Card>
         <h4 className="text-lg font-semibold">{qa.title}</h4>
         <div className="mt-2">
           <strong>質問:</strong>
@@ -76,118 +53,130 @@ const QACard: React.FC<QACardProps> = ({
           <p>{qa.answer}</p>
         </div>
         <div className="mt-2 text-xs text-gray-500">
-          {qa.tags && <div>資料タグ: {qa.tags.join(', ')}</div>}
-          {qa.genreTags && <div>ジャンルタグ: {qa.genreTags.join(', ')}</div>}
+          <div>決算年度: {qa.fiscalPeriod}</div>
+          {qa.tags && qa.tags.length > 0 && <div>タグ: {qa.tags.join(', ')}</div>}
+          {qa.genre && qa.genre.length > 0 && <div>ジャンル: {qa.genre.join(', ')}</div>}
           <div>公開日: {qa.createdAt}</div>
-          <div>いいね数: {qa.likeCount}</div>
+          <div>更新日: {qa.updatedAt}</div>
+          <div>いいね: {qa.likeCount}</div>
+          <div>公開状態: {qa.isPublished ? '公開' : '非公開'}</div>
+          <div>企業ID: {qa.companyId}</div>
         </div>
         <div className="mt-4">
-          {onLike && (
+          {role === 'investor' && onLike && (
             <button
-              onClick={() => onLike(qa.id)}
+              onClick={() => onLike(qa.qaId)}
               className="mr-2 bg-black text-white py-1 px-3 rounded"
             >
               いいね
             </button>
           )}
-          {role === 'corporate' && onEdit && (
-            <button
-              onClick={() => onEdit(qa.id)}
-              className="mr-2 bg-blue-500 text-white py-1 px-3 rounded"
-            >
-              編集
-            </button>
-          )}
-          {role === 'corporate' && onDelete && (
-            <button
-              onClick={() => onDelete(qa.id)}
-              className="bg-red-500 text-white py-1 px-3 rounded"
-            >
-              削除
-            </button>
+          {role === 'corporate' && (
+            <>
+              {onEdit && (
+                <button
+                  onClick={() => onEdit(qa.qaId)}
+                  className="mr-2 bg-blue-500 text-white py-1 px-3 rounded"
+                >
+                  編集
+                </button>
+              )}
+              {onDelete && (
+                <button
+                  onClick={() => onDelete(qa.qaId)}
+                  className="bg-red-500 text-white py-1 px-3 rounded"
+                >
+                  削除
+                </button>
+              )}
+            </>
           )}
         </div>
-      </div>
+      </Card>
     );
   }
 
-  // 編集状態：入力欄で編集可能。ファイル添付は省略。キャンセルと保存ボタンを表示
+  // 編集状態（企業向けのみ想定）
   if (mode === 'edit') {
-    const [title, setTitle] = React.useState(qa.title);
-    const [question, setQuestion] = React.useState(qa.question);
-    const [answer, setAnswer] = React.useState(qa.answer);
-    const [tags, setTags] = React.useState(qa.tags || []);
-    const [genreTags, setGenreTags] = React.useState(qa.genreTags || []);
-
+    const [editedQA, setEditedQA] = useState<QA>({ ...qa });
     return (
-      <div className="border p-4 rounded">
-        <input
-          type="text"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          className="w-full mb-2 border p-2"
-          placeholder="タイトル"
-        />
-        <textarea
-          value={question}
-          onChange={(e) => setQuestion(e.target.value)}
-          className="w-full mb-2 border p-2"
-          placeholder="質問文"
-        />
-        <textarea
-          value={answer}
-          onChange={(e) => setAnswer(e.target.value)}
-          className="w-full mb-2 border p-2"
-          placeholder="回答文"
-        />
+      <Card>
         <div className="mb-2">
+          <label className="block text-sm font-medium text-gray-700">タイトル</label>
           <input
             type="text"
-            value={tags.join(", ")}
-            onChange={(e) =>
-              setTags(e.target.value.split(",").map((s) => s.trim()))
-            }
-            className="w-full border p-2"
-            placeholder="資料タグ（カンマ区切り）"
+            value={editedQA.title}
+            onChange={(e) => setEditedQA({ ...editedQA, title: e.target.value })}
+            className="mt-1 block w-full border border-gray-300 rounded p-2"
           />
         </div>
         <div className="mb-2">
+          <label className="block text-sm font-medium text-gray-700">質問</label>
+          <textarea
+            value={editedQA.question}
+            onChange={(e) => setEditedQA({ ...editedQA, question: e.target.value })}
+            className="mt-1 block w-full border border-gray-300 rounded p-2"
+          />
+        </div>
+        <div className="mb-2">
+          <label className="block text-sm font-medium text-gray-700">回答</label>
+          <textarea
+            value={editedQA.answer}
+            onChange={(e) => setEditedQA({ ...editedQA, answer: e.target.value })}
+            className="mt-1 block w-full border border-gray-300 rounded p-2"
+          />
+        </div>
+        <div className="mb-2">
+          <label className="block text-sm font-medium text-gray-700">決算年度</label>
           <input
             type="text"
-            value={genreTags.join(", ")}
+            value={editedQA.fiscalPeriod}
+            onChange={(e) => setEditedQA({ ...editedQA, fiscalPeriod: e.target.value })}
+            className="mt-1 block w-full border border-gray-300 rounded p-2"
+          />
+        </div>
+        <div className="mb-2">
+          <label className="block text-sm font-medium text-gray-700">タグ (カンマ区切り)</label>
+          <input
+            type="text"
+            value={editedQA.tags.join(', ')}
             onChange={(e) =>
-              setGenreTags(e.target.value.split(",").map((s) => s.trim()))
+              setEditedQA({
+                ...editedQA,
+                tags: e.target.value.split(',').map(tag => tag.trim()),
+              })
             }
-            className="w-full border p-2"
-            placeholder="ジャンルタグ（カンマ区切り）"
+            className="mt-1 block w-full border border-gray-300 rounded p-2"
+          />
+        </div>
+        <div className="mb-2">
+          <label className="block text-sm font-medium text-gray-700">ジャンル (カンマ区切り)</label>
+          <input
+            type="text"
+            value={editedQA.genre.join(', ')}
+            onChange={(e) =>
+              setEditedQA({
+                ...editedQA,
+                genre: e.target.value.split(',').map(g => g.trim()),
+              })
+            }
+            className="mt-1 block w-full border border-gray-300 rounded p-2"
           />
         </div>
         <div className="flex justify-end space-x-2">
-          <button
-            onClick={onCancelEdit}
-            className="py-1 px-3 border rounded"
-          >
+          <button onClick={onCancelEdit} className="py-1 px-3 border rounded">
             キャンセル
           </button>
           <button
             onClick={() =>
-              onSaveEdit &&
-              onSaveEdit({
-                ...qa,
-                title,
-                question,
-                answer,
-                tags,
-                genreTags,
-                updatedAt: new Date().toISOString(),
-              })
+              onSaveEdit && onSaveEdit({ ...editedQA, updatedAt: new Date().toISOString() })
             }
             className="py-1 px-3 bg-black text-white rounded"
           >
             保存
           </button>
         </div>
-      </div>
+      </Card>
     );
   }
 

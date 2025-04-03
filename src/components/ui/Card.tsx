@@ -1,16 +1,6 @@
 // components/ui/Card.tsx
-import React from 'react';
+import{ CardProps} from '@/types';
 
-export interface CardProps {
-  /** カードのタイトル（任意） */
-  title?: string;
-  /** カード内に表示するコンテンツ */
-  children: React.ReactNode;
-  /** クリック時のハンドラ（オプション） */
-  onClick?: () => void;
-  /** 追加のクラス名（必要に応じてカスタマイズ） */
-  className?: string;
-}
 
 /**
  * Card コンポーネント

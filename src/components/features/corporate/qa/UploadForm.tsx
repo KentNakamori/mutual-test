@@ -1,8 +1,8 @@
 // src/components/features/corporate/qa/UploadForm.tsx
 import React, { useState, useCallback } from 'react';
 import Button from '@/components/ui/Button';
-import Select, { Option } from '@/components/ui/Select';
-import { UploadFormProps} from '@/types';
+import Select from '@/components/ui/Select';
+import { UploadFormProps, Option} from '@/types';
 
 
 

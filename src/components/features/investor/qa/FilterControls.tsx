@@ -1,12 +1,10 @@
-//src/components/features/investor/qa/FilterControls.tsx
+// src/components/features/investor/qa/FilterControls.tsx
 "use client";
 
 import React from 'react';
 import Input from '@/components/ui/Input';
 import Select from '@/components/ui/Select';
-import { FilterType, FilterControlsProps} from '@/types';
-
-
+import { FilterType, FilterControlsProps } from '@/types';
 
 /**
  * FilterControls コンポーネント
@@ -56,6 +54,7 @@ const FilterControls: React.FC<FilterControlsProps> = ({ filters, onChangeFilter
         <label className="block text-sm mb-1">日付範囲</label>
         <Select 
           options={dateOptions}
+          // ここは簡易的な実装例として、dateRange が存在すれば 'last_week' を、なければ 'all' としています
           value={filters.dateRange ? 'last_week' : 'all'}
           onChange={handleDateChange}
         />

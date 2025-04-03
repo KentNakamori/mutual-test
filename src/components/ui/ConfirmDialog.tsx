@@ -1,23 +1,9 @@
 // components/ui/ConfirmDialog.tsx
 import React from 'react';
 import Dialog from '@/components/ui/Dialog';
+import{ ConfirmDialogProps} from '@/types';
 
-export interface ConfirmDialogProps {
-  /** ダイアログが開いているか */
-  isOpen: boolean;
-  /** ダイアログのタイトル */
-  title: string;
-  /** ダイアログの説明テキスト */
-  description: string;
-  /** 確認ボタンのラベル（任意） */
-  confirmLabel?: string;
-  /** キャンセルボタンのラベル（任意） */
-  cancelLabel?: string;
-  /** 確認ボタン押下時のハンドラ */
-  onConfirm: () => void;
-  /** キャンセルボタン押下時のハンドラ */
-  onCancel: () => void;
-}
+
 
 /**
  * ConfirmDialog コンポーネント
