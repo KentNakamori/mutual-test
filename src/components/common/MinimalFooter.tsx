@@ -1,14 +1,6 @@
 // components/common/MinimalFooter.tsx
 import React from 'react';
-
-export interface MinimalFooterProps {
-  /** 最小限のフッターリンクリスト（任意） */
-  footerLinks?: { label: string; href: string }[];
-  /** コピーライトテキスト */
-  copyrightText: string;
-  /** リンククリック時のコールバック（任意） */
-  onSelectLink?: (href: string) => void;
-}
+import { MinimalFooterProps } from '@/types';
 
 /**
  * MinimalFooter コンポーネント

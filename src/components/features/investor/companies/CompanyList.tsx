@@ -1,12 +1,9 @@
 // src/components/features/investor/companies/CompanyList.tsx
 import React from 'react';
-import { Company } from '../../../../types';
+import { Company, CompanyListProps} from '../../../../types';
 import CompanyCard from './CompanyCard';
 
-export interface CompanyListProps {
-  companies: Company[];
-  onFollowToggle: (companyId: string, nextState: boolean) => void;
-}
+
 
 /**
  * CompanyList コンポーネント

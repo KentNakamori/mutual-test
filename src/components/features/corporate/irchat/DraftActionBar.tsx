@@ -1,11 +1,8 @@
 // src/components/features/corporate/irchat/DraftActionBar.tsx
 import React from 'react';
 import Button from '../../../ui/Button';
+import { DraftActionBarProps } from "@/types"; 
 
-interface DraftActionBarProps {
-  onRegisterQA: () => void;
-  onCreateMailDraft: () => void;
-}
 
 /**
  * DraftActionBar コンポーネント

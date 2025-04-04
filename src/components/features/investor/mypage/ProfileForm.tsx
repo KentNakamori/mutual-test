@@ -5,11 +5,8 @@ import React, { useState } from "react";
 import { ProfileData } from "@/types";
 import Input from "../../../../components/ui/Input";
 import Button from "../../../../components/ui/Button";
+import { ProfileFormProps} from "../../../../types";
 
-export interface ProfileFormProps {
-  initialProfile: ProfileData;
-  onSaveProfile: (updatedProfile: ProfileData) => Promise<void>;
-}
 
 const ProfileForm: React.FC<ProfileFormProps> = ({
   initialProfile,

@@ -1,20 +1,8 @@
 // components/ui/Input.tsx
 import React from 'react';
+import{ InputProps} from '@/types';
 
-export interface InputProps {
-  /** 入力値 */
-  value: string;
-  /** 入力値変更時のハンドラ */
-  onChange: (value: string) => void;
-  /** プレースホルダー */
-  placeholder?: string;
-  /** 入力タイプ（例: text, email, password） */
-  type?: string;
-  /** 無効状態 */
-  disabled?: boolean;
-  /** エラー状態（エラースタイル適用） */
-  errorState?: boolean;
-}
+
 
 /**
  * Input コンポーネント

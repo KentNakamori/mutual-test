@@ -3,20 +3,8 @@ import React from 'react';
 import MessageList from './MessageList';
 import ChatInputArea from './ChatInputArea';
 import DraftActionBar from './DraftActionBar';
+import { ChatMessage, ChatWindowProps } from "@/types"; 
 
-interface ChatMessage {
-  messageId: string;
-  role: 'user' | 'ai';
-  text: string;
-  timestamp: string;
-}
-
-interface ChatWindowProps {
-  messages: ChatMessage[];
-  onSendMessage: (text: string) => void;
-  onRegisterQA: () => void;
-  onCreateMailDraft: () => void;
-}
 
 /**
  * ChatWindow コンポーネント

@@ -1,17 +1,10 @@
 // src/components/features/corporate/irchat/MessageList.tsx
 import React from 'react';
 import MessageBubble from './MessageBubble';
+import { ChatMessage, MessageListProps  } from "@/types"; 
 
-interface ChatMessage {
-  messageId: string;
-  role: 'user' | 'ai';
-  text: string;
-  timestamp: string;
-}
 
-interface MessageListProps {
-  messages: ChatMessage[];
-}
+
 
 /**
  * MessageList コンポーネント

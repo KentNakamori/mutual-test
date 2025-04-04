@@ -4,18 +4,8 @@ import React, { useState } from 'react';
 import FAQPanel from './FAQPanel';
 import ChatHistory from './ChatHistory';
 import ChatInputBox from './ChatInputBox';
+import { ChatMessage, ChatTabViewProps } from '../../../../types';
 
-// チャットメッセージの型定義
-export interface ChatMessage {
-  messageId: string;
-  sender: 'user' | 'ai';
-  text: string;
-  timestamp: string;
-}
-
-interface ChatTabViewProps {
-  companyId: string;
-}
 
 /**
  * ChatTabView コンポーネント

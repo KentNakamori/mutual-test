@@ -1,18 +1,7 @@
 // components/ui/Button.tsx
 import React from 'react';
+import { ButtonProps} from '@/types';
 
-export interface ButtonProps {
-  /** ボタンに表示するテキスト */
-  label: string;
-  /** クリック時のハンドラ */
-  onClick?: (e: React.MouseEvent<HTMLButtonElement>) => void;
-  /** 無効状態フラグ */
-  disabled?: boolean;
-  /** ボタンのバリアント（primary: 黒背景＋白文字、destructive: 赤系など） */
-  variant?: 'primary' | 'destructive' | 'outline' | 'link';
-  /** ボタンの種類 */
-  type?: "button" | "submit" | "reset";
-}
 
 const Button: React.FC<ButtonProps> = ({
   label,
@@ -22,7 +11,7 @@ const Button: React.FC<ButtonProps> = ({
   type = "button",
 }) => {
   const baseClasses =
-    "py-2 px-4 rounded focus:outline-none focus:ring-2 focus:ring-offset-2 transition-colors duration-200";
+    "py-2 px-4 rounded  whitespace-nowrap focus:outline-none focus:ring-2 focus:ring-offset-2 transition-colors duration-200";
   let variantClasses = "";
 
   switch (variant) {
@@ -38,6 +27,9 @@ const Button: React.FC<ButtonProps> = ({
     case 'link':
       variantClasses = "text-blue-600 hover:underline";
       break;
+   case 'gradient':
+      variantClasses = "bg-gradient-to-r from-[#1CB5E0] to-[#9967EE] text-white hover:opacity-90";
+       break;
     default:
       variantClasses = "bg-black text-white hover:bg-gray-800";
   }

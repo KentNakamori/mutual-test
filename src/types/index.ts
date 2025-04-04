@@ -1,22 +1,13 @@
-// types/index.ts
-
 // =======================
-// 共通ユーティリティ型
+// 1. 共通ユーティリティ型
 // =======================
 
-/**
- * ISO8601形式の文字列を表す型
- */
+/** ISO8601形式の文字列 */
 export type DateString = string;
-
-/**
- * Epochタイムスタンプ（ミリ秒）を表す型
- */
+/** Epochタイムスタンプ（ミリ秒） */
 export type Timestamp = number;
 
-/**
- * エンティティIDのエイリアス（各ドメイン毎に個別定義）
- */
+/** エンティティIDのエイリアス */
 export type UserId = string;
 export type CompanyId = string;
 export type QaId = string;
@@ -26,24 +17,24 @@ export type DraftId = string;
 export type FileId = string;
 
 // =======================
-// 1. ドメイン型
+// 2. ドメイン/ビジネスモデル型
 // =======================
 
 /**
- * ユーザー情報を表す型
- * 投資家、企業、ゲストなどのユーザーを共通管理
+ * ユーザー情報
  */
 export interface User {
   userId: UserId;
   userName: string;
   email: string;
-  role: 'investor' | 'company' | 'guest' | string; // 必要に応じて拡張可能
+  role: 'investor' | 'company' | 'guest' | string;
   createdAt: DateString;
   updatedAt: DateString;
 }
 
 /**
- * 企業情報を表す型
+ * 企業情報  
+ * ※ IR API では企業登録時に追加項目（securitiesCode, establishedDate, phone, ceo, businessDescription, capital, employeeCount, websiteUrl, contactEmail）を送信するため、オプショナルとして追加しています。
  */
 export interface Company {
   companyId: CompanyId;
@@ -52,47 +43,61 @@ export interface Company {
   logoUrl?: string;
   createdAt: DateString;
   updatedAt: DateString;
-  adminUserIds?: UserId[]; // 企業担当者のユーザーIDリスト
+  adminUserIds?: UserId[];
+  securitiesCode?: string;        // IR API: 企業証券コード
+  establishedDate?: string;       // IR API: 設立年月日
+  address?: string;               // 企業登録時に送信される所在地
+  phone?: string;                 // 電話番号
+  ceo?: string;                   // 代表者名
+  businessDescription?: string;   // 事業内容
+  capital?: string;               // 資本金
+  employeeCount?: number;         // 従業員数
+  websiteUrl?: string;            // WebサイトURL
+  contactEmail?: string;          // 問い合わせ用メールアドレス
 }
 
 /**
- * Q&A情報を表す型
+ * IR API に準拠する Q&A（企業が作成するQA）  
+ * ※ API レスポンスは qaId, title, question, answer, companyId, likeCount, tags, genre, fiscalPeriod, createdAt, updatedAt, isPublished となるため、
+ *     UI 用には内部で id として扱い、views は UI 用にオプショナル項目として追加しています。
  */
 export interface QA {
   qaId: QaId;
+  title: string;
   question: string;
   answer: string;
   companyId: CompanyId;
   likeCount: number;
+  tags: string[];
+  genre: string[];
+  fiscalPeriod: string;
   createdAt: DateString;
   updatedAt: DateString;
   isPublished: boolean;
+
 }
 
 /**
- * チャットメッセージを表す型
+ * チャットメッセージ  
+ * ※ IR API の投資家向けチャットは sender を 'user' または 'ai' とするため、プロパティ名を sender に変更しています。
  */
 export interface ChatMessage {
   messageId: string;
-  role: 'user' | 'ai' | 'system';
+  sender: 'user' | 'ai';
   text: string;
   timestamp: DateString;
 }
 
-/**
- * ドキュメント（PDF、Wordなど）のメタ情報
- */
+
 export interface Document {
   documentId: DocumentId;
   fileName: string;
-  fileType: string; // 例: "pdf", "docx"
+  fileType: string;
   uploadDate: DateString;
   companyId: CompanyId;
 }
 
-/**
- * チャット・メッセージの下書きを表す型
- */
+
 export interface Draft {
   draftId: DraftId;
   title: string;
@@ -102,9 +107,7 @@ export interface Draft {
   updatedAt: DateString;
 }
 
-/**
- * メール下書きの型
- */
+
 export interface MailDraft {
   recipientName: string;
   subject?: string;
@@ -112,9 +115,7 @@ export interface MailDraft {
   createdAt: DateString;
 }
 
-/**
- * Q&Aなどに添付するファイルのメタ情報
- */
+
 export interface FileReference {
   fileId: FileId;
   fileName: string;
@@ -123,20 +124,17 @@ export interface FileReference {
 }
 
 /**
- * 企業設定画面などで使用する詳細企業情報
+ * 企業基本情報（企業設定画面用）  
+ * ※ CompanyInfo は、Company とは別にUI向けの編集用データとして扱います。
  */
 export interface CompanyInfo {
   companyName: string;
   address: string;
   email: string;
   tel?: string;
-  // その他、管理用の細かい項目を必要に応じて追加
   [key: string]: any;
 }
 
-/**
- * 投資家側のチャット履歴メタ情報
- */
 export interface ChatLog {
   chatId: ChatId;
   companyName: string;
@@ -145,9 +143,6 @@ export interface ChatLog {
   isArchived: boolean;
 }
 
-/**
- * 投資家ユーザーのプロフィール情報
- */
 export interface ProfileData {
   userId: UserId;
   displayName: string;
@@ -156,9 +151,6 @@ export interface ProfileData {
   bio?: string;
 }
 
-/**
- * 投資家向け通知設定の型
- */
 export interface NotificationSetting {
   enabled: boolean;
   email?: string;
@@ -166,10 +158,8 @@ export interface NotificationSetting {
 }
 
 // =======================
-// 2. API用型
+// 3. API用型
 // =======================
-
-// 2.1 Auth系
 
 export interface LoginRequest {
   email: string;
@@ -181,7 +171,6 @@ export interface LoginResponse {
   role: 'investor' | 'company' | 'guest' | string;
   accessToken: string;
   refreshToken: string;
-  // その他必要に応じたプロパティ
 }
 
 export interface RefreshRequest {
@@ -191,7 +180,6 @@ export interface RefreshRequest {
 export interface RefreshResponse {
   newAccessToken: string;
   newRefreshToken: string;
-  // その他必要に応じたプロパティ
 }
 
 export interface LogoutRequest {
@@ -203,9 +191,7 @@ export interface LogoutResponse {
   message?: string;
 }
 
-export interface GuestLoginRequest {
-  // パラメータ不要の場合は空オブジェクトで定義
-}
+export interface GuestLoginRequest {}
 
 export interface GuestLoginResponse {
   userId: UserId;
@@ -214,20 +200,16 @@ export interface GuestLoginResponse {
   refreshToken?: string;
 }
 
-// 2.2 ユーザー管理系
-
 export interface GetUserResponse {
   userId: UserId;
   role: string;
   userName: string;
   email: string;
-  // その他、必要なフィールドを追加
 }
 
 export interface UpdateUserRequest {
   userName?: string;
   email?: string;
-  // 更新可能なその他のプロパティ
 }
 
 export interface UpdateUserResponse {
@@ -235,148 +217,109 @@ export interface UpdateUserResponse {
   updatedUser: User;
 }
 
-// 2.3 Q&A系
-
-/**
- * Q&A検索などで利用するフィルタ型を継承
- */
-export interface GetQAListRequest extends FilterType {
-  // 検索条件、ページング、ソート等を含む
-}
-
+/** Q&A 関連 API */
+export interface GetQAListRequest extends FilterType {}
 export interface GetQAListResponse {
   items: QA[];
   totalCount: number;
 }
-
 export interface CreateQARequest {
   question: string;
   answer: string;
   companyId: CompanyId;
-  // その他必要なプロパティ
 }
-
 export interface CreateQAResponse {
   success: boolean;
   newQa: QA;
 }
-
 export interface LikeQARequest {
   qaId: QaId;
 }
-
 export interface LikeQAResponse {
   success: boolean;
   likeCount: number;
 }
-
 export interface BookmarkQARequest {
   qaId: QaId;
 }
-
 export interface BookmarkQAResponse {
   success: boolean;
   bookmarked: boolean;
 }
 
-// 2.4 チャット系
-
+/** チャット系 API */
 export interface GetChatLogsResponse {
   logs: ChatLog[];
   totalCount: number;
 }
-
 export interface ChatRequest {
   message: string;
   context?: ChatMessage[];
-  // その他、必要なパラメータを追加
 }
-
 export interface ChatResponse {
   reply: string;
   chatId?: ChatId;
-  // その他、必要なプロパティを追加
 }
-
 export interface DeleteChatLogRequest {
   chatId: ChatId;
 }
-
 export interface DeleteChatLogResponse {
   success: boolean;
 }
-
 export interface ArchiveChatLogRequest {
   chatId: ChatId;
 }
-
 export interface ArchiveChatLogResponse {
   success: boolean;
 }
 
-// 2.5 ファイルアップロード（企業向け）
-
+/** ファイルアップロード（企業向け） */
 export interface UploadRequest {
-  file: File; // ブラウザの File オブジェクト
+  file: File;
   meta?: { [key: string]: string | number | boolean };
 }
-
 export interface UploadResponse {
   success: boolean;
   generatedQas?: QA[];
   fileIdList?: FileId[];
-  // その他必要なプロパティ
 }
 
-// 2.6 メール下書き系（企業向け）
-
+/** メール下書き（企業向け） */
 export interface MailDraftRequest {
   recipientName: string;
   subject?: string;
   chatContext?: ChatMessage[];
 }
-
 export interface MailDraftResponse {
   generatedText: string;
-  // その他必要なプロパティ
 }
 
-// 2.7 Profile / Settings系（投資家向け）
-
+/** 投資家向け Profile / Settings */
 export interface UpdateProfileRequest extends ProfileData {}
-
 export interface UpdateProfileResponse {
   success: boolean;
   updatedProfile: ProfileData;
 }
-
 export interface ChangePasswordRequest {
   currentPassword: string;
   newPassword: string;
 }
-
 export interface ChangePasswordResponse {
   success: boolean;
   message?: string;
 }
-
 export interface UpdateNotificationSettingRequest extends NotificationSetting {}
-
 export interface UpdateNotificationSettingResponse {
   success: boolean;
   updatedSetting: NotificationSetting;
 }
-
 export interface DeleteAccountRequest {
   password: string;
 }
-
 export interface DeleteAccountResponse {
   success: boolean;
   message?: string;
 }
-
-// 2.8 エラーレスポンス
 
 export interface ErrorResponse {
   errorCode: string;
@@ -384,9 +327,6 @@ export interface ErrorResponse {
   status?: number;
 }
 
-/**
- * 汎用APIレスポンスラッパー型
- */
 export interface ApiResult<T> {
   data?: T;
   error?: ErrorResponse;
@@ -394,23 +334,36 @@ export interface ApiResult<T> {
 }
 
 // =======================
-// 3. コンポーネント Props 型
+// 4. コンポーネント Props 型
 // =======================
 
-// 3.1 共通UIコンポーネント
+// 4.1 共通 UI コンポーネント
 
-export interface LayoutProps {
-  children: React.ReactNode;
-}
+export type NavigationLink = {
+  label: string;
+  href: string;
+};
 
 export interface HeaderProps {
-  isLoggedIn: boolean;
-  userName?: string;
-  // ユーザーメニューやログイン状態などのナビゲーション関連プロパティ
+  navigationLinks: NavigationLink[];
+  userStatus: {
+    isLoggedIn: boolean;
+    userName?: string;
+  };
+  onClickLogo: () => void;
 }
 
-export interface SidebarProps {
-  menuItems: { label: string; link: string }[];
+export interface MinimalFooterProps {
+  footerLinks?: { label: string; href: string }[];
+  copyrightText: string;
+  onSelectLink?: (href: string) => void;
+}
+
+export interface MinimalHeaderProps {
+  onClickLogo: () => void;
+  logoText?: string;
+  logoSrc?: string;
+  links?: { label: string; href: string }[];
 }
 
 export interface FooterProps {
@@ -418,10 +371,18 @@ export interface FooterProps {
 }
 
 export interface ButtonProps {
-  onClick?: () => void;
+  label: string;
+  onClick?: (e: React.MouseEvent<HTMLButtonElement>) => void;
   disabled?: boolean;
+  variant?: 'primary' | 'destructive' | 'outline' | 'link' | 'gradient';
+  type?: "button" | "submit" | "reset";
+}
+
+export interface CardProps {
+  title?: string;
   children: React.ReactNode;
-  variant?: 'primary' | 'destructive' | string;
+  onClick?: () => void;
+  className?: string;
 }
 
 export interface InputProps {
@@ -437,77 +398,235 @@ export interface DialogProps {
   isOpen: boolean;
   onClose: () => void;
   children: React.ReactNode;
+  title?: string;
+  className?: string;
 }
 
-// 3.2 企業向けページ コンポーネント Props
-
-export interface LoginCardProps {
-  // 企業ログイン画面用のカード（内部状態完結の場合はほぼ不要）
+export interface Option {
+  label: string;
+  value: string;
 }
 
-export interface LoginFormProps {
-  onLoginSuccess?: (user: User) => void;
-  onLoginError?: (error: Error) => void;
+export interface SelectProps {
+  options: Option[];
+  value: string;
+  onChange: (value: string) => void;
+  disabled?: boolean;
 }
 
-export interface PasswordResetLinkProps {
-  onReset?: () => void;
+export interface Column {
+  key: string;
+  label: string;
+  sortable?: boolean;
+}
+
+export interface Tab {
+  id: string;
+  label: string;
+  content: React.ReactNode;
+}
+
+export interface TabsProps {
+  tabs: Tab[];
+  activeTab?: string;
+  onChangeTab?: (tabId: string) => void;
+}
+
+export interface TextareaProps {
+  value: string;
+  onChange: (value: string) => void;
+  placeholder?: string;
+  disabled?: boolean;
+  errorState?: boolean;
+}
+
+
+// QACard 用のモード・ロール型（企業向けは "corporate"、投資家向けは "investor"）
+export type QACardMode = 'preview' | 'detail' | 'edit';
+export type QACardRole = 'investor' | 'corporate';
+
+// QACard コンポーネントの Props 型定義
+export interface QACardProps {
+  mode: QACardMode;
+  role: QACardRole;
+  qa: QA;
+  // プレビュー時の選択用
+  onSelect?: (qaId: string) => void;
+  // 投資家向け：いいねボタン用
+  onLike?: (qaId: string) => void;
+  // 企業向け：編集・削除ボタン用
+  onEdit?: (qaId: string) => void;
+  onDelete?: (qaId: string) => void;
+  // 編集状態でのキャンセル/保存コールバック
+  onCancelEdit?: () => void;
+  onSaveEdit?: (updatedQa: QA) => void;
+}
+
+// QaDetailModal コンポーネントの Props 型定義
+export interface QADetailModalProps {
+  qa: QA;
+  isOpen: boolean;
+  onClose: () => void;
+  role: QACardRole;
+  // モーダル内で利用する各アクションのコールバック（必要に応じて実装先で渡してください）
+  onLike?: (qaId: string) => void;
+  onEdit?: (qaId: string) => void;
+  onDelete?: (qaId: string) => void;
+  onCancelEdit?: () => void;
+  onSaveEdit?: (updatedQa: QA) => void;
+}
+
+export interface ConfirmDialogProps {
+  /** ダイアログが開いているか */
+  isOpen: boolean;
+  /** ダイアログのタイトル */
+  title: string;
+  /** ダイアログの説明テキスト */
+  description: string;
+  /** 確認ボタンのラベル（任意） */
+  confirmLabel?: string;
+  /** キャンセルボタンのラベル（任意） */
+  cancelLabel?: string;
+  /** 確認ボタン押下時のハンドラ */
+  onConfirm: () => void;
+  /** キャンセルボタン押下時のハンドラ */
+  onCancel: () => void;
+}
+
+export interface CheckboxProps {
+  /** チェック状態 */
+  checked: boolean;
+  /** チェック変更時のハンドラ */
+  onChange: (checked: boolean) => void;
+  /** チェックボックスのラベル */
+  label: string;
+  /** 無効状態 */
+  disabled?: boolean;
+}
+
+export interface ChatSession {
+  sessionId: string;
+  title: string;
+  lastMessageTimestamp: string;
+}
+
+export interface ChatHistoryProps {
+  sessions: ChatSession[];
+  selectedSessionId: string | null;
+  onSelectSession: (sessionId: string) => void;
+  onNewChat: () => void;
+}
+
+export interface ChatAreaProps {
+  messages: ChatMessage[];
+  onSendMessage: (text: string) => void;
+  chatTitle: string;  // 新規追加
+}
+export interface SidebarMenuItem {
+  label: string;
+  icon?: React.ReactNode;
+  link: string;
+}
+
+export interface SidebarProps {
+  menuItems: SidebarMenuItem[];
+  isCollapsible?: boolean;
+  selectedItem?: string;
+  onSelectMenuItem?: (link: string) => void;
+}
+
+
+// 4.2 企業向けページ コンポーネント Props
+
+export interface GraphDataItem {
+  date: string;
+  likeCount: number;
+  chatCount: number;
+}
+
+/**
+ * ダッシュボードデータ  
+ * stats: アクセス数、チャット質問数、公開Q&A数  
+ * graphData: 各期間ごとの推移  
+ * qas: 公開済み Q&A リスト（IR API では qaId, title, question, answer, companyId, likeCount, tags, genre, fiscalPeriod, createdAt, updatedAt, isPublished）
+ */
+export interface DashboardData {
+  stats: {
+    daily: Stat[];
+    weekly: Stat[];
+    monthly: Stat[];
+  };
+  graphData: {
+    daily: GraphDataItem[];
+    weekly: GraphDataItem[];
+    monthly: GraphDataItem[];
+  };
+  qas: {
+    published: QA[];
+  };
+}
+
+export interface Stat {
+  label: string;
+  value: number;
+  unit?: string;
+}
+
+/** IR API では、ダッシュボードフィルターの期間は 'daily' | 'weekly' | 'monthly' として送受信 */
+export type Period = "daily" | "weekly" | "monthly";
+
+export interface Filter {
+  period: Period;
+}
+
+/** ダッシュボード Q&A 一覧用 */
+export interface DashboardQnAListProps {
+  publishedQAs: QA[];
+  onSelectQA: (qaId: string) => void
 }
 
 export interface DashboardStatsProps {
-  statsData: { label: string; value: number; unit?: string }[];
+  statsData: Stat[];
 }
 
 export interface FilterBarProps {
-  initialFilter: FilterType;
-  onFilterChange: (newFilter: FilterType) => void;
+  initialFilter: Filter;
+  onFilterChange: (newFilter: Filter) => void;
 }
 
-export interface QaEditModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  onSave?: (data: QA) => void;
+export interface DashboardGraphsProps {
+  graphData: GraphDataItem[];
 }
 
-export interface UploadModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  onSave?: (data: UploadResponse) => void;
-}
-
-export interface IrChatPageProps {
-  // 必要なプロパティを定義
-}
-
-export interface DraftListProps {
-  drafts: Draft[];
-  onSelectDraft: (draftId: DraftId) => void;
-}
-
-export interface ChatWindowProps {
-  messages: ChatMessage[];
-  onSendMessage: (message: string) => void;
-}
-
-export interface SettingsTabsProps {
-  activeTab: string;
-  onTabChange: (tab: string) => void;
-}
-
+/** 企業基本情報編集フォーム用 */
 export interface CompanyInfoFormProps {
   initialData: CompanyInfo;
-  onSave: (data: CompanyInfo) => void;
+  onSaveSuccess: () => void;
 }
 
+/** アカウント設定フォーム */
 export interface AccountSettingsFormProps {
   initialProfile: ProfileData;
-  onSaveProfile: (updated: ProfileData) => Promise<void>;
+  onSaveProfile: (updatedProfile: ProfileData) => Promise<void>;
 }
 
-// 3.3 投資家向けページ コンポーネント Props
+export interface PasswordChangeFormProps {
+  onChangePassword: (data: ChangePasswordRequest) => Promise<void>;
+}
+
+export interface NotificationSettingFormProps {
+  initialSetting: NotificationSetting;
+  onSaveSetting: (setting: NotificationSetting) => Promise<void>;
+}
+
+export interface AccountDeleteFormProps {
+  onDeleteAccount: (data: DeleteAccountRequest) => Promise<void>;
+}
+
+// 4.3 投資家向けページ コンポーネント Props
 
 export interface InvestorLoginPageProps {
-  // 投資家向けログインページの必要なプロパティ
+  // 投資家向けログインページ用プロパティ（必要に応じて追加）
 }
 
 export interface GuestLoginButtonProps {
@@ -516,7 +635,7 @@ export interface GuestLoginButtonProps {
 }
 
 export interface LinkToSignupProps {
-  // サインアップへのリンクに必要なプロパティ
+  // サインアップリンク用プロパティ
 }
 
 export interface TopPageProps {
@@ -529,11 +648,12 @@ export interface CompanySearchBarProps {
 
 export interface CompanyListProps {
   companies: Company[];
+  onFollowToggle: (companyId: string, nextState: boolean) => void;
 }
 
 export interface CompanyCardProps {
   company: Company;
-  onFollowToggle?: (id: CompanyId, nextState: boolean) => void;
+  onFollowToggle: (companyId: string, nextState: boolean) => void;
 }
 
 export interface CompanyPageProps {
@@ -550,7 +670,7 @@ export interface QATabViewProps {
 }
 
 export interface QASearchPageProps {
-  // Q&A検索ページに必要なプロパティ
+  // Q&A検索ページ用プロパティ
 }
 
 export interface QASearchBarProps {
@@ -558,14 +678,23 @@ export interface QASearchBarProps {
 }
 
 export interface QAResultListProps {
+  /** 検索結果のQAリスト */
   qas: QA[];
+  /** QA項目クリック時のハンドラ（オプション） */
+  onItemClick?: (qa: QA) => void;
+  /** いいね操作ハンドラ（オプション） */
+  onLike?: (qaId: string) => void;
 }
 
-export interface QADetailModalProps {
+export interface QAResultItemProps {
+  /** 表示対象のQ&Aデータ */
   qa: QA;
-  isOpen: boolean;
-  onClose: () => void;
+  /** 項目クリック時のハンドラ */
+  onClickItem: () => void;
+  /** いいね操作ハンドラ */
+  onLike?: (qaId: string) => void;
 }
+
 
 export interface ChatLogsPageProps {
   logs: ChatLog[];
@@ -577,14 +706,14 @@ export interface ChatLogsSearchBarProps {
 
 export interface ChatLogsListProps {
   logs: ChatLog[];
-  onDeleteLog?: (chatId: ChatId) => void;
-  onArchiveLog?: (chatId: ChatId) => void;
+  onDeleteLog?: (chatId: string) => void;
+  onArchiveLog?: (chatId: string) => void;
 }
 
 export interface ChatLogItemProps {
   log: ChatLog;
-  onDelete?: (chatId: ChatId) => void;
-  onArchive?: (chatId: ChatId) => void;
+  onDelete?: (chatId: string) => void;
+  onArchive?: (chatId: string) => void;
 }
 
 export interface MyPageProps {
@@ -598,29 +727,86 @@ export interface MyPageTabMenuProps {
 
 export interface ProfileFormProps {
   initialProfile: ProfileData;
-  onSaveProfile: (updated: ProfileData) => Promise<void>;
+  onSaveProfile: (updatedProfile: ProfileData) => Promise<void>;
 }
 
-export interface PasswordChangeFormProps {
-  onChangePassword: (data: ChangePasswordRequest) => Promise<void>;
+export interface PasswordResetLinkProps {
+  href: string;
 }
 
-export interface NotificationSettingFormProps {
-  initialSetting: NotificationSetting;
-  onSaveSetting: (setting: NotificationSetting) => Promise<void>;
+export interface FileAttachmentSectionProps {
+  attachedFiles: FileReference[];
+  onAddFile: (file: File) => void;
+  onRemoveFile: (fileId: string) => void;
 }
 
-export interface AccountDeleteFormProps {
-  onDeleteAccount: (data: DeleteAccountRequest) => Promise<void>;
+export interface GeneratedQaListProps {
+  qaDrafts: QA[];
+  onUpdateDraft: (index: number, updatedQa: QA) => void;
+  onDeleteDraft: (index: number) => void;
 }
+
+export interface PaginationProps {
+  currentPage: number;
+  totalPages: number;
+  onChangePage: (page: number) => void;
+}
+
+export interface QaListCardsProps {
+  qaItems: QA[];
+  onSelect: (qaId: string) => void;
+  onEdit: (id: string) => void;
+  onDelete: (id: string) => void;
+}
+
+export interface QaListTableProps {
+  qaItems: QA[];
+  onEdit: (qaId: string) => void;
+  onDelete: (qaId: string) => void;
+}
+
+export interface QaTableRowProps {
+  qaItem: QA;
+  onEdit: (qaId: string) => void;
+  onDelete: (qaId: string) => void;
+}
+
+export interface SearchFormProps {
+  initialQuery?: string;
+  onSearch: (params: { query: string; filter?: string; sortOrder?: 'asc' | 'desc' }) => void;
+}
+
+export interface TopActionBarProps {
+  onSearch: (params: { query: string; theme?: string }) => void;
+  onUploadClick: () => void;
+}
+
+export interface UploadButtonProps {
+  onClick: () => void;
+}
+
+export interface UploadFormProps {
+  onUploadSuccess: (qas: any[]) => void;
+  onUploadError: (error: Error) => void;
+  materialType: string;
+  onMaterialTypeChange: (type: string) => void;
+}
+
+export interface UploadModalProps {
+  onClose: () => void;
+  onConfirm: (newQas: QA[]) => void;
+}
+
+export interface SettingsTabsProps {
+  companyInfo: CompanyInfo;
+  refetchCompanyInfo: () => void;
+}
+
 
 // =======================
-// 4. ユーティリティ型
+// 5. ユーティリティ型
 // =======================
 
-/**
- * 一覧系APIで利用するページング情報
- */
 export interface Pagination {
   page: number;
   limit: number;
@@ -628,9 +814,6 @@ export interface Pagination {
   totalPages: number;
 }
 
-/**
- * ソート・フィルタ情報
- */
 export interface FilterType {
   likeMin?: number;
   dateRange?: {
@@ -642,7 +825,10 @@ export interface FilterType {
   [key: string]: any;
 }
 
-/**
- * ソート順の型定義
- */
+// FilterControls 用の Props 型定義
+export interface FilterControlsProps {
+  filters: FilterType;
+  onChangeFilters: (newFilters: FilterType) => void;
+}
+
 export type SortOrder = 'asc' | 'desc';

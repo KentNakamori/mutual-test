@@ -1,31 +1,25 @@
-// src/components/features/corporate/irchat/IrChatPage.tsx
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import Sidebar from '../../../common/sidebar';
-import Footer from '../../../common/footer';
-import DraftList from './DraftList';
-import ChatWindow from './ChatWindow';
-import MailDraftModal from './MailDraftModal';
+import Sidebar from '@/components/common/sidebar';
+import Footer from '@/components/common/footer';
+import ChatArea, { ChatMessage } from '@/components/ui/ChatArea';
+import ChatHistory, { ChatSession } from '@/components/ui/ChatHistory';
+import MailDraftModal from '@/components/features/corporate/irchat/MailDraftModal'; // 追加：メールドラフトモーダルのインポート
+import Button from '@/components/ui/Button';
 
-// モックデータの型例（実際は types/index.ts 等に定義済み）
-interface Draft {
-  draftId: string;
-  title: string;
-  createdAt: string;
-}
-interface ChatMessage {
-  messageId: string;
-  role: 'user' | 'ai';
-  text: string;
-  timestamp: string;
-}
+const sidebarMenuItems = [
+  { label: 'ダッシュボード', link: '/corporate/dashboard' },
+  { label: 'Q&A管理', link: '/corporate/qa' },
+  { label: 'IRチャット', link: '/corporate/irchat' },
+  { label: '設定', link: '/corporate/settings' },
+];
 
-// モックデータ例
-const mockDrafts: Draft[] = [
-  { draftId: '1', title: '案件Aのドラフト', createdAt: '2025-03-01T10:00:00Z' },
-  { draftId: '2', title: '案件Bのドラフト', createdAt: '2025-03-02T12:30:00Z' },
-  { draftId: '3', title: '案件Cのドラフト', createdAt: '2025-03-03T09:15:00Z' },
+// モックデータ（例）
+const mockSessions: ChatSession[] = [
+  { sessionId: 's1', title: '案件A', lastMessageTimestamp: '2025-03-01T10:00:00Z' },
+  { sessionId: 's2', title: '案件B', lastMessageTimestamp: '2025-03-02T12:30:00Z' },
+  { sessionId: 's3', title: '案件C', lastMessageTimestamp: '2025-03-03T09:15:00Z' },
 ];
 
 const mockMessages: ChatMessage[] = [
@@ -33,38 +27,40 @@ const mockMessages: ChatMessage[] = [
   { messageId: 'm2', role: 'ai', text: '本日のミーティングは11時からです。', timestamp: '2025-03-03T10:00:05Z' },
 ];
 
-const sidebarMenuItems = [
-  { label: 'dashboard', link: '/corporate/dashboard' },
-  { label: 'Q&A管理', link: '/corporate/qa' },
-  { label: 'チャット', link: '/corporate/irchat' },
-  { label: '設定', link: '/corporate/settings' },
-];
-
 export default function IrChatPage() {
-  // ページ全体のローカルステート
-  const [drafts, setDrafts] = useState<Draft[]>([]);
-  const [selectedDraftId, setSelectedDraftId] = useState<string | null>(null);
+  const [sessions, setSessions] = useState<ChatSession[]>([]);
+  const [selectedSessionId, setSelectedSessionId] = useState<string | null>(null);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
-  const [isMailDraftOpen, setIsMailDraftOpen] = useState(false);
+  const [isMailDraftOpen, setIsMailDraftOpen] = useState(false); // 追加：メールドラフトモーダルの表示状態
 
-  // 初回ロード時にモックデータをセット
   useEffect(() => {
-    setDrafts(mockDrafts);
+    // 初回ロード時にモックデータをセット
+    setSessions(mockSessions);
+    setSelectedSessionId(mockSessions[0]?.sessionId || null);
     setMessages(mockMessages);
-    setSelectedDraftId(mockDrafts[0]?.draftId || null);
   }, []);
 
-  // ドラフト選択時のハンドラ
-  const handleSelectDraft = (draftId: string) => {
-    setSelectedDraftId(draftId);
-    // 実際はドラフトIDに応じたチャット履歴を取得するAPIコールを実行
-    // ここではモックデータをそのまま利用
+  // チャット履歴のセッション選択ハンドラ
+  const handleSelectSession = (sessionId: string) => {
+    setSelectedSessionId(sessionId);
+    // 実際は選択されたセッションのチャット履歴をAPIから取得する処理が必要
   };
 
-  // チャット送信時のハンドラ
+  // 新規チャット追加ハンドラ
+  const handleNewChat = () => {
+    const newSession: ChatSession = {
+      sessionId: `s${Date.now()}`,
+      title: '新規チャット',
+      lastMessageTimestamp: new Date().toISOString(),
+    };
+    setSessions((prev) => [newSession, ...prev]);
+    setSelectedSessionId(newSession.sessionId);
+    setMessages([]); // 新規チャットの場合、メッセージは空にする
+  };
+
+  // チャット送信ハンドラ
   const handleSendMessage = (text: string) => {
     if (!text.trim()) return;
-    // ユーザー送信の新規メッセージを追加
     const newMessage: ChatMessage = {
       messageId: `m${Date.now()}`,
       role: 'user',
@@ -72,57 +68,71 @@ export default function IrChatPage() {
       timestamp: new Date().toISOString(),
     };
     setMessages((prev) => [...prev, newMessage]);
-
-    // AI応答のモック（実際はAPI呼び出し）
+    // AI応答のシミュレーション
     setTimeout(() => {
       const aiMessage: ChatMessage = {
         messageId: `m${Date.now() + 1}`,
         role: 'ai',
-        text: 'こちらが自動生成された回答です。',
+        text: 'こちらは自動生成された回答です。',
         timestamp: new Date().toISOString(),
       };
       setMessages((prev) => [...prev, aiMessage]);
     }, 1000);
   };
 
-  // QA登録ボタン押下時のハンドラ
-  const handleRegisterQA = () => {
-    // QA登録処理を実装（API呼び出しなど）
-    alert('QA登録処理を実行します。');
-  };
+  // 現在選択中のセッションを取得
+  const selectedSession = sessions.find((session) => session.sessionId === selectedSessionId);
+  const sessionTitle = selectedSession ? selectedSession.title : "チャット";
 
   // メールドラフトモーダルの開閉ハンドラ
   const handleOpenMailDraftModal = () => setIsMailDraftOpen(true);
   const handleCloseMailDraftModal = () => setIsMailDraftOpen(false);
 
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="min-h-screen flex flex-col overflow-hidden">
       <div className="flex flex-1">
-        {/* 共通Sidebar */}
-        <Sidebar menuItems={sidebarMenuItems} isCollapsible={true} selectedItem="/corporate/irchat" onSelectMenuItem={(link) => window.location.assign(link)} />
-        {/* MainContent */}
-        <main className="flex-1 p-4 bg-gray-50">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {/* 左カラム：DraftList */}
-            <div className="md:col-span-1">
-              <DraftList drafts={drafts} selectedDraftId={selectedDraftId} onSelectDraft={handleSelectDraft} />
+        <Sidebar
+          menuItems={sidebarMenuItems}
+          isCollapsible
+          selectedItem="/corporate/irchat"
+          onSelectMenuItem={(link) => window.location.assign(link)}
+        />
+        <main className="flex-1 bg-gray-50 flex">
+          {/* 左側：上部1/3にメールドラフト作成ボタン、下部2/3にチャット履歴 */}
+          <div className="w-1/3 h-full border-r flex flex-col">
+            <div className="h-1/3 flex items-center justify-center p-4">
+              <Button label="メールドラフト作成" onClick={handleOpenMailDraftModal} variant="destructive" />
             </div>
-            {/* 右カラム：ChatWindow */}
-            <div className="md:col-span-2">
-              <ChatWindow
-                messages={messages}
-                onSendMessage={handleSendMessage}
-                onRegisterQA={handleRegisterQA}
-                onCreateMailDraft={handleOpenMailDraftModal}
+            <div className="h-2/3">
+              <ChatHistory
+                sessions={sessions}
+                selectedSessionId={selectedSessionId}
+                onSelectSession={handleSelectSession}
+                onNewChat={handleNewChat}
               />
             </div>
           </div>
+          {/* 右側：チャットエリア（全体の2/3） */}
+          <div className="w-2/3 h-full">
+            <ChatArea
+              messages={messages}
+              onSendMessage={handleSendMessage}
+              chatTitle={sessionTitle}  // 追加：表題を渡す
+            />
+          </div>
         </main>
       </div>
-      {/* 共通Footer */}
-      <Footer footerLinks={[{ label: '利用規約', href: '/terms' }, { label: '問い合わせ', href: '/contact' }]} copyrightText="MyCompany Inc." />
-      {/* メールドラフトモーダル */}
+      <Footer
+        footerLinks={[
+          { label: '利用規約', href: '/terms' },
+          { label: '問い合わせ', href: '/contact' },
+        ]}
+        copyrightText="MyCompany Inc."
+        onSelectLink={(href) => window.location.assign(href)}
+      />
+       {isMailDraftOpen && (
       <MailDraftModal isOpen={isMailDraftOpen} onClose={handleCloseMailDraftModal} />
+    )}
     </div>
   );
 }

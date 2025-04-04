@@ -1,46 +1,48 @@
-// src/components/features/corporate/dashboard/DashboardGraphs.tsx
 import React from "react";
+import {
+  ResponsiveContainer,
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+} from "recharts";
 
-interface GraphDataItem {
-  date: string;
-  access: number;
-  chatCount: number;
-}
-
-interface DashboardGraphsProps {
-  graphData: GraphDataItem[];
-}
+// 型定義ファイルから GraphDataItem および DashboardGraphsProps をインポート
+import { GraphDataItem, DashboardGraphsProps } from "@/types";
 
 /**
  * DashboardGraphs コンポーネント
- * 時系列データのグラフを表示します。ここでは簡易的にテーブル表示を実装していますが、
- * 実際のグラフライブラリ（Chart.js, Recharts など）と組み合わせてもよいです。
+ * モックデータを利用して、いいね数とチャット質問数の推移を折れ線グラフで表示します。
  */
 const DashboardGraphs: React.FC<DashboardGraphsProps> = ({ graphData }) => {
   return (
     <div className="bg-white p-4 rounded shadow-md mb-6">
-      <h3 className="text-xl font-semibold mb-4">アクセス・チャット質問数推移</h3>
-      <div className="overflow-x-auto">
-        <table className="min-w-full">
-          <thead>
-            <tr>
-              <th className="px-2 py-1 border-b">日付</th>
-              <th className="px-2 py-1 border-b">アクセス数</th>
-              <th className="px-2 py-1 border-b">チャット質問数</th>
-            </tr>
-          </thead>
-          <tbody>
-            {graphData.map((item, index) => (
-              <tr key={index}>
-                <td className="px-2 py-1 border-b">{item.date}</td>
-                <td className="px-2 py-1 border-b">{item.access}</td>
-                <td className="px-2 py-1 border-b">{item.chatCount}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-      <p className="text-sm text-gray-500 mt-2">※ グラフは実装例としてテーブル表示しています。</p>
+      <h3 className="text-xl font-semibold mb-4">いいね数・チャット質問数推移</h3>
+      <ResponsiveContainer width="100%" height={300}>
+        <LineChart data={graphData}>
+          <CartesianGrid strokeDasharray="3 3" />
+          <XAxis dataKey="date" />
+          <YAxis />
+          <Tooltip />
+          <Legend />
+          <Line
+            type="monotone"
+            dataKey="likeCount"
+            name="いいね数"
+            stroke="#8884d8"
+            activeDot={{ r: 8 }}
+          />
+          <Line
+            type="monotone"
+            dataKey="chatCount"
+            name="チャット質問数"
+            stroke="#82ca9d"
+          />
+        </LineChart>
+      </ResponsiveContainer>
     </div>
   );
 };

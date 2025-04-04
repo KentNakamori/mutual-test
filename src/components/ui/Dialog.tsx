@@ -1,16 +1,8 @@
 // components/ui/Dialog.tsx
 import React from 'react';
+import{ DialogProps} from '@/types';
 
-export interface DialogProps {
-  /** ダイアログが開いているか */
-  isOpen: boolean;
-  /** ダイアログを閉じるためのハンドラ */
-  onClose: () => void;
-  /** ダイアログのタイトル（任意） */
-  title?: string;
-  /** ダイアログ内に表示するコンテンツ */
-  children: React.ReactNode;
-}
+
 
 /**
  * Dialog コンポーネント

@@ -4,12 +4,8 @@ import Dialog from '../../../ui/Dialog';
 import Button from '../../../ui/Button';
 import Input from '../../../ui/Input';
 import Textarea from '../../../ui/Textarea';
+import { MailDraftModalProps } from "@/types"; 
 
-interface MailDraftModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  // onDraftGenerateなどのAPI連携も必要であれば追加可能
-}
 
 /**
  * MailDraftModal コンポーネント
@@ -52,9 +48,7 @@ const MailDraftModal: React.FC<MailDraftModalProps> = ({ isOpen, onClose }) => {
           </div>
         )}
       </div>
-      <div className="mt-4 flex justify-end">
-        <Button label="閉じる" onClick={onClose} />
-      </div>
+      
     </Dialog>
   );
 };

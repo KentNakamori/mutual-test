@@ -1,13 +1,9 @@
 //src\components\features\investor\chat\ChatLogsList.tsx
 import React from 'react';
-import { ChatLog } from '@/types';
+import { ChatLog, ChatLogsListProps} from '@/types';
 import ChatLogItem from './ChatLogItem';
 
-export interface ChatLogsListProps {
-  logs: ChatLog[];
-  onDeleteLog: (chatId: string) => void;
-  onArchiveLog: (chatId: string) => void;
-}
+
 
 /**
  * ChatLogsList コンポーネント

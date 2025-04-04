@@ -1,11 +1,9 @@
 //src\components\features\investor\company\TabSwitcher.tsx
 
 import React from 'react';
+import { TabSwitcherProps } from '../../../../types';
 
-interface TabSwitcherProps {
-  activeTab: "chat" | "qa";
-  onChangeTab: (tab: "chat" | "qa") => void;
-}
+
 
 /**
  * TabSwitcher コンポーネント

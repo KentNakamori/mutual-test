@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 
 // 共通コンポーネントのインポート
 import Sidebar from "@/components/common/sidebar";
-import Footer from "@/components/common/Footer";
+import Footer from "@/components/common/footer";
 
 
 // ページ固有コンポーネントのインポート
@@ -29,7 +29,7 @@ const SettingsPage: React.FC = () => {
         {/* サイドバー（Dashboardと全く同じ実装） */}
         <Sidebar
           menuItems={[
-            { label: "Dashboard", link: "/corporate/dashboard" },
+            { label: "ダッシュボード", link: "/corporate/dashboard" },
             { label: "Q&A管理", link: "/corporate/qa" },
             { label: "IRチャット", link: "/corporate/irchat" },
             { label: "設定", link: "/corporate/settings" },

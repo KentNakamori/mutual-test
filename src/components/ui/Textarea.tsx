@@ -1,18 +1,8 @@
 // components/ui/Textarea.tsx
 import React from 'react';
+import{ TextareaProps } from '@/types';
 
-export interface TextareaProps {
-  /** 入力値 */
-  value: string;
-  /** 入力値変更時のハンドラ */
-  onChange: (value: string) => void;
-  /** プレースホルダー */
-  placeholder?: string;
-  /** 無効状態 */
-  disabled?: boolean;
-  /** エラー状態 */
-  errorState?: boolean;
-}
+
 
 /**
  * Textarea コンポーネント

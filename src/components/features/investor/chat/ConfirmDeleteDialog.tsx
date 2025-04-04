@@ -1,14 +1,8 @@
 //src\components\features\investor\chat\ConfirmDeleteDialog.tsx
 import React from 'react';
 import ConfirmDialog from '@/components/ui/ConfirmDialog';
+import { ConfirmDeleteDialogProps} from '@/types';
 
-export interface ConfirmDeleteDialogProps {
-  isOpen: boolean;
-  onConfirm: () => void;
-  onCancel: () => void;
-  title?: string;
-  description?: string;
-}
 
 /**
  * ConfirmDeleteDialog コンポーネント

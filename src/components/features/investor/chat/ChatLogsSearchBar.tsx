@@ -1,13 +1,10 @@
 //src\components\features\investor\chat\ChatLogsSearchBar.tsx
 import React, { useState, FormEvent } from 'react';
-import { FilterType } from '@/types';
+import { FilterType, ChatLogsSearchBarProps} from '@/types';
 import Input from '@/components/ui/Input';
 import Button from '@/components/ui/Button';
 
-export interface ChatLogsSearchBarProps {
-  onSearch: (keyword: string, filter: FilterType) => void;
-  initialKeyword?: string;
-}
+
 
 /**
  * ChatLogsSearchBar コンポーネント
