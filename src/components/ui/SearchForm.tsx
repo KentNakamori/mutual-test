@@ -1,4 +1,5 @@
-// src/components/features/corporate/qa/SearchForm.tsx
+
+// src/components/ui/SearchForm.tsx
 import React, { useState } from 'react';
 import Button from '@/components/ui/Button';
 import Input from '@/components/ui/Input';

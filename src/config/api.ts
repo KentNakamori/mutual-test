@@ -40,4 +40,8 @@ export const ENDPOINTS = {
   investorQa: "/investor/qa", // POST /:qaId/like, POST /:qaId/bookmark
   investorChatLogs: "/investor/chat/logs", // GET 一覧, DELETE /:chatId, PATCH /:chatId/archive
   investorUser: "/investor/users/me", // GET, PATCH, PATCH /password, PATCH /notification, DELETE
+
+  //管理者
+  adminCompanyRegister: "/api/admin/company/admin/company/register",
+  adminCorporateRegister: "/api/admin/corporate/admin/corporate/register",
 };

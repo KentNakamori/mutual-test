@@ -12,7 +12,7 @@ const DraftActionBar: React.FC<DraftActionBarProps> = ({ onRegisterQA, onCreateM
   return (
     <div className="flex justify-end space-x-2 mt-4">
       <Button label="QA登録" variant="primary" onClick={onRegisterQA} />
-      <Button label="メールドラフト作成" variant="destructive" onClick={onCreateMailDraft} />
+      <Button label="メールドラフト作成" variant="gradient" onClick={onCreateMailDraft} />
     </div>
   );
 };

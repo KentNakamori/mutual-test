@@ -1,4 +1,4 @@
-//src\app\investor\company\[companyId]\page.tsx
+// src/app/investor/company/[companyId]/page.tsx
 "use client";
 
 import React, { useEffect, useState } from 'react';
@@ -9,26 +9,24 @@ import CompanyHeader from '@/components/features/investor/company/CompanyHeader'
 import TabSwitcher from '@/components/features/investor/company/TabSwitcher';
 import ChatTabView from '@/components/features/investor/company/ChatTabView';
 import QATabView from '@/components/features/investor/company/QATabView';
+import{ Company} from '@/types';
 
-interface Company {
-  companyId: string;
-  companyName: string;
-  industry: string;
-  logoUrl?: string;
-}
 
 const mockCompanyData: Company = {
   companyId: "1",
   companyName: "Mock Company Inc.",
   industry: "Technology",
   logoUrl: "/company-logo.png",
+  securitiesCode: "1234",
+  majorStockExchange: "Tokyo Stock Exchange",
+  websiteUrl: "https://www.mockcompany.com",
 };
 
 // サイドバーのメニュー項目
 const menuItems = [
   { label: 'トップページ', link: '/investor/companies' },
   { label: "フォロー済み企業", link: "/investor/companies/followed" },
-  { label: 'Q&A', link: '/investor/qa' },
+  { label: 'Q&A検索', link: '/investor/qa' },
   { label: 'チャットログ', link: '/investor/chat-logs' },
   { label: 'マイページ', link: '/investor/mypage' },
 ];
@@ -59,12 +57,12 @@ const CompanyPage: React.FC = () => {
 
   return (
     <div className="min-h-screen flex flex-col">
-      {/* ヘッダー削除 → サイドバーに置き換え */}
+      {/* ヘッダーはサイドバーに置き換え */}
       <div className="flex flex-1">
         <Sidebar
           isCollapsible
           menuItems={menuItems}
-          selectedItem="" // このページは企業詳細なので特定のメニューをハイライトしない
+          selectedItem="" // 企業詳細ページなので特定メニューのハイライトは不要
           onSelectMenuItem={(link) => (window.location.href = link)}
         />
         <main className="flex-1 container mx-auto p-4">

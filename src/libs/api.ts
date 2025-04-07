@@ -290,3 +290,30 @@ export async function updateInvestorNotification(token: string, requestData: Upd
 export async function deleteInvestorAccount(token: string, requestData: DeleteAccountRequest): Promise<DeleteAccountResponse> {
   return apiFetch<DeleteAccountResponse>(ENDPOINTS.investorUser, "DELETE", requestData, token);
 }
+
+// 管理者用 企業アカウント登録 API
+export async function adminRegisterCompany(
+  requestData: Omit<Company, "companyId" | "createdAt" | "updatedAt" | "adminUserIds">
+): Promise<{ companyId: string; message: string }> {
+  return apiFetch<{ companyId: string; message: string }>(
+    ENDPOINTS.adminCompanyRegister,
+    "POST",
+    requestData
+  );
+}
+
+// 管理者用 企業ユーザー（チームメンバー）登録 API
+export async function adminRegisterCorporateUser(
+  requestData: {
+    email: string;
+    password: string;
+    company_id: string;
+    is_admin: boolean;
+  }
+): Promise<{ userId: string; company_id: string; message: string }> {
+  return apiFetch<{ userId: string; company_id: string; message: string }>(
+    ENDPOINTS.adminCorporateRegister,
+    "POST",
+    requestData
+  );
+}

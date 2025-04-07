@@ -1,4 +1,3 @@
-//src\app\investor\mypage\page.tsx
 "use client";
 
 import React, { useState } from "react";
@@ -14,6 +13,9 @@ const MOCK_PROFILE: ProfileData = {
   displayName: "Mock User",
   email: "mock@example.com",
   investorType: "individual",
+  // 新規追加：投資経験・資産運用規模（必要に応じて適宜設定してください）
+  investmentExperience: "5年",
+  assetManagementScale: "1000万円未満",
   bio: "This is a mock profile for testing purposes.",
 };
 
@@ -21,19 +23,21 @@ const MOCK_PROFILE: ProfileData = {
 const menuItems = [
   { label: 'トップページ', link: '/investor/companies' },
   { label: "フォロー済み企業", link: "/investor/companies/followed" },
-  { label: 'Q&A', link: '/investor/qa' },
+  { label: 'Q&A検索', link: '/investor/qa' },
   { label: 'チャットログ', link: '/investor/chat-logs' },
   { label: 'マイページ', link: '/investor/mypage' },
 ];
 
 const MyPage = () => {
   const { userProfile, isLoading, error, refetch } = useUserProfile();
+  // APIに合わせた最新のプロフィール情報（MOCK_PROFILE も新しいフィールドを含む）
   const profile: ProfileData = userProfile || MOCK_PROFILE;
 
   const [activeTab, setActiveTab] = useState<"profile" | "password" | "notification" | "delete">("profile");
 
   const handleSaveProfile = async (updatedProfile: ProfileData) => {
     console.log("Saving profile", updatedProfile);
+    // 実際は PATCH /api/investor/investor/users/me などで更新する
     await refetch();
   };
 

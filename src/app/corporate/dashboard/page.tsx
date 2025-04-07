@@ -15,6 +15,8 @@ import DashboardGraphs from "@/components/features/corporate/dashboard/Dashboard
 import DashboardQnAList from "@/components/features/corporate/dashboard/DashboardQnAList";
 
 import { GraphDataItem, DashboardData, Filter, Period  } from "@/types"
+import { FaTachometerAlt, FaQuestionCircle, FaComments, FaUserCircle } from 'react-icons/fa';
+
 
 
 // 新しいAPI出力に合わせたモックデータ
@@ -153,10 +155,10 @@ const DashboardPage: React.FC = () => {
       <div className="flex flex-1">
         <Sidebar
           menuItems={[
-            { label: "ダッシュボード", link: "/corporate/dashboard" },
-            { label: "Q&A管理", link: "/corporate/qa" },
-            { label: "IRチャット", link: "/corporate/irchat" },
-            { label: "設定", link: "/corporate/settings" },
+            { label: "ダッシュボード", link: "/corporate/dashboard", icon: <FaTachometerAlt size={20} />},
+            { label: "Q&A管理", link: "/corporate/qa", icon: <FaQuestionCircle size={20} /> },
+            { label: "IRチャット", link: "/corporate/irchat" , icon: <FaComments size={20} />},
+            { label: "設定", link: "/corporate/settings", icon: <FaUserCircle size={20} />  },
           ]}
           isCollapsible
           selectedItem="/corporate/dashboard"

@@ -1,12 +1,11 @@
 // components/ui/QACard.tsx
 import React, { useState } from 'react';
-import { QA, QACardProps,  } from '@/types';
+import { QA, QACardProps } from '@/types';
 import Card from '@/components/ui/Card';
 
 // QACard 用のモード・ロール型（企業向けは "corporate"、投資家向けは "investor"）
 export type QACardMode = 'preview' | 'detail' | 'edit';
 export type QACardRole = 'investor' | 'corporate';
-
 
 const QACard: React.FC<QACardProps> = ({
   mode,
@@ -28,12 +27,22 @@ const QACard: React.FC<QACardProps> = ({
           {qa.answer.substring(0, 100)}
           {qa.answer.length > 100 ? '…' : ''}
         </p>
-        <div className="text-xs text-gray-500 mt-2">
-          <div>決算年度: {qa.fiscalPeriod}</div>
-          {qa.tags && qa.tags.length > 0 && <div>タグ: {qa.tags.join(', ')}</div>}
-          {qa.genre && qa.genre.length > 0 && <div>ジャンル: {qa.genre.join(', ')}</div>}
-          <div>公開日: {qa.createdAt}</div>
-          <div>いいね: {qa.likeCount}</div>
+        <div className="mt-2 text-xs text-gray-500">
+          {/* 1行目 */}
+          <div className="flex space-x-4">
+            <span>決算年度: {qa.fiscalPeriod}</span>
+            <span>公開日: {qa.createdAt}</span>
+            <span>いいね: {qa.likeCount}</span>
+          </div>
+          {/* 2行目 */}
+          <div className="flex space-x-4 mt-1">
+            {qa.tags && qa.tags.length > 0 && (
+              <span>タグ: {qa.tags.join(', ')}</span>
+            )}
+            {qa.genre && qa.genre.length > 0 && (
+              <span>ジャンル: {qa.genre.join(', ')}</span>
+            )}
+          </div>
         </div>
       </Card>
     );

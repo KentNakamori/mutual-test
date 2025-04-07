@@ -5,7 +5,7 @@ import { QA, QaListCardsProps } from "@/types";
 
 const itemsPerPage = 10;
 
-const QaListCards: React.FC<QaListCardsProps> = ({ qaItems,  onSelect, onEdit, onDelete }) => {
+const QaListCards: React.FC<QaListCardsProps> = ({ qaItems, onSelect, onEdit, onDelete }) => {
   const [currentPage, setCurrentPage] = useState<number>(1);
   const totalPages = Math.ceil(qaItems.length / itemsPerPage);
 
@@ -17,12 +17,13 @@ const QaListCards: React.FC<QaListCardsProps> = ({ qaItems,  onSelect, onEdit, o
 
   return (
     <div>
-      <div className="grid grid-cols-1 gap-4">
+      {/* ここで 2列表示にする */}
+      <div className="grid grid-cols-2 gap-4">
         {currentItems.map((qa) => (
           <QACard
             key={qa.qaId}
             mode="preview"
-            role="corporate"  // 企業向け管理画面として扱うため
+            role="corporate"
             qa={qa}
             onSelect={() => onSelect(qa.qaId)}
             onEdit={() => onEdit(qa.qaId)}

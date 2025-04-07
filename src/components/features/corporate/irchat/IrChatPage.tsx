@@ -101,7 +101,7 @@ export default function IrChatPage() {
           {/* 左側：上部1/3にメールドラフト作成ボタン、下部2/3にチャット履歴 */}
           <div className="w-1/3 h-full border-r flex flex-col">
             <div className="h-1/3 flex items-center justify-center p-4">
-              <Button label="メールドラフト作成" onClick={handleOpenMailDraftModal} variant="destructive" />
+              <Button label="メールドラフト作成" onClick={handleOpenMailDraftModal} variant="gradient" />
             </div>
             <div className="h-2/3">
               <ChatHistory
