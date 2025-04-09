@@ -2,26 +2,31 @@
 import React, { useState } from 'react';
 import Card from '../../../ui/Card';
 import Button from '../../../ui/Button';
-import { Company, CompanyCardProps} from '../../../../types';
-
-
+import { Company, CompanyCardProps } from '../../../../types';
 
 /**
  * CompanyCard コンポーネント
  * ── 単一企業の情報（ロゴ、社名、業種）をカード形式で表示し、
- *     フォローボタンでフォロー状態を切り替えます。
+ *     フォローボタンでフォロー状態を切り替え、カードクリックで企業ページに遷移します。
  */
-const CompanyCard: React.FC<CompanyCardProps> = ({ company, onFollowToggle }) => {
+const CompanyCard: React.FC<CompanyCardProps> = ({ company, onFollowToggle, onCardClick }) => {
   const [isFollowed, setIsFollowed] = useState<boolean>(false);
 
-  const handleFollowClick = () => {
+  const handleFollowClick = (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.stopPropagation(); // カードクリックイベントを防止
     const nextState = !isFollowed;
     setIsFollowed(nextState);
     onFollowToggle(company.companyId, nextState);
   };
 
+  const handleCardClick = () => {
+    if (onCardClick) {
+      onCardClick(company.companyId);
+    }
+  };
+
   return (
-    <Card className="hover:shadow-lg">
+    <Card className="hover:shadow-lg cursor-pointer" onClick={handleCardClick}>
       <div className="flex flex-col items-center">
         {company.logoUrl ? (
           <img

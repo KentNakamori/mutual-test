@@ -1,12 +1,26 @@
-//src\components\features\investor\mypage\ProfileForm.tsx
+// src/components/features/investor/mypage/ProfileForm.tsx
 "use client";
 
 import React, { useState } from "react";
 import { ProfileData } from "@/types";
-import Input from "../../../../components/ui/Input";
-import Button from "../../../../components/ui/Button";
-import { ProfileFormProps} from "../../../../types";
+import Input from "@/components/ui/Input";
+import Button from "@/components/ui/Button";
+import Select from "@/components/ui/Select";
+import { ProfileFormProps } from "@/types";
 
+const investorTypeOptions = [
+  { label: '機関投資家', value: '機関投資家' },
+  { label: '個人投資家', value: '個人投資家' },
+  { label: 'アナリスト', value: 'アナリスト' },
+  { label: 'その他', value: 'その他' },
+];
+
+const assetManagementScaleOptions = [
+  { label: '500万円未満', value: '500万円未満' },
+  { label: '500万～1000万円', value: '500万～1000万円' },
+  { label: '1000万～3000万', value: '1000万～3000万' },
+  { label: '3000万円以上', value: '3000万円以上' },
+];
 
 const ProfileForm: React.FC<ProfileFormProps> = ({
   initialProfile,
@@ -49,6 +63,30 @@ const ProfileForm: React.FC<ProfileFormProps> = ({
           onChange={(value) => handleChange("email", value)}
           placeholder="メールアドレス"
           type="email"
+        />
+      </div>
+      <div>
+        <label className="block mb-1">投資家種別</label>
+        <Select
+          options={investorTypeOptions}
+          value={formData.investorType || ""}
+          onChange={(value) => handleChange("investorType", value)}
+        />
+      </div>
+      <div>
+        <label className="block mb-1">資産運用規模</label>
+        <Select
+          options={assetManagementScaleOptions}
+          value={formData.assetManagementScale || ""}
+          onChange={(value) => handleChange("assetManagementScale", value)}
+        />
+      </div>
+      <div>
+        <label className="block mb-1">自己紹介</label>
+        <Input
+          value={formData.bio || ""}
+          onChange={(value) => handleChange("bio", value)}
+          placeholder="自己紹介"
         />
       </div>
       <div>

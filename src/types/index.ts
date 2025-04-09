@@ -143,13 +143,20 @@ export interface ChatLog {
   isArchived: boolean;
 }
 
+export type InvestorType = '機関投資家' | '個人投資家' | 'アナリスト' | 'その他';
+export type AssetManagementScale = '500万円未満' | '500万～1000万円' | '1000万～3000万' | '3000万円以上';
+
 export interface ProfileData {
   userId: UserId;
   displayName: string;
   email: string;
-  investorType?: 'individual' | 'institution' | string;
+  investorType?: InvestorType;
   bio?: string;
+  investmentExperience?: string;
+  assetManagementScale?: AssetManagementScale;
 }
+
+
 
 export interface NotificationSetting {
   enabled: boolean;
@@ -654,10 +661,24 @@ export interface CompanyListProps {
 export interface CompanyCardProps {
   company: Company;
   onFollowToggle: (companyId: string, nextState: boolean) => void;
+  onCardClick?: (companyId: string) => void;
 }
 
 export interface CompanyPageProps {
   company: Company;
+}
+
+export interface CompanyHeaderProps {
+  company: Company;
+}
+
+export interface CompanySearchQuery {
+  keyword: string;
+  industry?: string;
+}
+export interface CompanySearchBarProps {
+  initialQuery: CompanySearchQuery;
+  onSearchChange: (query: CompanySearchQuery & { filter?: string; sortOrder?: 'asc' | 'desc' }) => void;
 }
 
 export interface ChatTabViewProps {
@@ -689,10 +710,12 @@ export interface QAResultListProps {
 export interface QAResultItemProps {
   /** 表示対象のQ&Aデータ */
   qa: QA;
-  /** 項目クリック時のハンドラ */
-  onClickItem: () => void;
+  /** 項目クリック時のハンドラ（QAオブジェクトと qaId を受け取る） */
+  onClickItem?: (qa: QA, qaId: string) => void;
   /** いいね操作ハンドラ */
   onLike?: (qaId: string) => void;
+}
+
 }
 
 
@@ -829,6 +852,14 @@ export interface FilterType {
 export interface FilterControlsProps {
   filters: FilterType;
   onChangeFilters: (newFilters: FilterType) => void;
+}
+
+// チームメンバー登録用のリクエスト型
+export interface CorporateUserRegistrationData {
+  email: string;
+  password: string;
+  company_id: CompanyId;
+  is_admin: boolean;
 }
 
 export type SortOrder = 'asc' | 'desc';

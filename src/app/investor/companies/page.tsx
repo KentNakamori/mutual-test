@@ -1,12 +1,14 @@
-//src\app\investor\companies\page.tsx
+// src/app/investor/companies/page.tsx
 "use client";
 
 import React, { useState, useEffect } from 'react';
 import Sidebar from '@/components/common/sidebar';
-import Footer from '@/components/common/Footer';
+import Footer from '@/components/common/footer';
 import CompanySearchBar from '@/components/features/investor/companies/CompanySearchBar';
 import CompanyList from '@/components/features/investor/companies/CompanyList';
-import { Company } from '@/types';
+import NewQAList from '@/components/features/investor/qa/NewQAList';
+import { Company, QA } from '@/types';
+import { FaHome, FaHeart, FaSearch, FaComments, FaUser } from 'react-icons/fa';
 
 // ── モックデータ ─────────────────────────────────────────────
 const mockCompanies: Company[] = [
@@ -39,13 +41,60 @@ const mockCompanies: Company[] = [
   },
 ];
 
-// サイドバーのメニュー項目
+const mockQAs: (QA & { companyName?: string })[] = [
+  {
+    qaId: '101',
+    title: '新着QAタイトル1',
+    question: 'この製品の使い方について詳しく教えてください。',
+    answer: '詳しい使い方は…',
+    companyId: '1',
+    companyName: 'テック・イノベーターズ株式会社',
+    likeCount: 10,
+    tags: ['使い方', '操作'],
+    genre: ['FAQ'],
+    fiscalPeriod: '2025年度',
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(),
+    isPublished: true,
+  },
+  {
+    qaId: '102',
+    title: '新着QAタイトル2',
+    question: '保証期間はどのくらいですか？',
+    answer: '保証期間は1年間です。',
+    companyId: '2',
+    companyName: 'グリーンエナジー株式会社',
+    likeCount: 5,
+    tags: ['保証', 'サポート'],
+    genre: ['FAQ'],
+    fiscalPeriod: '2025年度',
+    createdAt: new Date(Date.now() - 3600000).toISOString(), // 1時間前
+    updatedAt: new Date(Date.now() - 3600000).toISOString(),
+    isPublished: true,
+  },
+  {
+    qaId: '103',
+    title: '新着QAタイトル3',
+    question: '製品の特徴は何ですか？',
+    answer: '最新技術を採用して…',
+    companyId: '3',
+    companyName: 'ヘルスプラス合同会社',
+    likeCount: 8,
+    tags: ['特徴'],
+    genre: ['FAQ'],
+    fiscalPeriod: '2025年度',
+    createdAt: new Date(Date.now() - 7200000).toISOString(), // 2時間前
+    updatedAt: new Date(Date.now() - 7200000).toISOString(),
+    isPublished: true,
+  },
+];
+
 const menuItems = [
-  { label: 'トップページ', link: '/investor/companies' },
-  { label: "フォロー済み企業", link: "/investor/companies/followed" },
-  { label: 'Q&A', link: '/investor/qa' },
-  { label: 'チャットログ', link: '/investor/chat-logs' },
-  { label: 'マイページ', link: '/investor/mypage' },
+  { label: 'トップページ', link: '/investor/companies', icon: <FaHome size={20} /> },
+  { label: "フォロー済み企業", link: "/investor/companies/followed", icon: <FaHeart size={20} /> },
+  { label: 'OA検索', link: '/investor/oa-search', icon: <FaSearch size={20} /> },
+  { label: 'チャットログ', link: '/investor/chat-logs', icon: <FaComments size={20} /> },
+  { label: 'マイページ', link: '/investor/mypage', icon: <FaUser size={20} /> },
 ];
 
 const CompaniesPage: React.FC = () => {
@@ -90,7 +139,7 @@ const CompaniesPage: React.FC = () => {
     }
   };
 
-  // 初回レンダリング時にデータ取得
+  // 初回レンダリング時に企業データ取得
   useEffect(() => {
     handleSearchChange(searchQuery);
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -101,9 +150,14 @@ const CompaniesPage: React.FC = () => {
     console.log(`企業 ${companyId} のフォロー状態が ${nextState ? 'フォロー中' : 'フォロー解除'} に変更されました`);
   };
 
+  // CompanyCard クリック時のハンドラ：企業詳細ページへ遷移
+  const handleCardClick = (companyId: string) => {
+    window.location.assign(`/investor/company/${companyId}`);
+  };
+
   return (
     <div className="min-h-screen flex flex-col">
-      {/* ヘッダー削除 → サイドバーに置き換え */}
+      {/* サイドバー */}
       <div className="flex flex-1">
         <Sidebar
           isCollapsible
@@ -112,19 +166,31 @@ const CompaniesPage: React.FC = () => {
           onSelectMenuItem={(link) => (window.location.href = link)}
         />
         <main className="flex-1 container mx-auto p-4">
-          <CompanySearchBar initialQuery={searchQuery} onSearchChange={handleSearchChange} />
-          {isLoading ? (
-            <div className="text-center py-8">企業データを読み込み中…</div>
-          ) : error ? (
-            <div className="text-center py-8 text-red-600">
-              {error}
-              <button onClick={() => handleSearchChange(searchQuery)} className="ml-4 underline">
-                再試行
-              </button>
-            </div>
-          ) : (
-            <CompanyList companies={companies} onFollowToggle={handleFollowToggle} />
-          )}
+          {/* ページ上部の表題 */}
+          <h1 className="text-3xl font-bold mb-4">トップページ</h1>
+          {/* 新着QAリスト（テーブル形式） */}
+          <NewQAList qas={mockQAs} />
+          {/* 企業一覧セクション */}
+          <section>
+            <h2 className="text-xl font-bold mb-8">企業一覧</h2>
+            <CompanySearchBar initialQuery={searchQuery} onSearchChange={handleSearchChange} />
+            {isLoading ? (
+              <div className="text-center py-8">企業データを読み込み中…</div>
+            ) : error ? (
+              <div className="text-center py-8 text-red-600">
+                {error}
+                <button onClick={() => handleSearchChange(searchQuery)} className="ml-4 underline">
+                  再試行
+                </button>
+              </div>
+            ) : (
+              <CompanyList
+                companies={companies}
+                onFollowToggle={handleFollowToggle}
+                onCardClick={handleCardClick}
+              />
+            )}
+          </section>
         </main>
       </div>
       <Footer

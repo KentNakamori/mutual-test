@@ -1,6 +1,6 @@
 // src/components/features/corporate/qa/TopActionBar.tsx
 import React from 'react';
-import SearchForm from './SearchForm';
+import SearchForm from '@/components/ui/SearchForm';
 import UploadButton from './UploadButton';
 import { TopActionBarProps} from '@/types';
 

@@ -16,7 +16,7 @@ const QASearchPage: React.FC = () => {
   const menuItems = [
     { label: 'トップページ', link: '/investor/companies' },
     { label: "フォロー済み企業", link: "/investor/companies/followed" },
-    { label: 'Q&A', link: '/investor/qa' },
+    { label: 'Q&A検索', link: '/investor/qa' },
     { label: 'チャットログ', link: '/investor/chat-logs' },
     { label: 'マイページ', link: '/investor/mypage' },
   ];
@@ -26,25 +26,32 @@ const QASearchPage: React.FC = () => {
   const [selectedQA, setSelectedQA] = useState<QA | null>(null);
   const { token } = useAuth();
 
+  // モックデータ（バックエンド未接続時の代替）
   const mockQAData: QA[] = [
     {
       qaId: '1',
+      title: '会社のミッション',
       question: '会社のミッションは何ですか？',
       answer: '当社のミッションは、革新を通じて最高のサービスを提供することです。',
       companyId: 'comp1',
       likeCount: 10,
-      views: 100,
+      tags: ['ミッション', '企業理念'],
+      genre: ['FAQ'],
+      fiscalPeriod: '2025年度',
       createdAt: '2023-01-01T00:00:00Z',
       updatedAt: '2023-01-01T00:00:00Z',
       isPublished: true,
     },
     {
       qaId: '2',
+      title: 'サポートについて',
       question: 'カスタマーサポートはどのように対応していますか？',
       answer: '電話やメールなど、24時間365日対応のサポート体制を整えています。',
       companyId: 'comp2',
       likeCount: 5,
-      views: 100,
+      tags: ['サポート'],
+      genre: ['FAQ'],
+      fiscalPeriod: '2025年度',
       createdAt: '2023-02-01T00:00:00Z',
       updatedAt: '2023-02-01T00:00:00Z',
       isPublished: true,
@@ -72,6 +79,7 @@ const QASearchPage: React.FC = () => {
 
   const qaItems: QA[] = data?.results || mockQAData;
 
+  // 検索送信時のハンドラ
   const handleSearchSubmit = useCallback(
     (keyword: string, newFilters: FilterType) => {
       setSearchKeyword(keyword);
@@ -81,14 +89,17 @@ const QASearchPage: React.FC = () => {
     [refetch]
   );
 
+  // QAResultList のアイテムクリック時に選択された QA を状態管理
   const handleItemClick = useCallback((qa: QA) => {
     setSelectedQA(qa);
   }, []);
 
+  // モーダルを閉じるハンドラ
   const handleCloseModal = useCallback(() => {
     setSelectedQA(null);
   }, []);
 
+  // いいね操作のハンドラ
   const handleLike = useCallback((qaId: string) => {
     console.log('いいね：', qaId);
   }, []);
@@ -103,31 +114,22 @@ const QASearchPage: React.FC = () => {
           onSelectMenuItem={(link) => (window.location.href = link)}
         />
         <main className="flex-1 container mx-auto p-4">
+            {/* ページ上部の表題 */}
+            <h1 className="text-2xl font-semibold mb-4">Q&A検索</h1>
           <QASearchBar onSearchSubmit={handleSearchSubmit} />
           {isLoading && <p>読み込み中…</p>}
-          {error ? <p>エラーが発生しました: {(error as Error).message}</p> : null}
-
+          {error && <p>エラーが発生しました: {(error as Error).message}</p>}
           <QAResultList 
-            items={qaItems} 
+            qas={qaItems} 
             onItemClick={handleItemClick} 
             onLike={handleLike}
-            onBookmark={() => {}}
           />
+          {/* selectedQA が存在する場合にモーダルを表示 */}
           {selectedQA && (
             <QaDetailModal 
-              qa={{
-                id: selectedQA.qaId,
-                title: selectedQA.question,
-                question: selectedQA.question,
-                answer: selectedQA.answer,
-                createdAt: selectedQA.createdAt,
-                views: selectedQA.views,
-                likeCount: selectedQA.likeCount,
-                tags: selectedQA.tags || [],
-                genreTags: selectedQA.genreTags || [],
-                updatedAt: selectedQA.updatedAt,
-              }}
+              qa={selectedQA}
               role="investor"
+              isOpen={true} 
               onClose={handleCloseModal} 
               onLike={handleLike}
             />
