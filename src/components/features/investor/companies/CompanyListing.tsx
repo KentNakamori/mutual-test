@@ -59,8 +59,8 @@ const CompanyListing = () => {
   );
   
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-      {/* 表題、検索バー等の重複している上側の要素は親側で削除済み */}
+    <div>
+      {/* 企業一覧の表題 */}
       
       {/* 検索・フィルター・並び替えエリア */}
       <div className="flex flex-wrap items-center gap-3 mb-6">

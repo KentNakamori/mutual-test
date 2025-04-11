@@ -50,22 +50,27 @@ const CompanyPage: React.FC = () => {
   };
 
   if (loading) {
-    return <div className="flex items-center justify-center h-screen">Loading...</div>;
+    return (
+      <div className="flex items-center justify-center h-screen">
+        Loading...
+      </div>
+    );
   }
-
   return (
-    <div className="min-h-screen flex flex-col">
-      <div className="flex flex-1">
-        <Sidebar
-          defaultCollapsed={true}
-          menuItems={menuItems}
-          selectedItem=""
-          onSelectMenuItem={(link) => window.location.href = link}
-        />
-        <main className="flex-1 flex flex-col h-screen overflow-hidden">
-          <CompanyHeader company={companyData!} />
-          <TabSwitcher activeTab={activeTab} onChangeTab={handleTabChange} />
-          <div className="flex-1 flex"></div>
+    <div className="h-screen flex">
+      {/* サイドバー */}
+      <Sidebar
+        defaultCollapsed={true}
+        menuItems={menuItems}
+        selectedItem=""
+        onSelectMenuItem={(link) => (window.location.href = link)}
+      />
+      {/* 固定サイズの main エリア */}
+      <main className="flex flex-col w-full h-full container mx-auto p-4 bg-gray-50">
+        <CompanyHeader company={companyData!} />
+        <TabSwitcher activeTab={activeTab} onChangeTab={handleTabChange} />
+        {/* 固定された main 内で下部のみスクロール */}
+        <div className="flex-1 overflow-y-auto">
           {activeTab === "chat" ? (
             <ChatTabView companyId={companyData!.companyId} />
           ) : (
@@ -74,8 +79,8 @@ const CompanyPage: React.FC = () => {
               companyName={companyData!.companyName}
             />
           )}
-        </main>
-      </div>
+        </div>
+      </main>
     </div>
   );
 };
