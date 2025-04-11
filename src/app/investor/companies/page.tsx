@@ -107,7 +107,7 @@ const CompaniesPage: React.FC = () => {
             qas={mockQAs}
             onRowClick={(qa) => setSelectedQA(qa)}
           />
-          {/* 企業一覧セクション（上側の表題・検索バーは重複しているため削除済み） */}
+          <h1 className="text-2xl font-semibold mb-2">企業一覧</h1>
           <CompanyListing />
           {/* QA詳細モーダルの表示 */}
           {selectedQA && (
