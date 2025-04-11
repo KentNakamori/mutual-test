@@ -24,17 +24,17 @@ const getMockDashboardData = (period: Period): DashboardData => {
   return {
       stats: {
         daily: [
-          { label: "いいね数", value: 15, unit: "回" },
+          { label: "アクセス数", value: 15, unit: "回" },
           { label: "チャット質問数", value: 8, unit: "件" },
           { label: "公開Q&A数", value: 8, unit: "件" },
         ],
         weekly: [
-          { label: "いいね数", value: 102, unit: "回" },
+          { label: "アクセス数", value: 102, unit: "回" },
           { label: "チャット質問数", value: 32, unit: "件" },
           { label: "公開Q&A数", value: 22, unit: "件" },
         ],
         monthly: [
-          { label: "いいね数", value: 420, unit: "回" },
+          { label: "アクセス数", value: 420, unit: "回" },
           { label: "チャット質問数", value: 123, unit: "件" },
           { label: "公開Q&A数", value: 31, unit: "件" },
         ],

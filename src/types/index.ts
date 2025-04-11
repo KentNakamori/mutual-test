@@ -903,6 +903,16 @@ export interface ChatMessagesProps {
   chatTitle: string;
 }
 
+export interface InvestorChatSidebarProps {
+  sessions: ChatSession[];
+  selectedSessionId: string;
+  onSelectSession: (sessionId: string) => void;
+  onNewChat: () => void;
+  /** FAQ の質問をチャットに送信するためのコールバック */
+  onSendQuestion: (question: string) => void;
+}
+
+
 
 
 
