@@ -4,13 +4,12 @@
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'next/navigation';
 import Sidebar from '@/components/common/sidebar';
-import Footer from '@/components/common/footer';
 import CompanyHeader from '@/components/features/investor/company/CompanyHeader';
 import TabSwitcher from '@/components/features/investor/company/TabSwitcher';
 import ChatTabView from '@/components/features/investor/company/ChatTabView';
 import QATabView from '@/components/features/investor/company/QATabView';
-import{ Company} from '@/types';
-
+import { Company } from '@/types';
+import { Home, Heart, Search, MessageSquare, User } from 'lucide-react';
 
 const mockCompanyData: Company = {
   companyId: "1",
@@ -22,13 +21,12 @@ const mockCompanyData: Company = {
   websiteUrl: "https://www.mockcompany.com",
 };
 
-// サイドバーのメニュー項目
 const menuItems = [
-  { label: 'トップページ', link: '/investor/companies' },
-  { label: "フォロー済み企業", link: "/investor/companies/followed" },
-  { label: 'Q&A検索', link: '/investor/qa' },
-  { label: 'チャットログ', link: '/investor/chat-logs' },
-  { label: 'マイページ', link: '/investor/mypage' },
+  { label: 'トップページ', link: '/investor/companies', icon: <Home size={20} /> },
+  { label: "フォロー済み企業", link: "/investor/companies/followed", icon: <Heart size={20} /> },
+  { label: 'Q&A検索', link: '/investor/qa', icon: <Search size={20} /> },
+  { label: 'チャットログ', link: '/investor/chat-logs', icon: <MessageSquare size={20} /> },
+  { label: 'マイページ', link: '/investor/mypage', icon: <User size={20} /> },
 ];
 
 const CompanyPage: React.FC = () => {
@@ -57,31 +55,27 @@ const CompanyPage: React.FC = () => {
 
   return (
     <div className="min-h-screen flex flex-col">
-      {/* ヘッダーはサイドバーに置き換え */}
       <div className="flex flex-1">
         <Sidebar
-          isCollapsible
+          defaultCollapsed={true}
           menuItems={menuItems}
-          selectedItem="" // 企業詳細ページなので特定メニューのハイライトは不要
-          onSelectMenuItem={(link) => (window.location.href = link)}
+          selectedItem=""
+          onSelectMenuItem={(link) => window.location.href = link}
         />
-        <main className="flex-1 container mx-auto p-4">
+        <main className="flex-1 flex flex-col h-screen overflow-hidden">
           <CompanyHeader company={companyData!} />
           <TabSwitcher activeTab={activeTab} onChangeTab={handleTabChange} />
+          <div className="flex-1 flex"></div>
           {activeTab === "chat" ? (
             <ChatTabView companyId={companyData!.companyId} />
           ) : (
-            <QATabView companyId={companyData!.companyId} />
+            <QATabView
+              companyId={companyData!.companyId}
+              companyName={companyData!.companyName}
+            />
           )}
         </main>
       </div>
-      <Footer
-        footerLinks={[
-          { label: "Privacy Policy", href: "/privacy" },
-          { label: "Terms of Service", href: "/terms" },
-        ]}
-        copyrightText="MyApp Inc."
-      />
     </div>
   );
 };

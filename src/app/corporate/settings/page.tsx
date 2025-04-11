@@ -16,6 +16,8 @@ import SettingsTabs from "@/components/features/corporate/settings/SettingsTabs"
 import { useCorporateCompanySettings } from "@/hooks/useCorporateCompanySettings";
 import { useAuth } from "@/hooks/useAuth";
 
+import { LayoutDashboard, HelpCircle, MessageSquare, Settings } from 'lucide-react';
+
 const SettingsPage: React.FC = () => {
   const { token } = useAuth();
   const router = useRouter();
@@ -29,10 +31,10 @@ const SettingsPage: React.FC = () => {
         {/* サイドバー（Dashboardと全く同じ実装） */}
         <Sidebar
           menuItems={[
-            { label: "ダッシュボード", link: "/corporate/dashboard" },
-            { label: "Q&A管理", link: "/corporate/qa" },
-            { label: "IRチャット", link: "/corporate/irchat" },
-            { label: "設定", link: "/corporate/settings" },
+            { label: "ダッシュボード", link: "/corporate/dashboard", icon: <LayoutDashboard size={20} />},
+            { label: "Q&A管理", link: "/corporate/qa", icon: <HelpCircle size={20} /> },
+            { label: "IRチャット", link: "/corporate/irchat" , icon: <MessageSquare size={20} />},
+            { label: "設定", link: "/corporate/settings", icon: <Settings size={20} />  },
           ]}
           isCollapsible
           // 現在のページなので selectedItem を "/corporate/settings" に設定

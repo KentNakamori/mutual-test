@@ -10,6 +10,7 @@ import QaListCards from "@/components/features/corporate/qa/QaListCards";
 import UploadModal from "@/components/features/corporate/qa/UploadModal";
 import QaDetailModal from "@/components/ui/QaDetailModal";
 import { QA } from "@/types";
+import { LayoutDashboard, HelpCircle, MessageSquare, Settings } from 'lucide-react';
 
 // モックデータ（必要なプロパティを補完）
 const mockQas: QA[] = [
@@ -44,10 +45,10 @@ const mockQas: QA[] = [
 ];
 
 const sidebarMenuItems = [
-  { label: "ダッシュボード", link: "/corporate/dashboard" },
-  { label: "Q&A管理", link: "/corporate/qa" },
-  { label: "IRチャット", link: "/corporate/irchat" },
-  { label: "設定", link: "/corporate/settings" },
+  { label: "ダッシュボード", link: "/corporate/dashboard", icon: <LayoutDashboard size={20} />},
+  { label: "Q&A管理", link: "/corporate/qa", icon: <HelpCircle size={20} /> },
+  { label: "IRチャット", link: "/corporate/irchat" , icon: <MessageSquare size={20} />},
+  { label: "設定", link: "/corporate/settings", icon: <Settings size={20} />  },
 ];
 
 const QaPage: React.FC = () => {

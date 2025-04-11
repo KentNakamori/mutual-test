@@ -8,36 +8,37 @@ const CompanyHeader: React.FC<CompanyHeaderProps> = ({ company }) => {
   };
 
   return (
-    <div className="mb-4 flex items-center justify-between">
-      {/* 左側：ロゴ、会社名、下部に企業情報 */}
+    // 全体のマージンを削減して行間を詰める
+    <div className="mb-2 flex items-center justify-between">
+      {/* 左側：ロゴ、会社名、企業情報 */}
       <div className="flex flex-col">
-        {/* 上部：ロゴと会社名 */}
-        <div className="flex items-center space-x-4">
+        {/* 上部：ロゴと会社名（間隔を狭く） */}
+        <div className="flex items-center space-x-2">
           {company.logoUrl ? (
             <img
               src={company.logoUrl}
               alt={`${company.companyName} のロゴ`}
-              className="h-12 w-12 rounded-full"
+              className="h-10 w-10 rounded-full"
             />
           ) : (
-            <div className="h-12 w-12 rounded-full bg-gray-300 flex items-center justify-center">
-              <span className="text-lg font-semibold text-white">
+            <div className="h-10 w-10 rounded-full bg-gray-300 flex items-center justify-center">
+              <span className="text-base font-semibold text-white">
                 {company.companyName.charAt(0)}
               </span>
             </div>
           )}
-          <h1 className="text-2xl font-semibold">{company.companyName}</h1>
+          <h1 className="text-xl font-semibold">{company.companyName}</h1>
         </div>
-        {/* 下部：企業情報 */}
-        <div className="flex items-center space-x-4 mt-2">
+        {/* 下部：企業情報（余白を狭く：mt-1 と間隔調整） */}
+        <div className="flex items-center space-x-2 mt-1">
           {company.securitiesCode && (
-            <p className="text-gray-600">証券コード: {company.securitiesCode}</p>
+            <p className="text-gray-600 text-xs">証券コード: {company.securitiesCode}</p>
           )}
           {company.majorStockExchange && (
-            <p className="text-gray-600">主要取引所: {company.majorStockExchange}</p>
+            <p className="text-gray-600 text-xs">主要取引所: {company.majorStockExchange}</p>
           )}
           {company.websiteUrl && (
-            <p className="text-gray-600">
+            <p className="text-gray-600 text-xs">
               HP:{" "}
               <a
                 href={company.websiteUrl}
@@ -49,10 +50,10 @@ const CompanyHeader: React.FC<CompanyHeaderProps> = ({ company }) => {
               </a>
             </p>
           )}
-          <p className="text-gray-600">{company.industry}</p>
+          <p className="text-gray-600 text-xs">{company.industry}</p>
         </div>
       </div>
-      {/* 右側：バツ印アイコン（企業一覧ページへ戻る） */}
+      {/* 右側：戻るボタン */}
       <div className="cursor-pointer" onClick={handleBackClick}>
         <svg
           xmlns="http://www.w3.org/2000/svg"

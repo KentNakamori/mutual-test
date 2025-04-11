@@ -475,6 +475,7 @@ export interface QADetailModalProps {
   isOpen: boolean;
   onClose: () => void;
   role: QACardRole;
+  getCompanyName?: (id: string) => string;
   // モーダル内で利用する各アクションのコールバック（必要に応じて実装先で渡してください）
   onLike?: (qaId: string) => void;
   onEdit?: (qaId: string) => void;
@@ -650,7 +651,8 @@ export interface TopPageProps {
 }
 
 export interface CompanySearchBarProps {
-  onSearchSubmit: (keyword: string, filters: FilterType) => void;
+  initialQuery: CompanySearchQuery;
+  onSearchChange: (query: CompanySearchQuery) => void;
 }
 
 export interface CompanyListProps {
@@ -676,6 +678,7 @@ export interface CompanySearchQuery {
   keyword: string;
   industry?: string;
 }
+
 export interface CompanySearchBarProps {
   initialQuery: CompanySearchQuery;
   onSearchChange: (query: CompanySearchQuery & { filter?: string; sortOrder?: 'asc' | 'desc' }) => void;
@@ -687,7 +690,8 @@ export interface ChatTabViewProps {
 }
 
 export interface QATabViewProps {
-  companyId: CompanyId;
+  companyId: string;
+  companyName: string;
 }
 
 export interface QASearchPageProps {
@@ -699,12 +703,11 @@ export interface QASearchBarProps {
 }
 
 export interface QAResultListProps {
-  /** 検索結果のQAリスト */
   qas: QA[];
-  /** QA項目クリック時のハンドラ（オプション） */
-  onItemClick?: (qa: QA) => void;
-  /** いいね操作ハンドラ（オプション） */
-  onLike?: (qaId: string) => void;
+  onItemClick: (qa: QA) => void;
+  onLike: (qaId: string) => void;
+  getCompanyName: (companyId: string) => string;
+  formatDate: (dateStr: string) => string;
 }
 
 export interface QAResultItemProps {
@@ -724,7 +727,7 @@ export interface ChatLogsPageProps {
 }
 
 export interface ChatLogsSearchBarProps {
-  onSearch: (keyword: string) => void;
+  (keyword: string, filter: FilterType) => void;
 }
 
 export interface ChatLogsListProps {
@@ -794,9 +797,32 @@ export interface QaTableRowProps {
   onDelete: (qaId: string) => void;
 }
 
-export interface SearchFormProps {
-  initialQuery?: string;
-  onSearch: (params: { query: string; filter?: string; sortOrder?: 'asc' | 'desc' }) => void;
+// フィルターオプションの型定義
+export interface FilterOption {
+  id: string;
+  label: string;
+  type: 'select' | 'text' | 'date' | 'checkbox';
+  options?: { value: string; label: string }[];
+}
+
+export interface SearchBarProps {
+  // 基本プロパティ
+  placeholder?: string;
+  initialKeyword?: string;
+  initialFilters?: Record<string, any>;
+  showFilterButton?: boolean;
+  
+  // カスタマイズ用プロパティ
+  className?: string;
+  buttonLabel?: string;
+  filterButtonLabel?: string;
+  
+  // フィルター関連
+  filterOptions?: FilterOption[];
+  filterComponent?: ReactNode; // カスタムフィルターコンポーネント
+  
+  // コールバック
+  onSearch: (keyword: string, filters: Record<string, any>) => void;
 }
 
 export interface TopActionBarProps {
@@ -861,5 +887,23 @@ export interface CorporateUserRegistrationData {
   company_id: CompanyId;
   is_admin: boolean;
 }
+
+export interface TagOption {
+  label: string;   // 表示ラベル
+  color: string;   // Tailwind CSSの色クラス (bg-xxx-500など)
+}
+
+export interface ChatInputBoxProps {
+  /** ユーザーがメッセージを送信したときのコールバック関数 */
+  onSendMessage: (message: string) => void;
+}
+
+export interface ChatMessagesProps {
+  messages: ChatMessage[];
+  chatTitle: string;
+}
+
+
+
 
 export type SortOrder = 'asc' | 'desc';

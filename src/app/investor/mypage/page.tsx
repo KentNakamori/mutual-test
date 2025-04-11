@@ -6,6 +6,7 @@ import Footer from "@/components/common/footer";
 import MyPageTabMenu from "@/components/features/investor/mypage/MyPageTabMenu";
 import { useUserProfile } from "@/hooks/useUserProfile";
 import { ProfileData, NotificationSetting } from "@/types";
+import { Home, Heart, Search, MessageSquare, User } from 'lucide-react';
 
 // モックデータ（API接続不可時用）
 const MOCK_PROFILE: ProfileData = {
@@ -21,11 +22,11 @@ const MOCK_PROFILE: ProfileData = {
 
 // サイドバーのメニュー項目
 const menuItems = [
-  { label: 'トップページ', link: '/investor/companies' },
-  { label: "フォロー済み企業", link: "/investor/companies/followed" },
-  { label: 'Q&A検索', link: '/investor/qa' },
-  { label: 'チャットログ', link: '/investor/chat-logs' },
-  { label: 'マイページ', link: '/investor/mypage' },
+  { label: 'トップページ', link: '/investor/companies', icon: <Home size={20} /> },
+  { label: "フォロー済み企業", link: "/investor/companies/followed", icon: <Heart size={20} /> },
+  { label: 'Q&A検索', link: '/investor/qa', icon: <Search size={20} /> },
+  { label: 'チャットログ', link: '/investor/chat-logs', icon: <MessageSquare size={20} /> },
+  { label: 'マイページ', link: '/investor/mypage', icon: <User size={20} /> },
 ];
 
 const MyPage = () => {

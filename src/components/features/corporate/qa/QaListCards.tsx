@@ -17,8 +17,8 @@ const QaListCards: React.FC<QaListCardsProps> = ({ qaItems, onSelect, onEdit, on
 
   return (
     <div>
-      {/* ここで 2列表示にする */}
-      <div className="grid grid-cols-2 gap-4">
+      {/* カードを一列で表示 */}
+      <div className="grid grid-cols-1 gap-4">
         {currentItems.map((qa) => (
           <QACard
             key={qa.qaId}

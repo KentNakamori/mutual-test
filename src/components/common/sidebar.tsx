@@ -1,18 +1,22 @@
-// components/common/sidebar.tsx
+// src/components/common/sidebar.tsx
 import React, { useState } from 'react';
 import Image from 'next/image';
 import { FaBars, FaAngleDoubleLeft } from 'react-icons/fa';
 import { SidebarMenuItem, SidebarProps } from '@/types';
 
-const Sidebar: React.FC<SidebarProps> = ({
+interface ExtendedSidebarProps extends SidebarProps {
+  defaultCollapsed?: boolean;
+}
+
+const Sidebar: React.FC<ExtendedSidebarProps> = ({
   menuItems,
-  isCollapsible = false,
+  isCollapsible,
   selectedItem,
   onSelectMenuItem,
+  defaultCollapsed = false,
 }) => {
-  const [isOpen, setIsOpen] = useState(true);
+  const [isOpen, setIsOpen] = useState(defaultCollapsed ? false : true);
 
-  // サイドバー開閉
   const handleToggleSidebar = () => {
     if (isCollapsible) {
       setIsOpen(!isOpen);
@@ -22,52 +26,47 @@ const Sidebar: React.FC<SidebarProps> = ({
   return (
     <aside
       className={`
-        bg-gray-100 text-gray-700 p-4
-        ${isOpen ? 'w-64' : 'w-16'}   // 開閉に応じて幅を変更したい場合
-        transition-all duration-300   // スムーズなアニメーション
+        bg-gray-100 text-gray-700 p-2
+        ${isOpen ? 'w-64' : 'w-16'}
+        transition-all duration-300 relative
       `}
     >
-      {/* 上部にアイコンを配置して開閉 */}
-      {isCollapsible && (
-        <button
-          className="mb-4 flex items-center justify-center text-gray-600 hover:text-gray-800"
-          onClick={handleToggleSidebar}
-        >
-          {isOpen ? <FaAngleDoubleLeft size={24} /> : <FaBars size={24} />}
-        </button>
-      )}
+      {/* トグルボタン（常に表示） */}
+      <button
+        className="absolute top-2 right-[-12px] z-20 p-1 bg-gray-100 border border-gray-300 rounded-full text-gray-600 hover:bg-gray-200"
+        onClick={handleToggleSidebar}
+      >
+        {isOpen ? <FaAngleDoubleLeft size={20} /> : <FaBars size={20} />}
+      </button>
 
-      {/* ロゴ表示部分 */}
       {isOpen && (
-        <div className="flex items-center justify-center mb-4">
-          <Image
-            src="/images/qa-station-logo.png"
-            alt="QA Station Logo"
-            width={200}
-            height={50}
-            priority
-          />
-        </div>
-      )}
-
-      {/* メニュー項目 */}
-      {isOpen && (
-        <ul className="space-y-2">
-          {menuItems.map((item, index) => (
-            <li
-              key={index}
-              className={`p-2 rounded hover:bg-gray-200 cursor-pointer ${
-                selectedItem === item.link ? 'bg-gray-300' : ''
-              }`}
-              onClick={() => onSelectMenuItem && onSelectMenuItem(item.link)}
-            >
-              <div className="flex items-center space-x-2">
-                {item.icon && <span>{item.icon}</span>}
-                <span>{item.label}</span>
-              </div>
-            </li>
-          ))}
-        </ul>
+        <>
+          <div className="flex items-center justify-center mb-4">
+            <Image
+              src="/images/qa-station-logo.png"
+              alt="QA Station Logo"
+              width={200}
+              height={50}
+              priority
+            />
+          </div>
+          <ul className="space-y-2">
+            {menuItems.map((item, index) => (
+              <li
+                key={index}
+                className={`p-2 rounded hover:bg-gray-200 cursor-pointer ${
+                  selectedItem === item.link ? 'bg-gray-300' : ''
+                }`}
+                onClick={() => onSelectMenuItem && onSelectMenuItem(item.link)}
+              >
+                <div className="flex items-center space-x-2">
+                  {item.icon && <span>{item.icon}</span>}
+                  <span>{item.label}</span>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </>
       )}
     </aside>
   );
