@@ -3,16 +3,17 @@
 import React, { useState, useEffect } from 'react';
 import Sidebar from '@/components/common/sidebar';
 import Footer from '@/components/common/footer';
-import ChatArea, { ChatMessage } from '@/components/ui/ChatArea';
+import ChatMessages from '@/components/ui/ChatMessages'
 import ChatHistory, { ChatSession } from '@/components/ui/ChatHistory';
 import MailDraftModal from '@/components/features/corporate/irchat/MailDraftModal'; // 追加：メールドラフトモーダルのインポート
 import Button from '@/components/ui/Button';
+import { LayoutDashboard, HelpCircle, MessageSquare, Settings } from 'lucide-react';
 
 const sidebarMenuItems = [
-  { label: 'ダッシュボード', link: '/corporate/dashboard' },
-  { label: 'Q&A管理', link: '/corporate/qa' },
-  { label: 'IRチャット', link: '/corporate/irchat' },
-  { label: '設定', link: '/corporate/settings' },
+  { label: "ダッシュボード", link: "/corporate/dashboard", icon: <LayoutDashboard size={20} />},
+  { label: "Q&A管理", link: "/corporate/qa", icon: <HelpCircle size={20} /> },
+  { label: "IRチャット", link: "/corporate/irchat" , icon: <MessageSquare size={20} />},
+  { label: "設定", link: "/corporate/settings", icon: <Settings size={20} />  },
 ];
 
 // モックデータ（例）

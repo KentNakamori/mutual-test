@@ -1,16 +1,17 @@
 // src/app/investor/companies/page.tsx
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import Sidebar from '@/components/common/sidebar';
 import Footer from '@/components/common/footer';
-import CompanySearchBar from '@/components/features/investor/companies/CompanySearchBar';
-import CompanyList from '@/components/features/investor/companies/CompanyList';
 import NewQAList from '@/components/features/investor/qa/NewQAList';
-import { Company, QA } from '@/types';
-import { FaHome, FaHeart, FaSearch, FaComments, FaUser } from 'react-icons/fa';
+import CompanyListing from '@/components/features/investor/companies/CompanyListing';
+import CompanySearchBar from '@/components/features/investor/companies/CompanySearchBar';
+import QaDetailModal from '@/components/ui/QaDetailModal';
+import { Company, QA, CompanySearchQuery } from '@/types';
+import { Home, Heart, Search, MessageSquare, User } from 'lucide-react';
 
-// ── モックデータ ─────────────────────────────────────────────
+// モックデータ（例）
 const mockCompanies: Company[] = [
   {
     companyId: '1',
@@ -43,154 +44,81 @@ const mockCompanies: Company[] = [
 
 const mockQAs: (QA & { companyName?: string })[] = [
   {
-    qaId: '101',
-    title: '新着QAタイトル1',
-    question: 'この製品の使い方について詳しく教えてください。',
-    answer: '詳しい使い方は…',
-    companyId: '1',
-    companyName: 'テック・イノベーターズ株式会社',
-    likeCount: 10,
-    tags: ['使い方', '操作'],
-    genre: ['FAQ'],
-    fiscalPeriod: '2025年度',
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
+    qaId: '1',
+    title: '2025年度の業績見通しについて',
+    question: '今期の業績見通しを教えてください。',
+    answer:
+      '当社では、既存事業の拡大と新規事業への投資により前年比20%の成長を計画しております。',
+    companyId: 'comp1',
+    companyName: 'テック・イノベーター株式会社',
+    likeCount: 15,
+    tags: ['決算説明会'],
+    genre: ['業績'],
+    fiscalPeriod: '2025年度 Q4',
+    createdAt: '2023-09-01T00:00:00Z',
+    updatedAt: '2023-09-01T00:00:00Z',
     isPublished: true,
   },
   {
-    qaId: '102',
-    title: '新着QAタイトル2',
-    question: '保証期間はどのくらいですか？',
-    answer: '保証期間は1年間です。',
-    companyId: '2',
+    qaId: '2',
+    title: '人材戦略について',
+    question: '優秀な人材を確保するためにどのような施策を行いますか？',
+    answer:
+      '当社はリファラル採用の強化、福利厚生の拡充などで人材確保を図っています。',
+    companyId: 'comp2',
     companyName: 'グリーンエナジー株式会社',
-    likeCount: 5,
-    tags: ['保証', 'サポート'],
-    genre: ['FAQ'],
-    fiscalPeriod: '2025年度',
-    createdAt: new Date(Date.now() - 3600000).toISOString(), // 1時間前
-    updatedAt: new Date(Date.now() - 3600000).toISOString(),
-    isPublished: true,
-  },
-  {
-    qaId: '103',
-    title: '新着QAタイトル3',
-    question: '製品の特徴は何ですか？',
-    answer: '最新技術を採用して…',
-    companyId: '3',
-    companyName: 'ヘルスプラス合同会社',
     likeCount: 8,
-    tags: ['特徴'],
-    genre: ['FAQ'],
-    fiscalPeriod: '2025年度',
-    createdAt: new Date(Date.now() - 7200000).toISOString(), // 2時間前
-    updatedAt: new Date(Date.now() - 7200000).toISOString(),
+    tags: ['決算説明動画'],
+    genre: ['人材戦略'],
+    fiscalPeriod: '2025年度 Q2',
+    createdAt: '2023-10-01T00:00:00Z',
+    updatedAt: '2023-10-01T00:00:00Z',
     isPublished: true,
   },
 ];
 
 const menuItems = [
-  { label: 'トップページ', link: '/investor/companies', icon: <FaHome size={20} /> },
-  { label: "フォロー済み企業", link: "/investor/companies/followed", icon: <FaHeart size={20} /> },
-  { label: 'OA検索', link: '/investor/oa-search', icon: <FaSearch size={20} /> },
-  { label: 'チャットログ', link: '/investor/chat-logs', icon: <FaComments size={20} /> },
-  { label: 'マイページ', link: '/investor/mypage', icon: <FaUser size={20} /> },
+  { label: 'トップページ', link: '/investor/companies', icon: <Home size={20} /> },
+  { label: "フォロー済み企業", link: "/investor/companies/followed", icon: <Heart size={20} /> },
+  { label: 'Q&A検索', link: '/investor/qa', icon: <Search size={20} /> },
+  { label: 'チャットログ', link: '/investor/chat-logs', icon: <MessageSquare size={20} /> },
+  { label: 'マイページ', link: '/investor/mypage', icon: <User size={20} /> },
 ];
 
 const CompaniesPage: React.FC = () => {
-  const [companies, setCompanies] = useState<Company[]>([]);
-  const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [error, setError] = useState<string | null>(null);
-  const [searchQuery, setSearchQuery] = useState<{ keyword: string; industry?: string }>({
-    keyword: '',
-    industry: '',
-  });
+  // 検索条件（初期値）
+  const [searchQuery, setSearchQuery] = useState<CompanySearchQuery>({ keyword: '', industry: '' });
 
-  // モックのAPI呼び出し（検索条件に応じてモックデータをフィルタリング）
-  const fetchCompanies = async (query: { keyword: string; industry?: string }): Promise<Company[]> => {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        const filtered = mockCompanies.filter((company) => {
-          const matchesKeyword = query.keyword
-            ? company.companyName.toLowerCase().includes(query.keyword.toLowerCase())
-            : true;
-          const matchesIndustry = query.industry
-            ? company.industry.toLowerCase() === query.industry.toLowerCase()
-            : true;
-          return matchesKeyword && matchesIndustry;
-        });
-        resolve(filtered);
-      }, 500);
-    });
-  };
-
-  // CompanySearchBar からの検索条件変更ハンドラ
-  const handleSearchChange = async (newQuery: { keyword: string; industry?: string }) => {
-    setSearchQuery(newQuery);
-    setIsLoading(true);
-    setError(null);
-    try {
-      const data = await fetchCompanies(newQuery);
-      setCompanies(data);
-    } catch (err: any) {
-      setError(err.message || '企業データの取得に失敗しました');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  // 初回レンダリング時に企業データ取得
-  useEffect(() => {
-    handleSearchChange(searchQuery);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  // CompanyCard からのフォロー操作ハンドラ
-  const handleFollowToggle = (companyId: string, nextState: boolean) => {
-    console.log(`企業 ${companyId} のフォロー状態が ${nextState ? 'フォロー中' : 'フォロー解除'} に変更されました`);
-  };
-
-  // CompanyCard クリック時のハンドラ：企業詳細ページへ遷移
-  const handleCardClick = (companyId: string) => {
-    window.location.assign(`/investor/company/${companyId}`);
-  };
+  // QA詳細モーダル表示用の状態
+  const [selectedQA, setSelectedQA] = useState<QA | null>(null);
 
   return (
     <div className="min-h-screen flex flex-col">
-      {/* サイドバー */}
       <div className="flex flex-1">
         <Sidebar
           isCollapsible
           menuItems={menuItems}
           selectedItem="/investor/companies"
-          onSelectMenuItem={(link) => (window.location.href = link)}
+          onSelectMenuItem={(link) => window.location.assign(link)}
         />
-        <main className="flex-1 container mx-auto p-4">
-          {/* ページ上部の表題 */}
-          <h1 className="text-3xl font-bold mb-4">トップページ</h1>
-          {/* 新着QAリスト（テーブル形式） */}
-          <NewQAList qas={mockQAs} />
-          {/* 企業一覧セクション */}
-          <section>
-            <h2 className="text-xl font-bold mb-8">企業一覧</h2>
-            <CompanySearchBar initialQuery={searchQuery} onSearchChange={handleSearchChange} />
-            {isLoading ? (
-              <div className="text-center py-8">企業データを読み込み中…</div>
-            ) : error ? (
-              <div className="text-center py-8 text-red-600">
-                {error}
-                <button onClick={() => handleSearchChange(searchQuery)} className="ml-4 underline">
-                  再試行
-                </button>
-              </div>
-            ) : (
-              <CompanyList
-                companies={companies}
-                onFollowToggle={handleFollowToggle}
-                onCardClick={handleCardClick}
-              />
-            )}
-          </section>
+        <main className="flex-1 container mx-auto p-4 bg-gray-50">
+          {/* 新着QAリスト：クリックすると QA 詳細モーダルが表示される */}
+          <NewQAList
+            qas={mockQAs}
+            onRowClick={(qa) => setSelectedQA(qa)}
+          />
+          {/* 企業一覧セクション（上側の表題・検索バーは重複しているため削除済み） */}
+          <CompanyListing />
+          {/* QA詳細モーダルの表示 */}
+          {selectedQA && (
+            <QaDetailModal
+              qa={selectedQA}
+              role="investor"
+              isOpen={true}
+              onClose={() => setSelectedQA(null)}
+              onLike={(id: string) => console.log("いいね:", id)}
+            />
+          )}
         </main>
       </div>
       <Footer

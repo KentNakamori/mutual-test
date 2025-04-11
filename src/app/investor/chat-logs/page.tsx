@@ -8,6 +8,7 @@ import ChatLogsSearchBar from '@/components/features/investor/chat/ChatLogsSearc
 import ChatLogsList from '@/components/features/investor/chat/ChatLogsList';
 import { ChatLog, FilterType } from '@/types';
 import { useAuth } from '@/hooks/useAuth';
+import { Home, Heart, Search, MessageSquare, User } from 'lucide-react';
 
 const mockChatLogs: ChatLog[] = [
   {
@@ -35,11 +36,11 @@ const mockChatLogs: ChatLog[] = [
 
 // サイドバーのメニュー項目
 const menuItems = [
-  { label: '企業一覧', link: '/investor/companies' },
-  { label: "フォロー済み企業", link: "/investor/companies/followed" },
-  { label: 'Q&A', link: '/investor/qa' },
-  { label: 'チャットログ', link: '/investor/chat-logs' },
-  { label: 'マイページ', link: '/investor/mypage' },
+  { label: 'トップページ', link: '/investor/companies', icon: <Home size={20} /> },
+  { label: "フォロー済み企業", link: "/investor/companies/followed", icon: <Heart size={20} /> },
+  { label: 'Q&A検索', link: '/investor/qa', icon: <Search size={20} /> },
+  { label: 'チャットログ', link: '/investor/chat-logs', icon: <MessageSquare size={20} /> },
+  { label: 'マイページ', link: '/investor/mypage', icon: <User size={20} /> },
 ];
 
 const ChatLogsPage: React.FC = () => {

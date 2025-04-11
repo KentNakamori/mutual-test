@@ -5,15 +5,24 @@ import React from 'react';
 import QACard from '@/components/ui/QACard';
 import { QA, QAResultItemProps } from '@/types';
 
-const QAResultItem: React.FC<QAResultItemProps> = ({ qa, onClickItem, onLike }) => {
+const QAResultItem: React.FC<QAResultItemProps & {
+  getCompanyName?: (companyId: string) => string;
+  formatDate?: (dateStr: string) => string;
+}> = ({ qa, onClickItem, onLike, getCompanyName, formatDate }) => {
+  // onSelectの呼び出し時に QA 自体も渡す
+  const handleSelect = (qaId: string) => {
+    onClickItem && onClickItem(qa, qaId);
+  };
+
   return (
     <QACard
       mode="preview"
-      role="investor"  // 投資家向けなので編集機能は表示されず、いいねのみ表示される
+      role="investor"
       qa={qa}
-      // onSelect は qa.qaId を引数として渡すので、その qaId と QA オブジェクトの両方を渡す
-      onSelect={(qaId: string) => onClickItem && onClickItem(qa, qaId)}
+      onSelect={handleSelect}
       onLike={onLike}
+      getCompanyName={getCompanyName}
+      formatDate={formatDate}
     />
   );
 };
