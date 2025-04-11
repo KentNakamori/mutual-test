@@ -351,6 +351,14 @@ export type NavigationLink = {
   href: string;
 };
 
+/**
+ * TabSwitcher コンポーネントのプロパティ
+ */
+export interface TabSwitcherProps {
+  activeTab: "qa" | "chat";
+  onChangeTab: (tab: "qa" | "chat") => void;
+}
+
 export interface HeaderProps {
   navigationLinks: NavigationLink[];
   userStatus: {
@@ -900,7 +908,6 @@ export interface ChatInputBoxProps {
 
 export interface ChatMessagesProps {
   messages: ChatMessage[];
-  chatTitle: string;
 }
 
 

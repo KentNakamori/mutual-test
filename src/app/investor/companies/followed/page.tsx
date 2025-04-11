@@ -85,7 +85,7 @@ const FollowedCompaniesPage: React.FC = () => {
           onSelectMenuItem={(link) => window.location.assign(link)}
         />
         <main className="flex-1 container mx-auto p-4 bg-gray-50">
-          <h1 className="text-2xl font-semibold mb-2">フォロー済み企業一覧</h1>
+          <h1 className="text-2xl font-semibold mb-2">フォロー済み企業</h1>
           {/* 企業一覧セクション：上部の重複する表題・検索バーは削除 */}
           <CompanyListing />
         </main>

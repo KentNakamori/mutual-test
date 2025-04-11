@@ -38,7 +38,7 @@ const ChatTabView: React.FC<ChatTabViewProps> = ({ companyId }) => {
   
   const handleSendMessage = (message: string) => {
     if (!message.trim()) return;
-    const newMsg = {
+    const newMsg: ChatMessage = {
       messageId: Date.now().toString(),
       sender: "user",
       text: message,
@@ -74,14 +74,13 @@ const ChatTabView: React.FC<ChatTabViewProps> = ({ companyId }) => {
       {/* 右側チャットエリア） */}
       <div className="flex-1 h-full overflow-hidden flex flex-col">
         {/* 上部（チャットメッセージエリア）：スクロール対象 */}
-        <div className="border-b overflow-y-auto" style={{ height: 'calc(100% - 120px)' }}>
+        <div className="flex-1 overflow-y-auto">
           <ChatMessages
-            chatTitle={"チャット: " + (chatSessions.find(s => s.sessionId === selectedSessionId)?.title || "")}
             messages={messages}
           />
         </div>
-        {/* 下部（固定の入力欄）：（必要な縦幅に応じて調整可能） */}
-        <div style={{ height: '80px' }}>
+        {/* 下部（固定の入力欄） */}
+        <div className="flex-shrink-0">
           <ChatInputBox onSendMessage={handleSendMessage} />
         </div>
       </div>
