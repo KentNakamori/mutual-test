@@ -8,6 +8,8 @@ const CompanyListing = () => {
   const [showSortOptions, setShowSortOptions] = useState(false);
   const [activeGenre, setActiveGenre] = useState('すべて');
   const [activeSortOption, setActiveSortOption] = useState('新着順');
+  const [showExchangeFilter, setShowExchangeFilter] = useState(false);
+  const [activeExchange, setActiveExchange] = useState('すべて');
   
   // サンプルデータ（実際は API 等から取得）
   const companies = [
@@ -50,13 +52,15 @@ const CompanyListing = () => {
   ];
   
   const genres = ['すべて', 'テクノロジー', 'エネルギー', 'ヘルスケア', '金融', '小売', '製造', '不動産', 'サービス'];
-  
+  const exchanges = ['すべて', '東証プライム', '東証スタンダード'];
   const sortOptions = ['新着順', '名前順 (A-Z)', '名前順 (Z-A)', 'いいね数: 高い順', 'いいね数: 低い順'];
   
   // フィルター適用
-  const filteredCompanies = companies.filter(company => 
-    activeGenre === 'すべて' || company.category === activeGenre
-  );
+  // フィルター適用：ジャンルと主要取引所の両方でフィルタリング
+const filteredCompanies = companies.filter(company => 
+  (activeGenre === 'すべて' || company.category === activeGenre) &&
+  (activeExchange === 'すべて' || company.exchange === activeExchange)
+);
   
   return (
     <div>
@@ -76,41 +80,71 @@ const CompanyListing = () => {
           />
         </div>
         
-        {/* ジャンルフィルター */}
-        <div className="relative">
-          <button 
-            onClick={() => {
-              setShowGenreFilter(!showGenreFilter);
-              if (showSortOptions) setShowSortOptions(false);
-            }}
-            className="flex items-center justify-between w-48 px-4 py-2 bg-white border border-gray-300 rounded-lg shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
-          >
-            <div className="flex items-center">
-              <Filter size={16} className="mr-2 text-gray-500" />
-              <span>ジャンル: {activeGenre}</span>
-            </div>
-            <ChevronDown size={16} className="ml-2 text-gray-500" />
-          </button>
-          
-          {showGenreFilter && (
-            <div className="absolute z-10 mt-1 w-48 bg-white rounded-md shadow-lg border border-gray-200 py-1">
-              {genres.map((genre) => (
-                <button
-                  key={genre}
-                  onClick={() => {
-                    setActiveGenre(genre);
-                    setShowGenreFilter(false);
-                  }}
-                  className={`block w-full px-4 py-2 text-sm text-left hover:bg-gray-100 ${
-                    activeGenre === genre ? 'bg-blue-50 text-blue-700 font-medium' : 'text-gray-700'
-                  }`}
-                >
-                  {genre}
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
+      {/* ジャンルフィルター */}
+      <div className="relative">
+        <button 
+          onClick={() => {
+            setShowGenreFilter(!showGenreFilter);
+            if (showExchangeFilter) setShowExchangeFilter(false);
+          }}
+          className="flex items-center justify-between w-48 px-4 py-2 bg-white border border-gray-300 rounded-lg shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+        >
+          <span>ジャンル: {activeGenre}</span>
+          <ChevronDown size={16} className="ml-2 text-gray-500" />
+        </button>
+    
+        {showGenreFilter && (
+          <div className="absolute z-10 mt-1 w-48 bg-white rounded-md shadow-lg border border-gray-200 py-1">
+            {genres.map((genre) => (
+              <button
+                key={genre}
+                onClick={() => {
+                  setActiveGenre(genre);
+                  setShowGenreFilter(false);
+                }}
+                className={`block w-full px-4 py-2 text-sm text-left hover:bg-gray-100 ${
+                  activeGenre === genre ? 'bg-blue-50 text-blue-700 font-medium' : 'text-gray-700'
+                }`}
+              >
+                {genre}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+  
+      {/* 主要取引所フィルター */}
+      <div className="relative">
+        <button 
+          onClick={() => {
+            setShowExchangeFilter(!showExchangeFilter);
+            if (showGenreFilter) setShowGenreFilter(false);
+          }}
+          className="flex items-center justify-between w-48 px-4 py-2 bg-white border border-gray-300 rounded-lg shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+        >
+          <span>主要取引所: {activeExchange}</span>
+          <ChevronDown size={16} className="ml-2 text-gray-500" />
+        </button>
+    
+        {showExchangeFilter && (
+          <div className="absolute z-10 mt-1 w-48 bg-white rounded-md shadow-lg border border-gray-200 py-1">
+            {exchanges.map((exchange) => (
+              <button
+                key={exchange}
+                onClick={() => {
+                  setActiveExchange(exchange);
+                  setShowExchangeFilter(false);
+                }}
+                className={`block w-full px-4 py-2 text-sm text-left hover:bg-gray-100 ${
+                  activeExchange === exchange ? 'bg-blue-50 text-blue-700 font-medium' : 'text-gray-700'
+                }`}
+              >
+                {exchange}
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
         
         {/* 並び替え */}
         <div className="relative">
