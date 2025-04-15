@@ -910,6 +910,14 @@ export interface ChatMessagesProps {
   messages: ChatMessage[];
 }
 
+export interface QASearchBarProps {
+  onSearchSubmit: (keyword: string, filters: FilterType) => void;
+  // ソート条件が変更された際のコールバック（必要に応じて利用）
+  onSortChange?: (sortBy: string) => void;
+  initialKeyword?: string;
+  initialFilters?: FilterType;
+}
+
 
 
 
