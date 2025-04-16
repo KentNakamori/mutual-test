@@ -1,4 +1,4 @@
-// src/app/corporate/dashboard/page.tsx
+// src/app/corporate/dashboard/page.tsxあああああああああああ
 "use client";
 
 import React, { useState } from "react";
@@ -16,7 +16,6 @@ import DashboardQnAList from "@/components/features/corporate/dashboard/Dashboar
 
 import { GraphDataItem, DashboardData, Filter, Period  } from "@/types"
 import { LayoutDashboard, HelpCircle, MessageSquare, Settings } from 'lucide-react';
-
 
 
 // 新しいAPI出力に合わせたモックデータ
