@@ -4,15 +4,14 @@ import { FilterType, ChatLogsSearchBarProps } from '@/types';
 import { Search } from 'lucide-react';
 
 const ChatLogsSearchBar: React.FC<ChatLogsSearchBarProps> = ({
-  onSearch,
-  initialKeyword = ''
+  onSearchSubmit
 }) => {
-  const [localKeyword, setLocalKeyword] = useState<string>(initialKeyword);
+  const [localKeyword, setLocalKeyword] = useState<string>('');
   const [localFilter, setLocalFilter] = useState<FilterType>({});
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
-    onSearch(localKeyword, localFilter);
+    onSearchSubmit(localKeyword, localFilter);
   };
 
   return (

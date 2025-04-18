@@ -6,7 +6,7 @@ import { DialogProps } from '@/types';
  * Dialog コンポーネント
  * モーダルダイアログとして情報提示や確認操作を行います。
  */
-const Dialog: React.FC<DialogProps> = ({ isOpen, onClose, title, children, className }) => {
+const Dialog: React.FC<DialogProps> = ({ isOpen, onClose, title, children, className, showCloseButton = true }) => {
   if (!isOpen) return null;
 
   // 外部から className が指定されなければ、デフォルトで max-w-lg を適用する
@@ -17,12 +17,14 @@ const Dialog: React.FC<DialogProps> = ({ isOpen, onClose, title, children, class
       <div className={`bg-white rounded shadow-lg w-full p-6 ${containerClass}`}>
         {title && <h3 className="text-xl font-semibold mb-4">{title}</h3>}
         <div className="mb-4">{children}</div>
-        <button
-          onClick={onClose}
-          className="mt-2 bg-black text-white py-2 px-4 rounded hover:bg-gray-800"
-        >
-          Close
-        </button>
+        {showCloseButton && (
+          <button
+            onClick={onClose}
+            className="mt-2 bg-black text-white py-2 px-4 rounded hover:bg-gray-800"
+          >
+            Close
+          </button>
+        )}
       </div>
     </div>
   );

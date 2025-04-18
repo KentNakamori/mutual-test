@@ -3,20 +3,16 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { login } from '@/libs/api';
-import { LoginRequest, LoginResponse } from '@/types';
+import { signIn } from 'next-auth/react';
 import Input from '@/components/ui/Input';
 import Button from '@/components/ui/Button';
-import { useAuth } from '@/hooks/useAuth';
 
 /**
  * LoginForm
  * メールアドレス／パスワード入力欄とログインボタンを提供します。
- * API認証に失敗しても、エラー表示はせずにそのままダッシュボードへ遷移します。
  */
 const LoginForm: React.FC = () => {
   const router = useRouter();
-  const { loginSuccess } = useAuth();
   const [email, setEmail] = useState<string>('');
   const [password, setPassword] = useState<string>('');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -34,17 +30,28 @@ const LoginForm: React.FC = () => {
 
     setIsLoading(true);
     try {
-      const requestData: LoginRequest = { email, password };
-      const response: LoginResponse = await login(requestData);
-      // 認証成功時、useAuth で認証情報を更新
-      loginSuccess(response.accessToken, response.role as 'investor' | 'corporate', response.userId);
+      // NextAuthを使用したログイン処理
+      const result = await signIn('credentials', {
+        email,
+        password,
+        userType: 'corporate',
+        redirect: false,
+      });
+
+      if (result?.error) {
+        // ログインエラーの場合
+        throw new Error(result.error);
+      }
+
+      if (result?.ok) {
+        // ログイン成功の場合はダッシュボードへ遷移
+        router.push('/corporate/dashboard');
+      }
     } catch (error: any) {
-      console.warn('API認証失敗:', error);
-      // API認証が失敗しても、特に何もしない
+      console.error('ログインエラー:', error);
+      setErrorMessage('ログインに失敗しました。メールアドレスとパスワードを確認してください。');
     }
     setIsLoading(false);
-    // 認証の成功・失敗に関わらずダッシュボードへ遷移
-    router.push('/corporate/dashboard');
   };
 
   return (
@@ -80,7 +87,7 @@ const LoginForm: React.FC = () => {
       </div>
       <div>
         <Button
-          type="submit"  // ← ここで submit タイプを明示
+          type="submit"
           label={isLoading ? 'ログイン中...' : 'ログイン'}
           disabled={isLoading}
         />

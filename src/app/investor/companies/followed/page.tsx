@@ -5,7 +5,6 @@ import React, { useState, useEffect } from "react";
 import Sidebar from "@/components/common/sidebar";
 import Footer from "@/components/common/footer";
 import CompanyListing from '@/components/features/investor/companies/CompanyListing';
-import CompanySearchBar from '@/components/features/investor/companies/CompanySearchBar';
 import { Company } from "@/types";
 import { Home, Heart, Search, MessageSquare, User } from 'lucide-react';
 

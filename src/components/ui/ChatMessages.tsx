@@ -1,6 +1,8 @@
 // src/components/ui/ChatMessages.tsx
+"use client";
+
 import React from 'react';
-import MessageList from '@/components/features/corporate/irchat/MessageList';
+import MessageList from '@/components/ui/MessageList';
 import { ChatMessage, ChatMessagesProps } from '@/types';
 
 const ChatMessages: React.FC<ChatMessagesProps> = ({ messages }) => {
@@ -8,7 +10,7 @@ const ChatMessages: React.FC<ChatMessagesProps> = ({ messages }) => {
     <div className="flex flex-col h-full">
       {/* メッセージ一覧部分：この部分のみがスクロール対象
           min-h-0 を追加することで、親から指定された固定高さに沿って縮小させる */}
-      <div className="flex-1 overflow-y-auto p-4 min-h-0">
+      <div className="flex-1 overflow-y-auto px-6 py-4 min-h-0">
         <MessageList messages={messages} />
       </div>
     </div>

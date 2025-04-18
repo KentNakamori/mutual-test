@@ -5,8 +5,16 @@ import { QA } from '../types';
 import { useAuth } from './useAuth';
 
 interface QAQueryParams {
-  keyword: string;
-  theme: string;
+  keyword?: string;
+  page?: number;
+  limit?: number;
+  sort?: string;
+  order?: 'asc' | 'desc';
+  reviewStatus?: QA['reviewStatus'];
+  tag?: string;
+  source?: string[];
+  genre?: string[];
+  fiscalPeriod?: string;
 }
 
 export const useQA = (queryParams: QAQueryParams) => {

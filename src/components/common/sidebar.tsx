@@ -26,10 +26,12 @@ const Sidebar: React.FC<ExtendedSidebarProps> = ({
   return (
     <aside
       className={`
-        bg-gray-100 text-gray-700 p-2 h-screen
+        bg-white text-gray-700 p-2
         ${isOpen ? 'w-64' : 'w-16'}
-        transition-all duration-300 ease-in-out relative
-        flex-shrink-0
+        transition-all duration-300 ease-in-out
+        flex-shrink-0 flex flex-col
+        border-r border-gray-200
+        h-screen sticky top-0 left-0
       `}
     >
       {/* ロゴまたはトグルボタン */}
@@ -37,7 +39,7 @@ const Sidebar: React.FC<ExtendedSidebarProps> = ({
         {isOpen ? (
           <>
             <button
-              className="p-1 bg-gray-100 rounded-full text-gray-600 hover:bg-gray-200 transition-colors"
+              className="p-1 rounded-full text-gray-600 hover:bg-gray-100 transition-colors"
               onClick={handleToggleSidebar}
             >
               <FaAngleDoubleLeft size={20} />
@@ -54,7 +56,7 @@ const Sidebar: React.FC<ExtendedSidebarProps> = ({
           </>
         ) : (
           <button
-            className="p-1 bg-gray-100 rounded-full text-gray-600 hover:bg-gray-200 transition-colors"
+            className="p-1 rounded-full text-gray-600 hover:bg-gray-100 transition-colors"
             onClick={handleToggleSidebar}
           >
             <FaBars size={20} />
@@ -63,18 +65,18 @@ const Sidebar: React.FC<ExtendedSidebarProps> = ({
       </div>
 
       {/* メニュー項目 */}
-      <ul className="space-y-2">
+      <ul className="space-y-2 flex-grow">
         {menuItems.map((item, index) => (
           <li
             key={index}
-            className={`p-2 rounded hover:bg-gray-200 cursor-pointer transition-colors ${
-              selectedItem === item.link ? 'bg-gray-300' : ''
+            className={`p-2 rounded hover:bg-gray-100 cursor-pointer transition-colors ${
+              selectedItem === item.link ? 'border-l-4 border-blue-500 bg-gray-50' : ''
             }`}
             onClick={() => onSelectMenuItem && onSelectMenuItem(item.link)}
           >
             <div className={`flex items-center h-10 ${isOpen ? 'space-x-2' : 'justify-center'}`}>
-              {item.icon && <span className="flex-shrink-0">{item.icon}</span>}
-              {isOpen && <span className="truncate">{item.label}</span>}
+              {item.icon && <span className={`flex-shrink-0 ${selectedItem === item.link ? 'text-blue-500' : ''}`}>{item.icon}</span>}
+              {isOpen && <span className={`truncate ${selectedItem === item.link ? 'text-blue-500 font-medium' : ''}`}>{item.label}</span>}
             </div>
           </li>
         ))}

@@ -1,30 +1,58 @@
 // hooks/useAuth.ts
-import { useAuthContext } from '../contexts/AuthContext';
+import { signIn, signOut, useSession } from 'next-auth/react';
+import { CompanyInfo } from '@/types';
 
+/**
+ * NextAuthのセッション情報を使いやすい形で提供するカスタムフック
+ * 既存のuseAuthフックの代替として、NextAuth統合版
+ */
 export const useAuth = () => {
-  const { state, dispatch } = useAuthContext();
+  const { data: session, status } = useSession();
 
-  const loginSuccess = (token: string, userType: 'investor' | 'corporate', userId: string) => {
-    dispatch({ type: 'LOGIN_SUCCESS', payload: { token, userType, userId } });
+  // ログイン処理
+  const login = async (email: string, password: string, userType: 'investor' | 'corporate') => {
+    const result = await signIn('credentials', {
+      email,
+      password,
+      userType,
+      redirect: false,
+    });
+    
+    return result?.ok || false;
   };
 
-  const guestLogin = (userId: string) => {
-    dispatch({ type: 'GUEST_LOGIN', payload: { userId } });
+  // ログアウト処理
+  const logout = async () => {
+    await signOut({ redirect: false });
   };
 
-  const logout = () => {
-    dispatch({ type: 'LOGOUT' });
+  // 企業情報を更新する処理
+  // 注: NextAuthでは企業情報の更新はセッションの更新が必要
+  const updateCompanyInfo = (companyInfo: CompanyInfo) => {
+    console.warn('NextAuth使用時はセッション更新が必要です。この関数は互換性のために残されています。');
   };
 
-  const refreshToken = (token: string) => {
-    dispatch({ type: 'REFRESH_TOKEN', payload: { token } });
+  // トークンの有効性確認
+  const isTokenValid = () => {
+    return !!session?.user?.accessToken;
+  };
+
+  // 既存コードとの互換性のために状態を作成
+  const state = {
+    isAuthenticated: status === 'authenticated',
+    token: session?.user?.accessToken || null,
+    userType: session?.user?.role as 'investor' | 'corporate' | null,
+    userId: session?.user?.id || null,
+    companyInfo: session?.user?.companyInfo || null,
+    tokenExpiry: null, // NextAuthではJWT有効期限を自動管理
   };
 
   return {
     ...state,
-    loginSuccess,
-    guestLogin,
+    login,
     logout,
-    refreshToken,
+    updateCompanyInfo,
+    isTokenValid,
+    sessionStatus: status,
   };
 };

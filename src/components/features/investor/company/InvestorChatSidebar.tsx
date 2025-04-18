@@ -76,7 +76,7 @@ const InvestorChatSidebar: React.FC<InvestorChatSidebarProps> = ({
       <div className="font-medium text-gray-500 mb-1">チャット履歴</div>
       <ul className="space-y-1">
         {sessions
-          .filter(session => session.title.toLowerCase().includes(searchQuery.toLowerCase()))
+          .filter(session => session.lastMessageSnippet.toLowerCase().includes(searchQuery.toLowerCase()))
           .map((session) => (
             <li
               key={session.sessionId}
@@ -88,7 +88,7 @@ const InvestorChatSidebar: React.FC<InvestorChatSidebarProps> = ({
               <div className="flex items-center">
                 <MessageSquare size={14} className={`mr-1 ${selectedSessionId === session.sessionId ? 'text-blue-600' : 'text-gray-500'}`} />
                 <div className="flex-1 truncate">
-                  <div className="font-medium">{session.title}</div>
+                  <div className="font-medium">{session.lastMessageSnippet}</div>
                   <div className="text-gray-500">
                     {new Date(session.lastMessageTimestamp).toLocaleDateString()}
                   </div>

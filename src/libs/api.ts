@@ -34,10 +34,14 @@ import {
   UpdateNotificationSettingRequest,
   UpdateNotificationSettingResponse,
   DeleteAccountRequest,
-  DeleteAccountResponse
+  DeleteAccountResponse,
+  QA,
+  Company,
+  ChatSession,
+  ChatMessage,
+  CompanyInfo, 
+  DashboardData
 } from "../types";
-// API用の型定義から ChatMessage と CompanyInfo、DashboardData をインポート
-import { ChatMessage, CompanyInfo, DashboardData } from "../types";
 
 /**
  * 共通の HTTP クライアント関数
@@ -61,15 +65,38 @@ async function apiFetch<T>(
     ...(data ? { body: data instanceof FormData ? data : JSON.stringify(data) } : {}),
   };
 
+  // リクエスト情報のログ出力
+  console.log(`API ${method} Request to ${endpoint}:`, {
+    url: API_BASE_URL + endpoint,
+    headers,
+    body: data instanceof FormData ? "FormData" : data
+  });
+
   try {
     const response = await fetch(API_BASE_URL + endpoint, config);
-    const result = await response.json();
-    if (!response.ok) {
-      throw new Error(result.message || "API Error");
+    let result;
+    try {
+      result = await response.json();
+    } catch (e) {
+      console.error("Failed to parse response JSON:", e);
+      result = { message: "Response is not JSON" };
     }
+    
+    if (!response.ok) {
+      console.error("API Error Response:", {
+        endpoint,
+        status: response.status,
+        statusText: response.statusText,
+        data: result
+      });
+      throw new Error(result.message || result.detail || `API Error: ${response.status} ${response.statusText}`);
+    }
+    
+    // 成功時のレスポンスもログに出力
+    console.log(`API ${method} Response from ${endpoint}:`, result);
     return result;
   } catch (error) {
-    // 必要に応じてログ出力やエラートラッキング処理を追加
+    console.error(`API Fetch Error (${method} ${endpoint}):`, error);
     throw error;
   }
 }
@@ -138,25 +165,160 @@ export async function getCorporateDashboard(token: string, query: { period: stri
   return apiFetch<DashboardData>(`${ENDPOINTS.corporateDashboard}?${queryString}`, "GET", undefined, token);
 }
 
-export async function searchCorporateQa(token: string, query: { keyword: string; theme: string }): Promise<{ results: any[]; totalCount: number }> {
-  const queryString = new URLSearchParams(query as any).toString();
-  return apiFetch<{ results: any[]; totalCount: number }>(`${ENDPOINTS.corporateQaSearch}?${queryString}`, "GET", undefined, token);
+/**
+ * 企業向けQA検索API
+ * @param token 認証トークン
+ * @param query 検索クエリ
+ * @returns QAの検索結果
+ */
+export async function searchCorporateQa(
+  token: string,
+  query: {
+    keyword?: string;
+    review_status?: 'DRAFT' | 'PENDING' | 'PUBLISHED';
+    tag?: string;
+    genre?: string[];
+    fiscalPeriod?: string[];
+    sort?: 'createdAt' | 'likeCount';
+    order?: 'asc' | 'desc';
+    page?: number;
+    limit?: number;
+  }
+): Promise<{
+  results: QA[];
+  totalCount: number;
+  totalPages: number;
+}> {
+  console.log('searchCorporateQa called with query:', query);
+  
+  const queryString = new URLSearchParams();
+  
+  // クエリパラメータの設定
+  if (query.keyword) queryString.append('keyword', query.keyword);
+  if (query.review_status) queryString.append('review_status', query.review_status);
+  
+  // タグの処理 - バックエンドは単一値のみ受け付ける
+  if (query.tag) {
+    console.log('Setting tag parameter:', query.tag);
+    queryString.append('tag', query.tag);
+  }
+  
+  // ジャンルの処理
+  if (query.genre && Array.isArray(query.genre) && query.genre.length > 0) {
+    console.log('Setting genre parameters:', query.genre);
+    // 空の要素をフィルタリング
+    const validGenres = query.genre.filter(g => g && g.trim() !== '');
+    validGenres.forEach(g => queryString.append('genre', g));
+  }
+  
+  // 決算期の処理
+  if (query.fiscalPeriod && Array.isArray(query.fiscalPeriod) && query.fiscalPeriod.length > 0) {
+    console.log('Setting fiscalPeriod parameters:', query.fiscalPeriod);
+    // 空の要素をフィルタリング
+    const validPeriods = query.fiscalPeriod.filter(fp => fp && fp.trim() !== '');
+    validPeriods.forEach(fp => queryString.append('fiscalPeriod', fp));
+  }
+  
+  // ソートパラメータの処理 - バックエンドの仕様に合わせる
+  const validSortFields = ['createdAt', 'likeCount'];
+  
+  // sortが有効な値かチェック
+  if (query.sort && validSortFields.includes(query.sort)) {
+    queryString.append('sort', query.sort);
+  } else {
+    // デフォルト値
+    queryString.append('sort', 'createdAt');
+  }
+  
+  // orderの処理
+  if (query.order && ['asc', 'desc'].includes(query.order)) {
+    queryString.append('order', query.order);
+  } else {
+    // デフォルト値
+    queryString.append('order', 'desc');
+  }
+  
+  // ページネーションパラメータ
+  if (query.page) queryString.append('page', query.page.toString());
+  if (query.limit) queryString.append('limit', query.limit.toString());
+
+  const apiUrl = `${ENDPOINTS.corporateQaSearch}?${queryString.toString()}`;
+  console.log('Search API Full URL:', apiUrl);
+
+  return apiFetch<{
+    results: QA[];
+    totalCount: number;
+    totalPages: number;
+  }>(apiUrl, "GET", undefined, token);
 }
 
-export async function editCorporateQa(token: string, qaId: string, updateData: {
-  questionText: string;
-  answerText: string;
-  theme: string;
-  tags: string[];
-  relatedFiles?: any[];
-}): Promise<{ id: string; message: string }> {
-  const endpoint = `${ENDPOINTS.corporateQa}/${qaId}`;
-  return apiFetch<{ id: string; message: string }>(endpoint, "PUT", updateData, token);
+/**
+ * 企業向けQA作成API
+ * @param token 認証トークン
+ * @param data QA作成データ
+ * @returns 作成されたQAのID
+ */
+export async function createCorporateQa(
+  token: string,
+  data: {
+    title: string;
+    question: string;
+    answer: string;
+    tag: string;
+    source?: string[];
+    genre?: string[];
+    fiscalPeriod?: string;
+    reviewStatus: QA['reviewStatus'];
+  }
+): Promise<{ qaId: string }> {
+  return apiFetch<{ qaId: string }>(ENDPOINTS.corporateQa, "POST", data, token);
 }
 
-export async function deleteCorporateQa(token: string, qaId: string): Promise<{ message: string }> {
-  const endpoint = `${ENDPOINTS.corporateQa}/${qaId}`;
-  return apiFetch<{ message: string }>(endpoint, "DELETE", undefined, token);
+/**
+ * 企業向けQA更新API
+ * @param token 認証トークン
+ * @param qaId QAのID
+ * @param data 更新データ
+ * @returns 更新結果
+ */
+export async function updateCorporateQa(
+  token: string,
+  qaId: string,
+  data: {
+    title?: string;
+    question?: string;
+    answer?: string;
+    tag?: string;
+    source?: string[];
+    genre?: string[];
+    fiscalPeriod?: string;
+    reviewStatus?: QA['reviewStatus'];
+  }
+): Promise<{ qaId: string; updatedFields: Record<string, any> }> {
+  return apiFetch<{ qaId: string; updatedFields: Record<string, any> }>(
+    `${ENDPOINTS.corporateQa}/${qaId}`,
+    "PATCH",
+    data,
+    token
+  );
+}
+
+/**
+ * 企業向けQA削除API
+ * @param token 認証トークン
+ * @param qaId QAのID
+ * @returns 削除結果
+ */
+export async function deleteCorporateQa(
+  token: string,
+  qaId: string
+): Promise<{ message: string }> {
+  return apiFetch<{ message: string }>(
+    `${ENDPOINTS.corporateQa}/${qaId}`,
+    "DELETE",
+    undefined,
+    token
+  );
 }
 
 /**
@@ -316,4 +478,164 @@ export async function adminRegisterCorporateUser(
     "POST",
     requestData
   );
+}
+
+/**
+ * 企業用チャット履歴取得API
+ * @param token 認証トークン
+ * @param page ページ番号
+ * @param pageSize ページサイズ
+ * @returns チャット履歴
+ */
+export async function getCorporateChatHistory(
+  token: string,
+  page: number = 1,
+  pageSize: number = 20
+): Promise<{
+  chatLogs: {
+    chatId: string;
+    userId: string;
+    title: string;
+    lastMessageSnippet: string;
+    updatedAt: string;
+    totalMessages: number;
+  }[];
+  totalCount: number;
+  currentPage: number;
+  totalPages: number;
+}> {
+  const queryString = new URLSearchParams({
+    page: page.toString(),
+    page_size: pageSize.toString()
+  }).toString();
+  
+  return apiFetch<{
+    chatLogs: {
+      chatId: string;
+      userId: string;
+      title: string;
+      lastMessageSnippet: string;
+      updatedAt: string;
+      totalMessages: number;
+    }[];
+    totalCount: number;
+    currentPage: number;
+    totalPages: number;
+  }>(`${ENDPOINTS.corporateIrChatHistory}?${queryString}`, "GET", undefined, token);
+}
+
+/**
+ * 企業用チャット詳細取得API
+ * @param token 認証トークン
+ * @param chatId チャットID
+ * @returns チャットの詳細情報
+ */
+export async function getCorporateChatDetail(
+  token: string,
+  chatId: string
+): Promise<{
+  chatId: string;
+  messages: ChatMessage[];
+}> {
+  return apiFetch<{
+    chatId: string;
+    messages: ChatMessage[];
+  }>(`${ENDPOINTS.corporateIrChat}/${chatId}`, "GET", undefined, token);
+}
+
+/**
+ * 企業用新規チャット開始API
+ * @param token 認証トークン
+ * @param requestData チャット開始データ
+ * @returns AIの応答とチャットID
+ */
+export async function startNewCorporateChat(
+  token: string,
+  requestData: {
+    userId: string;
+  }
+): Promise<{
+  chatId: string;
+  reply: string;
+}> {
+  return apiFetch<{
+    chatId: string;
+    reply: string;
+  }>(ENDPOINTS.corporateIrChatNew, "POST", requestData, token);
+}
+
+/**
+ * 企業用チャットメッセージ送信API
+ * @param token 認証トークン
+ * @param chatId チャットID
+ * @param message 送信するメッセージ
+ * @returns AIの応答
+ */
+export async function sendCorporateChatMessage(
+  token: string,
+  chatId: string,
+  message: string
+): Promise<{
+  chatId: string;
+  reply: string;
+}> {
+  return apiFetch<{
+    chatId: string;
+    reply: string;
+  }>(`${ENDPOINTS.corporateIrChat}/${chatId}/message`, "POST", { message }, token);
+}
+
+/**
+ * 企業向けチャットメッセージ送信（ストリーミング）
+ */
+export async function sendCorporateChatMessageStream(
+  token: string,
+  chatId: string,
+  message: string,
+  onChunk: (chunk: string) => void
+): Promise<void> {
+  const headers: HeadersInit = {
+    'Content-Type': 'application/json',
+    'Authorization': `Bearer ${token}`,
+  };
+
+  const config: RequestInit = {
+    method: 'POST',
+    headers,
+    body: JSON.stringify({ message }),
+  };
+
+  try {
+    const response = await fetch(`${API_BASE_URL}${ENDPOINTS.corporateIrChat}/${chatId}/message`, config);
+    
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.message || error.detail || `API Error: ${response.status} ${response.statusText}`);
+    }
+
+    if (!response.body) {
+      throw new Error('Response body is null');
+    }
+
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+
+      const chunk = decoder.decode(value);
+      const lines = chunk.split('\n');
+      
+      for (const line of lines) {
+        if (line.startsWith('data: ')) {
+          const data = line.slice(6);
+          onChunk(data);
+        }
+      }
+    }
+  } catch (error) {
+    console.error('Streaming error:', error);
+    throw error;
+  }
 }

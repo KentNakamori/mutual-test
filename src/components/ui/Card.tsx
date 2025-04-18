@@ -10,7 +10,7 @@ const Card: React.FC<CardProps> = ({ title, children, onClick, className = "" })
   return (
     <div
       onClick={onClick}
-      className={`bg-white shadow-md rounded p-4 hover:shadow-lg transition-shadow duration-200 ${className} ${onClick ? 'cursor-pointer' : ''}`}
+      className={`bg-white shadow-md rounded-xl p-4 hover:shadow-lg transition-shadow duration-200 ${className} ${onClick ? 'cursor-pointer' : ''}`}
     >
       {title && <h2 className="text-xl font-semibold mb-2">{title}</h2>}
       <div>{children}</div>
