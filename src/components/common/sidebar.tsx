@@ -8,6 +8,30 @@ interface ExtendedSidebarProps extends SidebarProps {
   defaultCollapsed?: boolean;
 }
 
+/**
+ * Sidebar コンポーネント
+ * 
+ * このコンポーネントは以下の機能を提供します：
+ * - サイドバーナビゲーション
+ *   - 折りたたみ可能なメニュー
+ *   - アイコンとラベルの表示
+ *   - 選択状態の視覚的フィードバック
+ * 
+ * 主な機能：
+ * - サイドバーの展開/折りたたみ
+ * - メニュー項目の選択
+ * - レスポンシブデザイン
+ * - アニメーション付きの遷移
+ * 
+ * @component
+ * @param {SidebarProps} props - サイドバーのプロパティ
+ * @param {Array<SidebarMenuItem>} props.menuItems - メニュー項目の配列
+ * @param {boolean} [props.isCollapsible=true] - サイドバーを折りたたみ可能かどうか
+ * @param {string} [props.selectedItem] - 現在選択されているメニュー項目のリンク
+ * @param {(link: string) => void} [props.onSelectMenuItem] - メニュー項目選択時のコールバック関数
+ * @param {boolean} [props.defaultCollapsed=false] - デフォルトで折りたたまれた状態かどうか
+ * @returns {JSX.Element} サイドバーナビゲーションコンポーネント
+ */
 const Sidebar: React.FC<ExtendedSidebarProps> = ({
   menuItems,
   isCollapsible,

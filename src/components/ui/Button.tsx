@@ -1,7 +1,14 @@
 // components/ui/Button.tsx
-import React from 'react';
-import { ButtonProps} from '@/types';
+import React, { ButtonHTMLAttributes } from 'react';
+import { ButtonProps as BaseButtonProps } from '@/types';
 
+// 型を拡張
+interface ButtonProps extends Omit<BaseButtonProps, 'onClick'>,
+  Omit<ButtonHTMLAttributes<HTMLButtonElement>, 'onClick' | 'type' | 'className'> {
+  onClick?: (e: React.MouseEvent<HTMLButtonElement>) => void;
+  className?: string;
+  isLoading?: boolean;
+}
 
 const Button: React.FC<ButtonProps> = ({
   label,
@@ -9,6 +16,9 @@ const Button: React.FC<ButtonProps> = ({
   disabled = false,
   variant = 'primary',
   type = "button",
+  className = "",
+  isLoading = false,
+  ...rest
 }) => {
   const baseClasses =
     "py-2 px-4 rounded-xl whitespace-nowrap focus:outline-none focus:ring-2 focus:ring-offset-2 transition-colors duration-200";
@@ -38,10 +48,11 @@ const Button: React.FC<ButtonProps> = ({
     <button
       type={type}
       onClick={onClick}
-      disabled={disabled}
-      className={`${baseClasses} ${variantClasses} ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+      disabled={disabled || isLoading}
+      className={`${baseClasses} ${variantClasses} ${disabled || isLoading ? 'opacity-50 cursor-not-allowed' : ''} ${className}`}
+      {...rest}
     >
-      {label}
+      {isLoading ? 'Loading...' : label}
     </button>
   );
 };

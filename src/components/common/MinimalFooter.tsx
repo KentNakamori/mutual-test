@@ -4,7 +4,22 @@ import { MinimalFooterProps } from '@/types';
 
 /**
  * MinimalFooter コンポーネント
- * 認証前画面などでシンプルなコピーライト表示と最低限のリンクを提供します。
+ * 
+ * このコンポーネントは以下の機能を提供します：
+ * - シンプルなフッター表示
+ *   - コピーライト表示
+ *   - 最小限のリンク表示
+ * 
+ * 主な使用シーン：
+ * - 認証前の画面（ログイン、サインアップなど）
+ * - シンプルなレイアウトが必要な画面
+ * 
+ * @component
+ * @param {MinimalFooterProps} props - フッターのプロパティ
+ * @param {Array<{label: string, href: string}>} [props.footerLinks=[]] - フッターに表示するリンクの配列
+ * @param {string} props.copyrightText - コピーライトテキスト
+ * @param {(href: string) => void} [props.onSelectLink] - リンククリック時のコールバック関数
+ * @returns {JSX.Element} シンプルなフッターコンポーネント
  */
 const MinimalFooter: React.FC<MinimalFooterProps> = ({
   footerLinks = [],

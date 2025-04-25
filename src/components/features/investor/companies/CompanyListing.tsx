@@ -1,8 +1,31 @@
 // src/components/features/investor/companies/CompanyListing.tsx
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Search, ChevronDown, Grid, List, ExternalLink, Filter } from 'lucide-react';
+import { useGuest } from '@/contexts/GuestContext';
+import GuestRestrictedContent from '@/components/features/investor/common/GuestRestrictedContent';
+import { getInvestorCompanies, followInvestorCompany } from '@/libs/api';
+import { useAuth } from '@/hooks/useAuth';
+
+// APIレスポンスの型定義
+interface CompanyItem {
+  companyId: string;
+  companyName: string;
+  industry: string;
+  logoUrl?: string;
+  isFollowed: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+interface CompanyListResponse {
+  companies: CompanyItem[];
+  totalCount: number;
+  totalPages: number;
+}
 
 const CompanyListing = () => {
+  const { isGuest } = useGuest();
+  const { token } = useAuth();
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [showGenreFilter, setShowGenreFilter] = useState(false);
   const [showSortOptions, setShowSortOptions] = useState(false);
@@ -10,142 +33,169 @@ const CompanyListing = () => {
   const [activeSortOption, setActiveSortOption] = useState('新着順');
   const [showExchangeFilter, setShowExchangeFilter] = useState(false);
   const [activeExchange, setActiveExchange] = useState('すべて');
+  const [keyword, setKeyword] = useState('');
+  const [companies, setCompanies] = useState<CompanyItem[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   
-  // サンプルデータ（実際は API 等から取得）
-  const companies = [
-    { 
-      id: 1, 
-      name: 'テック・イノベーターズ株式会社', 
-      stockCode: '1234',
-      exchange: '東証プライム',
-      website: 'https://www.tech-innovators.co.jp',
-      industry: 'Technology',
-      category: 'テクノロジー', 
-      logo: '/tech-logo.png',
-      description: 'AIと機械学習技術を活用した次世代ソリューションの開発企業',
-      followed: false
-    },
-    { 
-      id: 2, 
-      name: 'グリーンエナジー株式会社', 
-      stockCode: '5678',
-      exchange: '東証プライム',
-      website: 'https://www.green-energy.co.jp',
-      industry: 'Energy',
-      category: 'エネルギー', 
-      logo: '/energy-logo.png',
-      description: '再生可能エネルギーの開発と持続可能なエネルギーソリューションの提供',
-      followed: false
-    },
-    { 
-      id: 3, 
-      name: 'ヘルスプラス合同会社', 
-      stockCode: '9012',
-      exchange: '東証スタンダード',
-      website: 'https://www.health-plus.co.jp',
-      industry: 'Healthcare',
-      category: 'ヘルスケア',
-      logo: '/health-logo.png',
-      description: 'デジタルヘルスケアサービスとウェルネスソリューションの提供企業',
-      followed: false
-    },
-  ];
+  // APIからデータ取得
+  useEffect(() => {
+    const fetchCompanies = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const query: { keyword?: string; industry?: string } = {};
+        
+        if (keyword) {
+          query.keyword = keyword;
+        }
+        
+        if (activeGenre !== 'すべて') {
+          query.industry = activeGenre;
+        }
+
+        // デバッグログ：クエリパラメータの確認
+        console.log('Fetching companies with query:', query);
+        console.log('Current token:', token);
+        
+        const response = await getInvestorCompanies(token || undefined, query);
+        console.log('API Response:', response);
+        
+        setCompanies(response.companies);
+      } catch (err) {
+        console.error('企業データの取得に失敗しました', err);
+        setError('企業データの取得に失敗しました。再度お試しください。');
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchCompanies();
+  }, [keyword, activeGenre, token]);
   
   const genres = ['すべて', 'テクノロジー', 'エネルギー', 'ヘルスケア', '金融', '小売', '製造', '不動産', 'サービス'];
   const exchanges = ['すべて', '東証プライム', '東証スタンダード'];
-  const sortOptions = ['新着順', '名前順 (A-Z)', '名前順 (Z-A)', 'いいね数: 高い順', 'いいね数: 低い順'];
+  const sortOptions = ['新着順', '名前順 (A-Z)', '名前順 (Z-A)'];
   
-  // フィルター適用
-  // フィルター適用：ジャンルと主要取引所の両方でフィルタリング
-const filteredCompanies = companies.filter(company => 
-  (activeGenre === 'すべて' || company.category === activeGenre) &&
-  (activeExchange === 'すべて' || company.exchange === activeExchange)
-);
+  // フィルター適用（APIからのデータに対して）
+  const filteredCompanies = companies.filter(company => 
+    (activeExchange === 'すべて' || company.industry === activeExchange)
+  );
+  
+  // フォロー/アンフォロー処理
+  const handleFollowToggle = async (companyId: string, currentFollowStatus: boolean) => {
+    if (isGuest || !token) {
+      return;
+    }
+    
+    try {
+      const action = currentFollowStatus ? 'unfollow' : 'follow';
+      await followInvestorCompany(companyId, action, token);
+      
+      // 成功したら、ローカルの状態を更新
+      setCompanies(prev => 
+        prev.map(company => 
+          company.companyId === companyId 
+            ? { ...company, isFollowed: !currentFollowStatus } 
+            : company
+        )
+      );
+    } catch (err) {
+      console.error('フォロー操作に失敗しました', err);
+      alert('フォロー操作に失敗しました。再度お試しください。');
+    }
+  };
+  
+  // 検索実行
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    // useEffectのトリガー（APIリクエスト）
+  };
   
   return (
     <div>
-      {/* 企業一覧の表題 */}
-      
       {/* 検索・フィルター・並び替えエリア */}
       <div className="flex flex-wrap items-center gap-3 mb-6">
         {/* 検索バー */}
-        <div className="relative flex-grow max-w-md">
+        <form onSubmit={handleSearch} className="relative flex-grow max-w-md">
           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
             <Search size={16} className="text-gray-400" />
           </div>
           <input 
             type="text" 
+            value={keyword}
+            onChange={(e) => setKeyword(e.target.value)}
             placeholder="企業名・キーワードで検索" 
             className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg bg-white text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
           />
+        </form>
+        
+        {/* ジャンルフィルター */}
+        <div className="relative">
+          <button 
+            onClick={() => {
+              setShowGenreFilter(!showGenreFilter);
+              if (showExchangeFilter) setShowExchangeFilter(false);
+            }}
+            className="flex items-center justify-between w-48 px-4 py-2 bg-white border border-gray-300 rounded-lg shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            <span>ジャンル: {activeGenre}</span>
+            <ChevronDown size={16} className="ml-2 text-gray-500" />
+          </button>
+      
+          {showGenreFilter && (
+            <div className="absolute z-10 mt-1 w-48 bg-white rounded-md shadow-lg border border-gray-200 py-1">
+              {genres.map((genre) => (
+                <button
+                  key={genre}
+                  onClick={() => {
+                    setActiveGenre(genre);
+                    setShowGenreFilter(false);
+                  }}
+                  className={`block w-full px-4 py-2 text-sm text-left hover:bg-gray-100 ${
+                    activeGenre === genre ? 'bg-blue-50 text-blue-700 font-medium' : 'text-gray-700'
+                  }`}
+                >
+                  {genre}
+                </button>
+              ))}
+            </div>
+          )}
         </div>
-        
-      {/* ジャンルフィルター */}
-      <div className="relative">
-        <button 
-          onClick={() => {
-            setShowGenreFilter(!showGenreFilter);
-            if (showExchangeFilter) setShowExchangeFilter(false);
-          }}
-          className="flex items-center justify-between w-48 px-4 py-2 bg-white border border-gray-300 rounded-lg shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
-        >
-          <span>ジャンル: {activeGenre}</span>
-          <ChevronDown size={16} className="ml-2 text-gray-500" />
-        </button>
     
-        {showGenreFilter && (
-          <div className="absolute z-10 mt-1 w-48 bg-white rounded-md shadow-lg border border-gray-200 py-1">
-            {genres.map((genre) => (
-              <button
-                key={genre}
-                onClick={() => {
-                  setActiveGenre(genre);
-                  setShowGenreFilter(false);
-                }}
-                className={`block w-full px-4 py-2 text-sm text-left hover:bg-gray-100 ${
-                  activeGenre === genre ? 'bg-blue-50 text-blue-700 font-medium' : 'text-gray-700'
-                }`}
-              >
-                {genre}
-              </button>
-            ))}
-          </div>
-        )}
-      </div>
-  
-      {/* 主要取引所フィルター */}
-      <div className="relative">
-        <button 
-          onClick={() => {
-            setShowExchangeFilter(!showExchangeFilter);
-            if (showGenreFilter) setShowGenreFilter(false);
-          }}
-          className="flex items-center justify-between w-48 px-4 py-2 bg-white border border-gray-300 rounded-lg shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
-        >
-          <span>主要取引所: {activeExchange}</span>
-          <ChevronDown size={16} className="ml-2 text-gray-500" />
-        </button>
-    
-        {showExchangeFilter && (
-          <div className="absolute z-10 mt-1 w-48 bg-white rounded-md shadow-lg border border-gray-200 py-1">
-            {exchanges.map((exchange) => (
-              <button
-                key={exchange}
-                onClick={() => {
-                  setActiveExchange(exchange);
-                  setShowExchangeFilter(false);
-                }}
-                className={`block w-full px-4 py-2 text-sm text-left hover:bg-gray-100 ${
-                  activeExchange === exchange ? 'bg-blue-50 text-blue-700 font-medium' : 'text-gray-700'
-                }`}
-              >
-                {exchange}
-              </button>
-            ))}
-          </div>
-        )}
-      </div>
-        
+        {/* 主要取引所フィルター */}
+        <div className="relative">
+          <button 
+            onClick={() => {
+              setShowExchangeFilter(!showExchangeFilter);
+              if (showGenreFilter) setShowGenreFilter(false);
+            }}
+            className="flex items-center justify-between w-48 px-4 py-2 bg-white border border-gray-300 rounded-lg shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            <span>主要取引所: {activeExchange}</span>
+            <ChevronDown size={16} className="ml-2 text-gray-500" />
+          </button>
+      
+          {showExchangeFilter && (
+            <div className="absolute z-10 mt-1 w-48 bg-white rounded-md shadow-lg border border-gray-200 py-1">
+              {exchanges.map((exchange) => (
+                <button
+                  key={exchange}
+                  onClick={() => {
+                    setActiveExchange(exchange);
+                    setShowExchangeFilter(false);
+                  }}
+                  className={`block w-full px-4 py-2 text-sm text-left hover:bg-gray-100 ${
+                    activeExchange === exchange ? 'bg-blue-50 text-blue-700 font-medium' : 'text-gray-700'
+                  }`}
+                >
+                  {exchange}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+          
         {/* 並び替え */}
         <div className="relative">
           <button 
@@ -158,7 +208,7 @@ const filteredCompanies = companies.filter(company =>
             <span>並び替え: {activeSortOption}</span>
             <ChevronDown size={16} className="ml-2 text-gray-500" />
           </button>
-          
+            
           {showSortOptions && (
             <div className="absolute z-10 mt-1 w-48 bg-white rounded-md shadow-lg border border-gray-200 py-1">
               {sortOptions.map((option) => (
@@ -178,7 +228,7 @@ const filteredCompanies = companies.filter(company =>
             </div>
           )}
         </div>
-        
+          
         {/* 表示切替 */}
         <div className="ml-auto flex items-center bg-white rounded-lg border shadow-sm p-1">
           <button 
@@ -196,6 +246,7 @@ const filteredCompanies = companies.filter(company =>
         </div>
       </div>
       
+      {/* フィルターの表示 */}
       {activeGenre !== 'すべて' && (
         <div className="mb-4 flex items-center">
           <span className="text-sm text-gray-600 mr-2">フィルター:</span>
@@ -208,28 +259,74 @@ const filteredCompanies = companies.filter(company =>
         </div>
       )}
       
-      {viewMode === 'grid' ? (
-        <div className="grid grid-cols-2 gap-6">
-          {filteredCompanies.map(company => (
-            <CompanyGridCard key={company.id} company={company} />
-          ))}
+      {/* ローディング表示 */}
+      {loading && (
+        <div className="flex justify-center items-center p-8">
+          <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500"></div>
+          <span className="ml-2 text-gray-600">データを読み込み中...</span>
         </div>
-      ) : (
-        <div className="space-y-4">
-          {filteredCompanies.map(company => (
-            <CompanyListCard key={company.id} company={company} />
-          ))}
+      )}
+      
+      {/* エラー表示 */}
+      {error && (
+        <div className="bg-red-50 border border-red-200 p-4 rounded-lg text-red-700 mb-4">
+          <p>{error}</p>
+          <button 
+            onClick={() => window.location.reload()} 
+            className="mt-2 px-4 py-1 bg-red-100 text-red-800 rounded-md text-sm hover:bg-red-200"
+          >
+            再読み込み
+          </button>
+        </div>
+      )}
+      
+      {/* データ表示 */}
+      {!loading && !error && (
+        viewMode === 'grid' ? (
+          <div className="grid grid-cols-2 gap-6">
+            {filteredCompanies.map(company => (
+              <CompanyGridCard 
+                key={company.companyId} 
+                company={company} 
+                isGuest={isGuest}
+                onFollowToggle={handleFollowToggle} 
+              />
+            ))}
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {filteredCompanies.map(company => (
+              <CompanyListCard 
+                key={company.companyId} 
+                company={company} 
+                isGuest={isGuest}
+                onFollowToggle={handleFollowToggle} 
+              />
+            ))}
+          </div>
+        )
+      )}
+      
+      {/* データが空の場合 */}
+      {!loading && !error && filteredCompanies.length === 0 && (
+        <div className="text-center py-8">
+          <p className="text-gray-500">該当する企業が見つかりませんでした。</p>
+          <p className="text-gray-500 mt-1">検索条件を変更してお試しください。</p>
         </div>
       )}
     </div>
   );
 };
 
-const CompanyGridCard = ({ company }: { company: any }) => {
-  const [followed, setFollowed] = useState(company.followed);
-  
+interface CompanyCardProps {
+  company: CompanyItem;
+  isGuest: boolean;
+  onFollowToggle: (companyId: string, currentFollowStatus: boolean) => void;
+}
+
+const CompanyGridCard = ({ company, isGuest, onFollowToggle }: CompanyCardProps) => {
   const handleCardClick = () => {
-    window.location.assign(`/investor/company/${company.id}`);
+    window.location.assign(`/investor/company/${company.companyId}`);
   };
   
   return (
@@ -239,39 +336,16 @@ const CompanyGridCard = ({ company }: { company: any }) => {
     >
       <div className="p-5 flex flex-col h-full">
         <div className="flex items-center mb-4">
-          {company.logo ? (
-            <img src={company.logo} alt={`${company.name} logo`} className="w-12 h-12 rounded-md object-contain bg-gray-100 mr-4" />
+          {company.logoUrl ? (
+            <img src={company.logoUrl} alt={`${company.companyName} logo`} className="w-12 h-12 rounded-md object-contain bg-gray-100 mr-4" />
           ) : (
             <div className="w-12 h-12 rounded-md bg-gray-100 flex items-center justify-center text-xl font-bold text-gray-500 mr-4">
-              {company.name.charAt(0)}
+              {company.companyName.charAt(0)}
             </div>
           )}
           <div>
-            <h3 className="font-medium text-gray-800">{company.name}</h3>
-            <p className="text-sm text-gray-500">{company.category}</p>
-          </div>
-        </div>
-        
-        <div className="mb-4 space-y-1 text-sm text-gray-600 flex-grow">
-          <div className="flex">
-            <span className="w-32 text-gray-500">証券コード:</span>
-            <span className="font-medium">{company.stockCode}</span>
-          </div>
-          <div className="flex">
-            <span className="w-32 text-gray-500">主要取引所:</span>
-            <span className="font-medium">{company.exchange}</span>
-          </div>
-          <div className="flex overflow-hidden">
-            <span className="w-32 text-gray-500">HP:</span>
-            <a 
-              href={company.website} 
-              target="_blank" 
-              rel="noopener noreferrer" 
-              className="text-blue-600 hover:underline truncate flex items-center"
-            >
-              {company.website.replace('https://', '')}
-              <ExternalLink size={12} className="ml-1 flex-shrink-0" />
-            </a>
+            <h3 className="font-medium text-gray-800">{company.companyName}</h3>
+            <p className="text-sm text-gray-500">{company.industry}</p>
           </div>
         </div>
         
@@ -281,29 +355,37 @@ const CompanyGridCard = ({ company }: { company: any }) => {
           </span>
         </div>
         
-        <p className="text-sm text-gray-600 mb-4 line-clamp-2">{company.description}</p>
-        
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            setFollowed(!followed);
-          }}
-          className={`w-full py-1 px-2 rounded-md text-sm font-medium transition-colors ${
-            followed ? 'bg-gray-100 text-gray-700 hover:bg-gray-200' : 'bg-blue-600 text-white hover:bg-blue-700'
-          }`}
-        >
-          {followed ? 'フォロー中' : 'フォローする'}
-        </button>
+        {isGuest ? (
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              window.location.assign('/investor/login');
+            }}
+            className="w-full py-1 px-2 rounded-md text-sm font-medium bg-gray-200 text-gray-700 hover:bg-gray-300"
+          >
+            フォローするにはログインが必要です
+          </button>
+        ) : (
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onFollowToggle(company.companyId, company.isFollowed);
+            }}
+            className={`w-full py-1 px-2 rounded-md text-sm font-medium transition-colors ${
+              company.isFollowed ? 'bg-gray-100 text-gray-700 hover:bg-gray-200' : 'bg-blue-600 text-white hover:bg-blue-700'
+            }`}
+          >
+            {company.isFollowed ? 'フォロー中' : 'フォローする'}
+          </button>
+        )}
       </div>
     </div>
   );
 };
 
-const CompanyListCard = ({ company }: { company: any }) => {
-  const [followed, setFollowed] = useState(company.followed);
-  
+const CompanyListCard = ({ company, isGuest, onFollowToggle }: CompanyCardProps) => {
   const handleCardClick = () => {
-    window.location.assign(`/investor/company/${company.id}`);
+    window.location.assign(`/investor/company/${company.companyId}`);
   };
 
   return (
@@ -312,56 +394,51 @@ const CompanyListCard = ({ company }: { company: any }) => {
       className="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-200 hover:shadow-md transition-all h-full cursor-pointer"
     >
       <div className="p-4 flex items-start h-full">
-        {company.logo ? (
-          <img src={company.logo} alt={`${company.name} logo`} className="w-12 h-12 rounded-md object-contain bg-gray-100 mr-4" />
+        {company.logoUrl ? (
+          <img src={company.logoUrl} alt={`${company.companyName} logo`} className="w-12 h-12 rounded-md object-contain bg-gray-100 mr-4" />
         ) : (
           <div className="w-12 h-12 rounded-md bg-gray-100 flex items-center justify-center text-xl font-bold text-gray-500 mr-4">
-            {company.name.charAt(0)}
+            {company.companyName.charAt(0)}
           </div>
         )}
         
         <div className="flex-1 min-w-0">
           <div className="flex flex-wrap justify-between items-start">
             <div>
-              <h3 className="font-medium text-gray-800">{company.name}</h3>
+              <h3 className="font-medium text-gray-800">{company.companyName}</h3>
               <div className="flex items-center text-sm text-gray-500 mt-1">
-                <span className="text-gray-500 mr-2">証券コード: {company.stockCode}</span>
-                <span className="text-gray-500 mr-2">|</span>
-                <span className="text-gray-500">{company.exchange}</span>
+                <span className="text-gray-500">{company.industry}</span>
               </div>
             </div>
             <span className="inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-medium bg-blue-50 text-blue-700 border border-blue-100 mt-1">
               {company.industry}
             </span>
           </div>
-          
-          <div className="mt-2 flex items-center text-xs text-gray-500">
-            <span>HP:</span>
-            <a 
-              href={company.website} 
-              target="_blank" 
-              rel="noopener noreferrer" 
-              className="ml-1 text-blue-600 hover:underline truncate flex items-center"
-            >
-              {company.website.replace('https://', '')}
-              <ExternalLink size={10} className="ml-1 flex-shrink-0" />
-            </a>
-          </div>
-          
-          <p className="mt-2 text-sm text-gray-600 line-clamp-1">{company.description}</p>
         </div>
         
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            setFollowed(!followed);
-          }}
-          className={`ml-4 px-2 py-1 rounded-md text-sm font-medium transition-colors flex-shrink-0 ${
-            followed ? 'bg-gray-100 text-gray-700 hover:bg-gray-200' : 'bg-blue-600 text-white hover:bg-blue-700'
-          }`}
-        >
-          {followed ? 'フォロー中' : 'フォローする'}
-        </button>
+        {isGuest ? (
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              window.location.assign('/investor/login');
+            }}
+            className="ml-4 px-2 py-1 rounded-md text-sm font-medium bg-gray-200 text-gray-700 hover:bg-gray-300 flex-shrink-0"
+          >
+            ログインが必要
+          </button>
+        ) : (
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onFollowToggle(company.companyId, company.isFollowed);
+            }}
+            className={`ml-4 px-2 py-1 rounded-md text-sm font-medium transition-colors flex-shrink-0 ${
+              company.isFollowed ? 'bg-gray-100 text-gray-700 hover:bg-gray-200' : 'bg-blue-600 text-white hover:bg-blue-700'
+            }`}
+          >
+            {company.isFollowed ? 'フォロー中' : 'フォローする'}
+          </button>
+        )}
       </div>
     </div>
   );

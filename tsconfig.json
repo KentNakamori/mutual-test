@@ -21,14 +21,15 @@
     "paths": {
       "@/*": ["./src/*"]
     },
-    "types": ["node", "msw"]  // この行を追加
+    "types": ["node", "msw", "auth0"]
   },
   "include": [
     "next-env.d.ts",
     "**/*.ts",
     "**/*.tsx",
     ".next/types/**/*.ts",
-    "src/mocks/**/*"  // この行を追加
-, "next.config.js"  ],
+    "src/mocks/**/*",
+    "next.config.js"
+  ],
   "exclude": ["node_modules"]
 }
