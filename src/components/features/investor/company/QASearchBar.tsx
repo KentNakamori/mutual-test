@@ -11,11 +11,11 @@ import { QASearchBarProps } from '../../../../types';
  * QASearchBar コンポーネント
  * QA一覧をキーワードで検索するための入力欄と検索ボタンを提供します。
  */
-const QASearchBar: React.FC<QASearchBarProps> = ({ onSearch }) => {
+const QASearchBar: React.FC<QASearchBarProps> = ({ onSearchSubmit }) => {
   const [searchWord, setSearchWord] = useState<string>("");
   
   const handleSearch = () => {
-    onSearch(searchWord);
+    onSearchSubmit(searchWord, {});
   };
   
   return (

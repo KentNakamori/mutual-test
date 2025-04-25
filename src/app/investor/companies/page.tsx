@@ -4,9 +4,8 @@
 import React, { useState } from 'react';
 import Sidebar from '@/components/common/sidebar';
 import Footer from '@/components/common/footer';
-import NewQAList from '@/components/features/investor/qa/NewQAList';
+import NewQAList from '@/components/features/investor/companies/NewQAList';
 import CompanyListing from '@/components/features/investor/companies/CompanyListing';
-import CompanySearchBar from '@/components/features/investor/companies/CompanySearchBar';
 import QaDetailModal from '@/components/ui/QaDetailModal';
 import { Company, QA, CompanySearchQuery } from '@/types';
 import { Home, Heart, Search, MessageSquare, User } from 'lucide-react';
@@ -107,7 +106,7 @@ const CompaniesPage: React.FC = () => {
             qas={mockQAs}
             onRowClick={(qa) => setSelectedQA(qa)}
           />
-          {/* 企業一覧セクション（上側の表題・検索バーは重複しているため削除済み） */}
+          <h1 className="text-2xl font-semibold mb-2">企業一覧</h1>
           <CompanyListing />
           {/* QA詳細モーダルの表示 */}
           {selectedQA && (

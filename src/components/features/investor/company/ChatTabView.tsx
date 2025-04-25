@@ -6,8 +6,11 @@ import InvestorChatSidebar from './InvestorChatSidebar';
 import ChatMessages from '@/components/ui/ChatMessages';
 import ChatInputBox from '@/components/ui/ChatInputBox';
 import { ChatMessage, ChatTabViewProps, ChatSession } from '@/types';
+import { useGuest } from '@/contexts/GuestContext';
+import GuestRestrictedContent from '@/components/features/investor/common/GuestRestrictedContent';
 
 const ChatTabView: React.FC<ChatTabViewProps> = ({ companyId }) => {
+  const { isGuest } = useGuest();
   const [chatSessions, setChatSessions] = useState<ChatSession[]>([
     { sessionId: '1', title: '案件A', lastMessageTimestamp: new Date().toISOString() },
     { sessionId: '2', title: '案件B', lastMessageTimestamp: new Date().toISOString() },
@@ -38,7 +41,7 @@ const ChatTabView: React.FC<ChatTabViewProps> = ({ companyId }) => {
   
   const handleSendMessage = (message: string) => {
     if (!message.trim()) return;
-    const newMsg = {
+    const newMsg: ChatMessage = {
       messageId: Date.now().toString(),
       sender: "user",
       text: message,
@@ -60,6 +63,15 @@ const ChatTabView: React.FC<ChatTabViewProps> = ({ companyId }) => {
     }, 1000);
   };
 
+  // ゲストユーザーの場合は制限付きコンテンツを表示
+  if (isGuest) {
+    return (
+      <div className="flex flex-col items-center justify-center h-full">
+        <GuestRestrictedContent featureName="チャット" />
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col md:flex-row h-full">
       {/* 左側サイドバー：固定幅 */}
@@ -74,14 +86,13 @@ const ChatTabView: React.FC<ChatTabViewProps> = ({ companyId }) => {
       {/* 右側チャットエリア） */}
       <div className="flex-1 h-full overflow-hidden flex flex-col">
         {/* 上部（チャットメッセージエリア）：スクロール対象 */}
-        <div className="border-b overflow-y-auto" style={{ height: 'calc(100% - 120px)' }}>
+        <div className="flex-1 overflow-y-auto">
           <ChatMessages
-            chatTitle={"チャット: " + (chatSessions.find(s => s.sessionId === selectedSessionId)?.title || "")}
             messages={messages}
           />
         </div>
-        {/* 下部（固定の入力欄）：（必要な縦幅に応じて調整可能） */}
-        <div style={{ height: '80px' }}>
+        {/* 下部（固定の入力欄） */}
+        <div className="flex-shrink-0">
           <ChatInputBox onSendMessage={handleSendMessage} />
         </div>
       </div>

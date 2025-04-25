@@ -49,7 +49,7 @@ const NewQAList: React.FC<NewQAListProps> = ({ qas, onRowClick }) => {
                 scope="col"
                 className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
               >
-                カテゴリー
+                資料
               </th>
             </tr>
           </thead>
@@ -71,14 +71,13 @@ const NewQAList: React.FC<NewQAListProps> = ({ qas, onRowClick }) => {
                 </td>
                 <td className="px-6 py-1 whitespace-nowrap text-xs">
                   <div className="flex flex-wrap gap-1">
-                    {qa.tags.map((tag, idx) => (
+                    {qa.tag && (
                       <span
-                        key={idx}
-                        className={`px-2 py-1 rounded-full text-xs font-medium ${getTagColor(tag)}`}
+                        className={`px-2 py-1 rounded-full text-xs font-medium ${getTagColor(qa.tag)}`}
                       >
-                        {tag}
+                        {qa.tag}
                       </span>
-                    ))}
+                    )}
                   </div>
                 </td>
               </tr>

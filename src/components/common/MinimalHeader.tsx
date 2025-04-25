@@ -5,7 +5,23 @@ import { MinimalHeaderProps } from '@/types';
 
 /**
  * MinimalHeader コンポーネント
- * 認証前画面（ログイン・パスワードリセット等）でシンプルにロゴと最低限のリンクのみを表示します。
+ * 
+ * このコンポーネントは以下の機能を提供します：
+ * - シンプルなヘッダー表示
+ *   - ロゴまたはテキスト表示
+ *   - 最小限のナビゲーションリンク
+ * 
+ * 主な使用シーン：
+ * - 認証前の画面（ログイン、パスワードリセットなど）
+ * - シンプルなレイアウトが必要な画面
+ * 
+ * @component
+ * @param {MinimalHeaderProps} props - ヘッダーのプロパティ
+ * @param {() => void} props.onClickLogo - ロゴクリック時のコールバック関数
+ * @param {string} [props.logoText="MyApp"] - ロゴテキスト（画像がない場合に表示）
+ * @param {string} [props.logoSrc="/images/qa-station-logo.png"] - ロゴ画像のパス
+ * @param {Array<{label: string, href: string}>} [props.links=[]] - ヘッダーに表示するリンクの配列
+ * @returns {JSX.Element} シンプルなヘッダーコンポーネント
  */
 const MinimalHeader: React.FC<MinimalHeaderProps> = ({
   onClickLogo,

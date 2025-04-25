@@ -15,31 +15,44 @@ import { GraphDataItem, DashboardGraphsProps } from "@/types";
 
 /**
  * DashboardGraphs コンポーネント
- * モックデータを利用して、いいね数とチャット質問数の推移を折れ線グラフで表示します。
+ * アクセス数とチャット質問数の推移を折れ線グラフで表示します。
  */
 const DashboardGraphs: React.FC<DashboardGraphsProps> = ({ graphData }) => {
+  // Date型をフォーマットしてグラフ表示用のデータに変換
+  const formattedData = graphData.map(item => ({
+    ...item,
+    date: typeof item.date === 'string' ? item.date : (item.date as Date).toISOString().split('T')[0],
+    accessCount: item.access,
+    chatCount: item.chatCount
+  }));
+
   return (
-    <div className="bg-white p-4 rounded shadow-md mb-6">
-      <h3 className="text-xl font-semibold mb-4">いいね数・チャット質問数推移</h3>
+    <div className="bg-white p-4 rounded-xl shadow-md mb-6">
+      <h3 className="text-xl font-semibold mb-4">アクセス数・チャット質問数推移</h3>
       <ResponsiveContainer width="100%" height={300}>
-        <LineChart data={graphData}>
-          <CartesianGrid strokeDasharray="3 3" />
+        <LineChart 
+          data={formattedData}
+          margin={{ top: 5, right: 30, left: 20, bottom: 5 }}
+        >
+          <CartesianGrid strokeDasharray="3 3" vertical={true} horizontal={true} />
           <XAxis dataKey="date" />
           <YAxis />
           <Tooltip />
           <Legend />
           <Line
             type="monotone"
-            dataKey="likeCount"
-            name="いいね数"
-            stroke="#8884d8"
+            dataKey="accessCount"
+            name="アクセス数"
+            stroke="#6a5acd"
+            strokeWidth={2.5}
             activeDot={{ r: 8 }}
           />
           <Line
             type="monotone"
             dataKey="chatCount"
             name="チャット質問数"
-            stroke="#82ca9d"
+            stroke="#2e8b57"
+            strokeWidth={2.5}
           />
         </LineChart>
       </ResponsiveContainer>

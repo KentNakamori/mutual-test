@@ -1,56 +1,96 @@
 // src/components/features/corporate/qa/QaListCards.tsx
-import React, { useState } from "react";
+import React, { useState, useCallback } from "react";
 import QACard from "@/components/ui/QACard";
-import { QA, QaListCardsProps } from "@/types";
+import { QA, QaListCardsWithFilterProps } from "@/types";
+import StatusFilter from "./StatusFilter";
 
-const itemsPerPage = 10;
-
-const QaListCards: React.FC<QaListCardsProps> = ({ qaItems, onSelect, onEdit, onDelete }) => {
-  const [currentPage, setCurrentPage] = useState<number>(1);
-  const totalPages = Math.ceil(qaItems.length / itemsPerPage);
-
-  // 現在のページのアイテムを抽出
-  const currentItems = qaItems.slice(
-    (currentPage - 1) * itemsPerPage,
-    currentPage * itemsPerPage
+const QaListCards: React.FC<QaListCardsWithFilterProps> = ({ 
+  qaItems,
+  onSelect, 
+  onEdit, 
+  onDelete, 
+  filters = {},
+  onFilterChange
+}) => {
+  const [selectedStatus, setSelectedStatus] = useState<'DRAFT' | 'PENDING' | 'PUBLISHED' | 'all'>(
+    filters?.reviewStatus ?? 'all'
   );
 
+  // 初期ページをfiltersから取得
+  const [currentPage, setCurrentPage] = useState<number>(filters?.page || 1);
+
+  const handleSelect = useCallback((qaId: string) => {
+    onSelect(qaId);
+  }, [onSelect]);
+
+  const handleEdit = useCallback((qaId: string) => {
+    onEdit(qaId);
+  }, [onEdit]);
+
+  const handleDelete = useCallback((qaId: string) => {
+    onDelete(qaId);
+  }, [onDelete]);
+
+  const handleStatusChange = useCallback((status: 'DRAFT' | 'PENDING' | 'PUBLISHED' | 'all') => {
+    setSelectedStatus(status);
+    // ステータス変更を親コンポーネントに通知
+    onFilterChange?.({ 
+      ...filters, 
+      reviewStatus: status === 'all' ? undefined : status,
+      page: 1 // ステータス変更時は1ページ目に戻る
+    });
+  }, [filters, onFilterChange]);
+
+  const handlePageChange = useCallback((page: number) => {
+    setCurrentPage(page);
+    onFilterChange?.({ ...filters, page });
+  }, [filters, onFilterChange]);
+
   return (
-    <div>
-      {/* カードを一列で表示 */}
-      <div className="grid grid-cols-1 gap-4">
-        {currentItems.map((qa) => (
-          <QACard
-            key={qa.qaId}
-            mode="preview"
-            role="corporate"
-            qa={qa}
-            onSelect={() => onSelect(qa.qaId)}
-            onEdit={() => onEdit(qa.qaId)}
-            onDelete={() => onDelete(qa.qaId)}
-          />
-        ))}
-      </div>
-      {/* ページネーション */}
-      <div className="mt-4 flex justify-center items-center space-x-4">
-        <button
-          disabled={currentPage === 1}
-          onClick={() => setCurrentPage(currentPage - 1)}
-          className="px-3 py-1 bg-gray-300 rounded disabled:opacity-50"
-        >
-          Prev
-        </button>
-        <span>
-          Page {currentPage} of {totalPages}
-        </span>
-        <button
-          disabled={currentPage === totalPages}
-          onClick={() => setCurrentPage(currentPage + 1)}
-          className="px-3 py-1 bg-gray-300 rounded disabled:opacity-50"
-        >
-          Next
-        </button>
-      </div>
+    <div className="space-y-4">
+      <StatusFilter selectedStatus={selectedStatus} onStatusChange={handleStatusChange} />
+      
+      {qaItems.length === 0 ? (
+        <div className="text-center p-8 bg-gray-50 rounded-lg">
+          <p className="text-gray-500">該当するQAがありません</p>
+        </div>
+      ) : (
+        <div className="grid grid-cols-1 gap-4">
+          {qaItems.map((qa) => (
+            <QACard
+              key={qa.qaId}
+              qa={qa}
+              mode="preview"
+              role="corporate"
+              onSelect={() => handleSelect(qa.qaId)}
+              onEdit={() => handleEdit(qa.qaId)}
+              onDelete={() => handleDelete(qa.qaId)}
+            />
+          ))}
+        </div>
+      )}
+      
+      {qaItems.length > 0 && filters.totalPages && filters.totalPages > 1 && (
+        <div className="mt-6 flex justify-center items-center space-x-4">
+          <button
+            disabled={currentPage === 1}
+            onClick={() => handlePageChange(currentPage - 1)}
+            className="px-4 py-2 bg-gray-100 rounded-lg hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          >
+            前へ
+          </button>
+          <span className="text-gray-600">
+            {currentPage} / {filters.totalPages || Math.ceil((filters.totalCount || 0) / (filters.limit || 10))}
+          </span>
+          <button
+            disabled={currentPage >= (filters.totalPages || Math.ceil((filters.totalCount || 0) / (filters.limit || 10)))}
+            onClick={() => handlePageChange(currentPage + 1)}
+            className="px-4 py-2 bg-gray-100 rounded-lg hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          >
+            次へ
+          </button>
+        </div>
+      )}
     </div>
   );
 };

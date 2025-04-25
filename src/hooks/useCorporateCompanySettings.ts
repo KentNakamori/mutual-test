@@ -1,10 +1,9 @@
-// src/hooks/useCorporateCompanySettings.ts
 import { useQuery } from 'react-query';
 import { getCorporateCompanySettings } from '../libs/api';
 import { CompanyInfo } from '../types';
 import { useAuth } from './useAuth';
 
-// モックデータ：バックエンドが接続されていない場合でもUI確認用に利用
+// モックデータ：バックエンドが接続されていない場合の確認用
 const mockCompanyInfo: CompanyInfo = {
   companyName: "株式会社モック",
   address: "東京都新宿区西新宿1-1-1",
@@ -12,28 +11,19 @@ const mockCompanyInfo: CompanyInfo = {
   tel: "03-1234-5678",
 };
 
-export const useCorporateCompanySettings = (token: string | null) => {
-  const { isAuthenticated } = useAuth();
-
-  const queryFn = async (): Promise<CompanyInfo> => {
-    if (!token) {
-      // トークンがない場合、モックデータを返す（500ms後に解決）
-      return new Promise((resolve) => setTimeout(() => resolve(mockCompanyInfo), 500));
-    }
-    // トークンが存在する場合は実際のAPI呼び出しを試みる
-    try {
-      return await getCorporateCompanySettings(token);
-    } catch (err) {
-      // API呼び出しエラー時は、モックデータを返す
-      return mockCompanyInfo;
-    }
-  };
+export const useCorporateCompanySettings = () => {
+  const { token } = useAuth();
 
   const { data, error, isLoading, refetch } = useQuery<CompanyInfo>(
     ['corporateCompanySettings'],
-    queryFn,
+    async () => {
+      if (!token) {
+        throw new Error('認証トークンがありません');
+      }
+      return await getCorporateCompanySettings(token);
+    },
     {
-      enabled: true, // 常に実行（モックデータが利用されるため）
+      enabled: !!token,
       staleTime: 5 * 60 * 1000, // 5分間キャッシュ
     }
   );

@@ -14,8 +14,8 @@ const LogoutButton: React.FC = () => {
     setIsModalOpen(true);
   };
 
-  const confirmLogout = () => {
-    logout();
+  const confirmLogout = async () => {
+    await logout();
     router.push('/corporate/login');
   };
 
