@@ -1,21 +1,44 @@
 // hooks/useFavorites.ts
-import { useFavoritesContext } from '../contexts/FavoritesContext';
-import { CompanyId } from '../types';
+import { useMutation, useQueryClient } from 'react-query';
+import { followInvestorCompany } from '../libs/api';
+import { useAuth } from './useAuth';
 
 export const useFavorites = () => {
-  const { state, dispatch } = useFavoritesContext();
+  const { token } = useAuth();
+  const queryClient = useQueryClient();
 
-  const addFavorite = (companyId: CompanyId) => {
-    dispatch({ type: 'ADD_FAVORITE', payload: { companyId } });
+  // 企業フォロー状態変更のミューテーション
+  const mutation = useMutation(
+    ({ companyId, action }: { companyId: string; action: 'follow' | 'unfollow' }) => {
+      if (!token) {
+        return Promise.reject(new Error('認証トークンがありません'));
+      }
+      return followInvestorCompany(companyId, action, token);
+    },
+    {
+      onSuccess: () => {
+        // 企業リストと詳細のキャッシュを無効化（再取得を強制）
+        queryClient.invalidateQueries(['investorCompanies']);
+        queryClient.invalidateQueries(['investorCompanyDetail']);
+      },
+    }
+  );
+
+  // フォロー状態を切り替える関数
+  const toggleFavorite = async (companyId: string, currentState: boolean) => {
+    try {
+      const action = currentState ? 'unfollow' : 'follow';
+      const result = await mutation.mutateAsync({ companyId, action });
+      return result;
+    } catch (error) {
+      console.error('企業フォロー状態変更エラー:', error);
+      throw error;
+    }
   };
 
-  const removeFavorite = (companyId: CompanyId) => {
-    dispatch({ type: 'REMOVE_FAVORITE', payload: { companyId } });
+  return {
+    toggleFavorite,
+    isLoading: mutation.isLoading,
+    error: mutation.error
   };
-
-  const setFavorites = (favorites: CompanyId[]) => {
-    dispatch({ type: 'SET_FAVORITES', payload: { favorites } });
-  };
-
-  return { favorites: state.favorites, addFavorite, removeFavorite, setFavorites };
 };

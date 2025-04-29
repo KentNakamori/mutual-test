@@ -12,7 +12,24 @@ export interface FooterProps {
 
 /**
  * Footer コンポーネント
- * ページ下部にコピーライトやフッターリンクを表示します。
+ * 
+ * このコンポーネントは以下の機能を提供します：
+ * - ページ下部のフッター表示
+ *   - コピーライト表示
+ *   - ナビゲーションリンク
+ *   - カスタマイズ可能なリンククリックハンドラ
+ * 
+ * 主な特徴：
+ * - レスポンシブデザイン
+ * - カスタマイズ可能なリンク
+ * - シンプルでクリーンなデザイン
+ * 
+ * @component
+ * @param {FooterProps} props - フッターのプロパティ
+ * @param {Array<{label: string, href: string}>} [props.footerLinks=[]] - フッターに表示するリンクの配列
+ * @param {string} props.copyrightText - コピーライトテキスト
+ * @param {(href: string) => void} [props.onSelectLink] - リンククリック時のコールバック関数
+ * @returns {JSX.Element} フッターコンポーネント
  */
 const Footer: React.FC<FooterProps> = ({
   footerLinks = [],

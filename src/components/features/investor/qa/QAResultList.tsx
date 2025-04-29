@@ -2,7 +2,7 @@
 "use client";
 
 import React from 'react';
-import { QA, QAResultListProps} from '@/types';
+import { QA, QAResultListProps } from '@/types';
 import QACard from '@/components/ui/QACard';
 
 /**
@@ -24,7 +24,7 @@ const QAResultList: React.FC<QAResultListProps> = ({
     <div className="space-y-4 my-6">
       {qas.map((qa) => (
         <QACard
-          key={qa.qaId}
+          key={qa._id}
           mode="preview"
           role="investor"
           qa={qa}

@@ -1,4 +1,4 @@
-// src/components/features/investor/company/ChatTabView.tsx
+// src/components/features/investor/company/InvestorChatSidebar.tsx
 "use client";
 
 import React, { useState } from 'react';
@@ -6,8 +6,12 @@ import InvestorChatSidebar from './InvestorChatSidebar';
 import ChatMessages from '@/components/ui/ChatMessages';
 import ChatInputBox from '@/components/ui/ChatInputBox';
 import { ChatMessage, ChatTabViewProps, ChatSession } from '@/types';
+import { useGuest } from '@/contexts/GuestContext';
+import GuestRestrictedContent from '@/components/features/investor/common/GuestRestrictedContent';
+
 
 const ChatTabView: React.FC<ChatTabViewProps> = ({ companyId }) => {
+  const { isGuest } = useGuest();
   const [chatSessions, setChatSessions] = useState<ChatSession[]>([
     { sessionId: '1', title: '案件A', lastMessageTimestamp: new Date().toISOString() },
     { sessionId: '2', title: '案件B', lastMessageTimestamp: new Date().toISOString() },
@@ -58,7 +62,15 @@ const ChatTabView: React.FC<ChatTabViewProps> = ({ companyId }) => {
       ]);
       setLoading(false);
     }, 1000);
-  };
+
+  // ゲストユーザーの場合は制限付きコンテンツを表示
+  if (isGuest) {
+    return (
+      <div className="flex flex-col items-center justify-center h-full">
+        <GuestRestrictedContent featureName="チャット" />
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col md:flex-row h-full">
@@ -71,6 +83,7 @@ const ChatTabView: React.FC<ChatTabViewProps> = ({ companyId }) => {
           onNewChat={handleNewChat}
         />
       </div>
+
       {/* 右側チャットエリア） */}
       <div className="flex-1 h-full overflow-hidden flex flex-col">
         {/* 上部（チャットメッセージエリア）：スクロール対象 */}
@@ -88,4 +101,4 @@ const ChatTabView: React.FC<ChatTabViewProps> = ({ companyId }) => {
   );
 };
 
-export default ChatTabView;
+export default InvestorChatSidebar;

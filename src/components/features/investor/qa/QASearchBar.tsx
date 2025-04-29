@@ -1,6 +1,6 @@
 // components/features/qa/QASearchBar.tsx
 import React from 'react';
-import { FilterType, FilterOption, QASearchBarProps} from '@/types';
+import { FilterOption, QASearchBarProps } from '@/types';
 import SearchBar from '@/components/ui/SearchBar';
 
 // QA検索用フィルターオプション（決算期、ジャンル）
@@ -30,13 +30,11 @@ const qaFilterOptions: FilterOption[] = [
 
 // ソートオプション（作成日順、いいね数）
 const qaSortOptions = [
-    { value: 'createdAt_desc', label: '作成日: 新しい順' },
-    { value: 'createdAt_asc', label: '作成日: 古い順' },
-    { value: 'likeCount_desc', label: 'いいね数: 高い順' },
-    { value: 'likeCount_asc', label: 'いいね数: 低い順' }
-  ];
-
-
+  { value: 'createdAt_desc', label: '作成日: 新しい順' },
+  { value: 'createdAt_asc', label: '作成日: 古い順' },
+  { value: 'likeCount_desc', label: 'いいね数: 高い順' },
+  { value: 'likeCount_asc', label: 'いいね数: 低い順' }
+];
 
 const QASearchBar: React.FC<QASearchBarProps> = ({ 
   onSearchSubmit, 
@@ -51,7 +49,6 @@ const QASearchBar: React.FC<QASearchBarProps> = ({
       initialFilters={initialFilters}
       filterOptions={qaFilterOptions}
       sortOptions={qaSortOptions}
-      // 共通UIの「詳細検索」ボタンラベルはそのまま利用
       filterButtonLabel="詳細検索"
       onSearch={onSearchSubmit}
       onSort={onSortChange}

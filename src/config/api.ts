@@ -1,47 +1,93 @@
-// config/api.ts
+// src/config/api.ts
+import { API_BASE_URL } from './auth';
 
-// API のベース URL は環境変数などで管理
-export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000/api";
-
-// エンドポイントの定義（動的パラメータが必要な場合は、関数内で組み立てます）
 export const ENDPOINTS = {
-  // 共通認証・ユーザー管理
-  login: "/auth/login",
-  refresh: "/auth/refresh",
-  passwordReset: "/auth/password/reset",
-  register: "/auth/register",
-  getMe: "/users/me",
-  updateMe: "/users/me",
-  search: "/search",
-  logout: "/auth/logout",
-
-  // 企業向け API
-  corporateLogin: "/corporate/auth/login",
-  corporateLogout: "/corporate/auth/logout",
-  corporateDashboard: "/corporate/dashboard",
-  corporateQaSearch: "/corporate/qa/search",
-  // 以下、動的パラメータを付与するためのベース URL
-  corporateQa: "/corporate/qa", // PUT /:id, DELETE /:id
-  corporateQaUpload: "/corporate/qa/upload",
-  corporateQaBatchCreate: "/corporate/qa/batchCreate",
-  corporateDrafts: "/corporate/irchat/drafts", // GET 一覧, GET /:draftId 詳細
-  corporateIrChat: "/corporate/irchat",
-  corporateMailDraft: "/corporate/maildraft",
-  corporateCompanySettings: "/corporate/settings/company",
-  corporateAccountSettings: "/corporate/settings/account",
-
-  // 投資家向け API
-  investorLogin: "/investor/auth/login",
-  investorLogout: "/investor/auth/logout",
-  investorGuest: "/investor/auth/guest",
-  investorCompanies: "/investor/companies", // GET 一覧, GET /:companyId 詳細
-  investorCompanyQa: "/investor/companies", // GET /:companyId/qa
-  investorQaSearch: "/investor/qa/search",
-  investorQa: "/investor/qa", // POST /:qaId/like, POST /:qaId/bookmark
-  investorChatLogs: "/investor/chat/logs", // GET 一覧, DELETE /:chatId, PATCH /:chatId/archive
-  investorUser: "/investor/users/me", // GET, PATCH, PATCH /password, PATCH /notification, DELETE
-
-  //管理者
-  adminCompanyRegister: "/api/admin/company/admin/company/register",
-  adminCorporateRegister: "/api/admin/corporate/admin/corporate/register",
+  // 企業向けAPI
+  corporate: {
+    // 認証関連
+    auth: {
+      login: '/corporate/auth/login',
+      logout: '/corporate/auth/logout',
+      passwordReset: '/corporate/auth/password/reset',
+      passwordResetConfirm: '/corporate/auth/password/reset/confirm',
+      me: '/corporate/auth/me',
+    },
+    // ダッシュボード
+    dashboard: '/corporate/dashboard',
+    // Q&A関連
+    qa: {
+      search: '/corporate/qa/search',
+      create: '/corporate/qa',
+      update: (id: string) => `/corporate/qa/${id}`,
+      delete: (id: string) => `/corporate/qa/${id}`,
+      upload: '/corporate/qa/upload',
+      batchCreate: '/corporate/qa/batchCreate',
+    },
+    // IR関連
+    ir: {
+      drafts: '/corporate/irchat/drafts',
+      draft: (id: string) => `/corporate/irchat/drafts/${id}`,
+      chat: '/corporate/irchat',
+      mailDraft: '/corporate/maildraft',
+    },
+    // 設定
+    settings: {
+      company: '/corporate/settings/company',
+      account: '/corporate/settings/account',
+    },
+    // 文書解析
+    documents: {
+      analysis: '/corporate/documents/analysis',
+    },
+  },
+  
+  // 投資家向けAPI
+  investor: {
+    // 認証関連
+    auth: {
+      login: '/investor/auth/login',
+      logout: '/investor/auth/logout',
+      register: '/investor/auth/register',
+      refresh: '/investor/auth/refresh',
+      me: '/investor/auth/me',
+      guest: '/investor/auth/guest',
+    },
+    // 企業関連
+    companies: {
+      list: '/investor/companies',
+      detail: (id: string) => `/investor/companies/${id}`,
+      qa: (id: string) => `/investor/companies/${id}/qa`,
+      names: '/investor/companies/names',
+      follow: (id: string) => `/investor/companies/${id}/follow`,
+    },
+    // Q&A関連
+    qa: {
+      search: '/investor/qa/search',
+      companies: '/investor/qa/companies',
+      like: (id: string) => `/investor/qa/like/${id}`,
+      comment: '/investor/qa/comment',
+    },
+    // チャット関連
+    chat: {
+      history: '/investor/chat/history',
+      message: '/investor/chat/message',
+      new: (companyId: string) => `/investor/chat/${companyId}`,
+      detail: (chatId: string) => `/investor/chat/${chatId}`,
+    },
+    // プロファイル関連
+    profile: {
+      get: '/investor/profile',
+      update: '/investor/profile',
+    },
+    // トラッキング
+    track: '/investor/track',
+  },
+  
+  // 管理者向けAPI
+  admin: {
+    company: {
+      register: '/admin/company/register',
+    },
+    corporate: '/admin/corporate',
+  },
 };

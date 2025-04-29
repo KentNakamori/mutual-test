@@ -11,27 +11,25 @@ const mockCompanyInfo: CompanyInfo = {
   tel: "03-1234-5678",
 };
 
-export const useCorporateCompanySettings = (token: string | null) => {
-  // トークンが存在する場合のみAPIを実行（トークンがない場合はモックデータを利用）
-  const queryFn = async (): Promise<CompanyInfo> => {
-    return await getCorporateCompanySettings(token!);
-  };
+export const useCorporateCompanySettings = () => {
+  const { token } = useAuth();
 
-  // トークンもクエリキーに含め、トークンが存在する場合のみクエリが有効になるように設定
   const { data, error, isLoading, refetch } = useQuery<CompanyInfo>(
-    ['corporateCompanySettings', token],
-    queryFn,
+    ['corporateCompanySettings'],
+    async () => {
+      if (!token) {
+        throw new Error('認証トークンがありません');
+      }
+      return await getCorporateCompanySettings(token);
+    },
     {
       enabled: !!token,
       staleTime: 5 * 60 * 1000, // 5分間キャッシュ
     }
   );
 
-  // トークンがなければモックデータを返す
-  const companyInfo = token ? data : undefined;
-
   return {
-    companyInfo,
+    companyInfo: data,
     error,
     isLoading,
     refetch,
