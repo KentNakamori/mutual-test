@@ -5,8 +5,9 @@ import React, { useState, useEffect } from "react";
 import Sidebar from "@/components/common/sidebar";
 import Footer from "@/components/common/footer";
 import CompanyListing from '@/components/features/investor/companies/CompanyListing';
-import CompanySearchBar from '@/components/features/investor/companies/CompanySearchBar';
 import { Company } from "@/types";
+import { useGuest } from "@/contexts/GuestContext";
+import GuestRestrictedContent from "@/components/features/investor/common/GuestRestrictedContent";
 import { Home, Heart, Search, MessageSquare, User } from 'lucide-react';
 
 interface ExtendedCompany extends Company {
@@ -47,13 +48,17 @@ const mockCompanies: ExtendedCompany[] = [
 ];
 
 const FollowedCompaniesPage: React.FC = () => {
+  const { isGuest } = useGuest();
   const [companies, setCompanies] = useState<ExtendedCompany[]>([]);
   const [searchQuery, setSearchQuery] = useState<{ keyword: string; industry?: string }>({ keyword: '', industry: '' });
   
   useEffect(() => {
+    // ゲストユーザーの場合はデータを取得しない
+    if (isGuest) return;
+    
     const followed = mockCompanies.filter(company => company.followed);
     setCompanies(followed);
-  }, []);
+  }, [isGuest]);
   
   const handleSearchChange = (query: { keyword: string; industry?: string }) => {
     setSearchQuery(query);
@@ -86,8 +91,14 @@ const FollowedCompaniesPage: React.FC = () => {
         />
         <main className="flex-1 container mx-auto p-4 bg-gray-50">
           <h1 className="text-2xl font-semibold mb-2">フォロー済み企業</h1>
-          {/* 企業一覧セクション：上部の重複する表題・検索バーは削除 */}
-          <CompanyListing />
+          
+          {isGuest ? (
+            <div className="mt-8">
+              <GuestRestrictedContent featureName="フォロー済み企業" />
+            </div>
+          ) : (
+            <CompanyListing />
+          )}
         </main>
       </div>
       <Footer

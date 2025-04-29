@@ -8,6 +8,8 @@ import ChatLogsSearchBar from '@/components/features/investor/chat/ChatLogsSearc
 import ChatLogsList from '@/components/features/investor/chat/ChatLogsList';
 import { ChatLog, FilterType } from '@/types';
 import { useAuth } from '@/hooks/useAuth';
+import { useGuest } from '@/contexts/GuestContext';
+import GuestRestrictedContent from '@/components/features/investor/common/GuestRestrictedContent';
 import { Home, Heart, Search, MessageSquare, User } from 'lucide-react';
 
 const mockChatLogs: ChatLog[] = [
@@ -45,18 +47,22 @@ const menuItems = [
 
 const ChatLogsPage: React.FC = () => {
   const { token } = useAuth();
+  const { isGuest } = useGuest();
   const [chatLogs, setChatLogs] = useState<ChatLog[]>([]);
   const [searchKeyword, setSearchKeyword] = useState<string>('');
   const [filterOptions, setFilterOptions] = useState<FilterType>({});
 
   useEffect(() => {
+    // ゲストユーザーの場合はAPIを呼び出さない
+    if (isGuest) return;
+    
     const fetchChatLogs = async () => {
       // 実際は token を利用して API から取得
       await new Promise((resolve) => setTimeout(resolve, 500));
       setChatLogs(mockChatLogs);
     };
     fetchChatLogs();
-  }, [token]);
+  }, [token, isGuest]);
 
   const handleSearch = useCallback((keyword: string, filter: FilterType) => {
     setSearchKeyword(keyword);
@@ -92,12 +98,21 @@ const ChatLogsPage: React.FC = () => {
         />
         <main className="flex-1 p-6">
           <h1 className="text-2xl font-semibold mb-4">チャットログ一覧</h1>
-          <ChatLogsSearchBar onSearch={handleSearch} initialKeyword={searchKeyword} />
-          <ChatLogsList
-            logs={chatLogs}
-            onDeleteLog={handleDeleteLog}
-            onArchiveLog={handleArchiveLog}
-          />
+          
+          {isGuest ? (
+            <div className="mt-8">
+              <GuestRestrictedContent featureName="チャットログ" />
+            </div>
+          ) : (
+            <>
+              <ChatLogsSearchBar onSearch={handleSearch} initialKeyword={searchKeyword} />
+              <ChatLogsList
+                logs={chatLogs}
+                onDeleteLog={handleDeleteLog}
+                onArchiveLog={handleArchiveLog}
+              />
+            </>
+          )}
         </main>
       </div>
       <Footer

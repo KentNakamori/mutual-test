@@ -1,4 +1,6 @@
 // hooks/useAppConfig.ts
+// アプリケーションの設定を管理するフック
+
 import { useAppConfigContext } from '../contexts/AppConfigContext';
 
 export const useAppConfig = () => {

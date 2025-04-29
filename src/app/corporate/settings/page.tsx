@@ -1,48 +1,45 @@
-//src\app\corporate\settings\page.tsx
 "use client";
 
 import React from "react";
 import { useRouter } from "next/navigation";
 
-// 共通コンポーネントのインポート
+// 共通コンポーネント
 import Sidebar from "@/components/common/sidebar";
 import Footer from "@/components/common/footer";
 
-
-// ページ固有コンポーネントのインポート
+// 企業向け設定用のコンポーネント
 import SettingsTabs from "@/components/features/corporate/settings/SettingsTabs";
 
-// API 呼び出しと認証用カスタムフックのインポート
+// API 接続と認証用のカスタムフック
 import { useCorporateCompanySettings } from "@/hooks/useCorporateCompanySettings";
 import { useAuth } from "@/hooks/useAuth";
 
 import { LayoutDashboard, HelpCircle, MessageSquare, Settings } from 'lucide-react';
 
 const SettingsPage: React.FC = () => {
-  const { token } = useAuth();
   const router = useRouter();
+  const { token } = useAuth();
 
-  // 企業基本情報取得用カスタムフック（モックデータ対応済み）
+  // useCorporateCompanySettings フックでバックエンド API から企業情報を取得
   const { companyInfo, isLoading, error, refetch } = useCorporateCompanySettings(token);
 
   return (
     <div className="min-h-screen flex flex-col">
       <div className="flex flex-1">
-        {/* サイドバー（Dashboardと全く同じ実装） */}
+        {/* サイドバー：ダッシュボード、Q&A管理、IRチャット、設定 */}
         <Sidebar
           menuItems={[
-            { label: "ダッシュボード", link: "/corporate/dashboard", icon: <LayoutDashboard size={20} />},
+            { label: "ダッシュボード", link: "/corporate/dashboard", icon: <LayoutDashboard size={20} /> },
             { label: "Q&A管理", link: "/corporate/qa", icon: <HelpCircle size={20} /> },
-            { label: "IRチャット", link: "/corporate/irchat" , icon: <MessageSquare size={20} />},
-            { label: "設定", link: "/corporate/settings", icon: <Settings size={20} />  },
+            { label: "IRチャット", link: "/corporate/irchat", icon: <MessageSquare size={20} /> },
+            { label: "設定", link: "/corporate/settings", icon: <Settings size={20} /> },
           ]}
           isCollapsible
-          // 現在のページなので selectedItem を "/corporate/settings" に設定
           selectedItem="/corporate/settings"
           onSelectMenuItem={(link) => router.push(link)}
         />
 
-        {/* メインコンテンツ */}
+        {/* メインコンテンツ部分 */}
         <main className="flex-1 p-6 bg-gray-50">
           {isLoading && <p>企業情報を取得中…</p>}
           {error && (

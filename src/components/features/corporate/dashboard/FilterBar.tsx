@@ -24,12 +24,13 @@ const FilterBar: React.FC<FilterBarProps> = ({ initialFilter, onFilterChange }) 
 
   return (
     <div className="flex items-end space-x-4 mb-6">
-      <div className="flex-1">
-        <label className="block mb-1 text-sm font-medium">集計期間</label>
+      <div className="w-48">
+        <label className="block mb-1 text-sm font-medium text-gray-700">集計期間</label>
         <Select
           options={periodOptions}
           value={localFilter.period}
           onChange={handlePeriodChange}
+          className="rounded-xl"
         />
       </div>
     </div>

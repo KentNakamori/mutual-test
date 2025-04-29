@@ -1,14 +1,148 @@
 // src/components/features/corporate/qa/TopActionBar.tsx
 import React from 'react';
-import SearchForm from '@/components/ui/SearchBar.tsx';
+import SearchBar from '@/components/ui/SearchBar';
 import UploadButton from './UploadButton';
-import { TopActionBarProps} from '@/types';
-
+import { TopActionBarProps } from '@/types';
+import { GENRE_OPTIONS, TAG_OPTIONS } from '@/components/ui/tagConfig';
+import { FilterOption } from '@/types';
 
 const TopActionBar: React.FC<TopActionBarProps> = ({ onSearch, onUploadClick }) => {
+  // 直近3年分の決算期を生成
+  const generateFiscalPeriods = () => {
+    const currentYear = new Date().getFullYear();
+    const periods = [];
+    for (let year = currentYear; year >= currentYear - 2; year--) {
+      for (let quarter = 1; quarter <= 4; quarter++) {
+        periods.push({
+          value: `${year}-Q${quarter}`,
+          label: `${year}-Q${quarter}`
+        });
+      }
+    }
+    return periods;
+  };
+
+  const filterOptions: FilterOption[] = [
+    {
+      id: 'tag',
+      label: 'タグ',
+      type: 'select',
+      options: TAG_OPTIONS.map(option => ({
+        value: option.label,
+        label: option.label
+      }))
+    },
+    {
+      id: 'genre',
+      label: 'ジャンル',
+      type: 'select',
+      options: GENRE_OPTIONS.map(option => ({
+        value: option.label,
+        label: option.label
+      }))
+    },
+    {
+      id: 'fiscalPeriod',
+      label: '対象決算期',
+      type: 'select',
+      options: generateFiscalPeriods()
+    }
+  ];
+
+  const sortOptions = [
+    { value: "createdAt_desc", label: "作成日（新しい順）" },
+    { value: "createdAt_asc", label: "作成日（古い順）" },
+    { value: "likeCount_desc", label: "いいね数（多い順）" }
+  ];
+
+  const handleSearch = (keyword: string, filters: any) => {
+    console.log('TopActionBar - 受け取ったフィルター:', filters);
+    
+    // 1. フィルターの処理 - すべて明示的に処理する
+    
+    // ジャンルの処理 (配列または文字列を適切に処理)
+    let genreArray: string[] | undefined = undefined;
+    if (filters.genre) {
+      if (Array.isArray(filters.genre)) {
+        const validGenres = filters.genre.filter((g: string) => g && g.trim() !== '');
+        if (validGenres.length > 0) {
+          genreArray = validGenres;
+        }
+      } else if (typeof filters.genre === 'string' && filters.genre.trim() !== '') {
+        genreArray = [filters.genre];
+      }
+    }
+    
+    // 決算期の処理
+    let fiscalPeriodArray: string[] | undefined = undefined;
+    if (filters.fiscalPeriod) {
+      if (Array.isArray(filters.fiscalPeriod)) {
+        const validPeriods = filters.fiscalPeriod.filter((p: string) => p && p.trim() !== '');
+        if (validPeriods.length > 0) {
+          fiscalPeriodArray = validPeriods;
+        }
+      } else if (typeof filters.fiscalPeriod === 'string' && filters.fiscalPeriod.trim() !== '') {
+        fiscalPeriodArray = [filters.fiscalPeriod];
+      }
+    }
+    
+    // タグの処理
+    let tagValue: string | undefined = undefined;
+    if (filters.tag && typeof filters.tag === 'string' && filters.tag.trim() !== '') {
+      tagValue = filters.tag;
+    }
+    
+    // 2. ソートの処理
+    let sortKey: 'createdAt' | 'likeCount' | undefined = undefined;
+    let sortOrder: 'asc' | 'desc' = 'desc';
+    
+    if (filters.sort && typeof filters.sort === 'string') {
+      // 'createdAt_desc' 形式からsortKeyとorderを抽出
+      const parts = filters.sort.split('_');
+      if (parts.length === 2) {
+        if (parts[0] === 'createdAt' || parts[0] === 'likeCount') {
+          sortKey = parts[0];
+        }
+        if (parts[1] === 'asc' || parts[1] === 'desc') {
+          sortOrder = parts[1];
+        }
+      }
+    }
+    
+    // 明示的なorder指定がある場合はそちらを優先
+    if (filters.order && (filters.order === 'asc' || filters.order === 'desc')) {
+      sortOrder = filters.order;
+    }
+    
+    // デフォルト値の設定
+    if (!sortKey) {
+      sortKey = 'createdAt';
+    }
+    
+    // 3. 検索条件をクリーンに整形
+    const searchParams = {
+      query: keyword || '',
+      tags: tagValue ? [tagValue] : undefined,
+      genre: genreArray,
+      fiscalPeriod: fiscalPeriodArray,
+      sort: sortKey,
+      order: sortOrder
+    };
+    
+    console.log('TopActionBar - 送信する検索条件:', searchParams);
+    onSearch(searchParams);
+  };
+
   return (
-    <div className="flex justify-between items-center mb-4">
-      <SearchForm onSearch={onSearch} />
+    <div className="flex justify-between items-start mb-4">
+      <div className="flex-grow mr-4">
+        <SearchBar
+          placeholder="Q&Aを検索"
+          filterOptions={filterOptions}
+          sortOptions={sortOptions}
+          onSearch={handleSearch}
+        />
+      </div>
       <UploadButton onClick={onUploadClick} />
     </div>
   );

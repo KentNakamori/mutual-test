@@ -1,6 +1,27 @@
 import React from 'react';
 import { HeaderProps } from '@/types';
 
+/**
+ * Header コンポーネント
+ * 
+ * このコンポーネントは以下の機能を提供します：
+ * - ページ上部のヘッダー表示
+ *   - ロゴとアプリケーション名
+ *   - ナビゲーションリンク
+ *   - ユーザー情報表示（ログイン時）
+ * 
+ * 主な特徴：
+ * - レスポンシブデザイン
+ * - ユーザー認証状態に応じた表示切り替え
+ * - カスタマイズ可能なナビゲーション
+ * 
+ * @component
+ * @param {HeaderProps} props - ヘッダーのプロパティ
+ * @param {Array<{label: string, href: string}>} props.navigationLinks - ナビゲーションリンクの配列
+ * @param {{isLoggedIn: boolean, userName: string}} props.userStatus - ユーザーの認証状態と情報
+ * @param {() => void} props.onClickLogo - ロゴクリック時のコールバック関数
+ * @returns {JSX.Element} ヘッダーコンポーネント
+ */
 const Header: React.FC<HeaderProps> = ({ navigationLinks, userStatus, onClickLogo }) => {
   return (
     <header className="bg-white text-black shadow-md py-4 px-6 flex justify-between items-center">

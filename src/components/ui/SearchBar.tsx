@@ -1,20 +1,8 @@
 // components/ui/SearchBar.tsx
 import React, { useState, ReactNode } from 'react';
-import { Search, Filter, ChevronDown, ArrowUpDown } from 'lucide-react';
-import { FilterOption, SearchBarProps } from '@/types';
-
-// 並び替えオプションの型定義
-export interface SortOption {
-  value: string;
-  label: string;
-}
-
-// プロパティの拡張
-export interface EnhancedSearchBarProps extends SearchBarProps {
-  sortOptions?: SortOption[];
-  initialSortBy?: string;
-  onSort?: (sortBy: string) => void;
-}
+import { Search, Filter, ChevronDown, ArrowUpDown, X } from 'lucide-react';
+import { FilterOption, SearchBarProps, EnhancedSearchBarProps, SortOption } from '@/types';
+import { getTagColor } from '@/components/ui/tagConfig';
 
 const SearchBar: React.FC<EnhancedSearchBarProps> = ({
   placeholder = "検索",
@@ -23,10 +11,14 @@ const SearchBar: React.FC<EnhancedSearchBarProps> = ({
   initialSortBy = "",
   showFilterButton = true,
   className = "",
-  buttonLabel = "検索",
-  filterButtonLabel = "ジャンルでフィルター",
+  filterButtonLabel = "フィルター",
   filterOptions = [],
-  sortOptions = [],
+  sortOptions = [
+    { value: "createdAt_desc", label: "作成日（新しい順）" },
+    { value: "createdAt_asc", label: "作成日（古い順）" },
+    { value: "likeCount_desc", label: "いいね数（多い順）" },
+    { value: "likeCount_asc", label: "いいね数（少ない順）" }
+  ],
   filterComponent,
   onSearch,
   onSort
@@ -35,56 +27,116 @@ const SearchBar: React.FC<EnhancedSearchBarProps> = ({
   const [showFilters, setShowFilters] = useState(false);
   const [showSortOptions, setShowSortOptions] = useState(false);
   const [selectedFilters, setSelectedFilters] = useState<Record<string, any>>(initialFilters);
+  const [activeFilters, setActiveFilters] = useState<Record<string, any>>(initialFilters);
   const [selectedSort, setSelectedSort] = useState(initialSortBy);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    onSearch(keyword, selectedFilters);
+    const cleanFilters = Object.entries(selectedFilters).reduce((acc, [key, value]) => {
+      if (value) {
+        acc[key] = value;
+      }
+      return acc;
+    }, {} as Record<string, any>);
+
+    console.log('検索条件:', {
+      keyword,
+      filters: cleanFilters,
+      sort: selectedSort
+    });
+    onSearch(keyword, cleanFilters);
   };
 
   const updateFilter = (key: string, value: any) => {
-    setSelectedFilters(prev => ({
-      ...prev,
-      [key]: value
-    }));
+    const newFilters = { ...selectedFilters };
+    if (value) {
+      newFilters[key] = value;
+    } else {
+      delete newFilters[key];
+    }
+    console.log('SearchBar - updateFilter:', { key, value, newFilters });
+    setSelectedFilters(newFilters);
+  };
+
+  const removeFilter = (key: string, value: string) => {
+    const newFilters = { ...selectedFilters };
+    if (newFilters[key] === value) {
+      delete newFilters[key];
+    }
+    setSelectedFilters(newFilters);
   };
 
   const handleSortSelect = (sortValue: string) => {
     setSelectedSort(sortValue);
     setShowSortOptions(false);
+    const [sortKey, sortDirection] = sortValue.split('_') as [string, 'asc' | 'desc'];
+    setSelectedFilters(prev => ({
+      ...prev,
+      sort: sortValue,
+      order: sortDirection
+    }));
+    onSearch(keyword, { ...selectedFilters, sort: sortValue, order: sortDirection });
     if (onSort) {
       onSort(sortValue);
     }
   };
 
+  const getFilterLabel = (key: string, value: string) => {
+    const option = filterOptions.find(opt => opt.id === key);
+    if (!option) return value;
+    const selectedOption = option.options?.find(opt => opt.value === value);
+    return selectedOption?.label || value;
+  };
+
+  const getFilterColor = (key: string, value: string) => {
+    const option = filterOptions.find(opt => opt.id === key);
+    if (!option) return 'bg-gray-100 text-gray-800';
+    const selectedOption = option.options?.find(opt => opt.value === value);
+    return selectedOption ? getTagColor(selectedOption.label) : 'bg-gray-100 text-gray-800';
+  };
+
+  const handleApplyFilters = () => {
+    setShowFilters(false);
+    const cleanFilters = Object.entries(selectedFilters).reduce((acc, [key, value]) => {
+      if (value) {
+        // ジャンルのみ配列として扱う
+        if (key === 'genre') {
+          acc[key] = Array.isArray(value) ? value : [value];
+        } else if (key === 'reviewStatus') {
+          // ステータスフィルタを適切に処理
+          acc[key] = value;
+        } else {
+          acc[key] = value;
+        }
+      }
+      return acc;
+    }, {} as Record<string, any>);
+    console.log('SearchBar - handleApplyFilters:', { cleanFilters });
+    setActiveFilters(cleanFilters);
+    onSearch(keyword, cleanFilters);
+  };
+
   return (
-    <div className={`bg-white p-4 rounded-lg shadow-sm mb-6 ${className}`}>
-      <div className="flex justify-between items-center">
-        {/* 検索バー - 幅を半分に */}
-        <div className="relative w-80">
-          <form onSubmit={handleSubmit} className="flex items-center">
-            <div className="relative">
-              <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+    <div className={`flex flex-col w-full ${className}`}>
+      <div className="flex items-center">
+        <div className="relative flex-grow max-w-md">
+          <form onSubmit={handleSubmit} className="flex items-center w-full">
+            <div className="relative w-full">
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <Search size={16} className="text-gray-400" />
+              </div>
               <input
                 type="text"
                 value={keyword}
                 onChange={(e) => setKeyword(e.target.value)}
                 placeholder={placeholder}
-                className="pl-10 pr-4 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg bg-white text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
               />
             </div>
-            
-            <button
-              type="submit"
-              className="ml-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700"
-            >
-              {buttonLabel}
-            </button>
           </form>
         </div>
-        
-        {/* フィルターと並び替えボタン */}
-        <div className="flex space-x-3">
+
+        <div className="flex ml-4 space-x-2">
           {showFilterButton && (
             <div className="relative">
               <button 
@@ -93,57 +145,105 @@ const SearchBar: React.FC<EnhancedSearchBarProps> = ({
                   setShowFilters(!showFilters);
                   setShowSortOptions(false);
                 }}
-                className="flex items-center space-x-1 bg-white px-4 py-2 rounded-lg border shadow-sm text-sm font-medium"
+                className="flex items-center justify-between px-4 py-2 bg-white border border-gray-300 rounded-lg shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
               >
-                <Filter size={16} />
-                <span>{filterButtonLabel}</span>
-                <ChevronDown size={16} />
+                <div className="flex items-center">
+                  <Filter size={16} className="mr-2 text-gray-500" />
+                  <span>{filterButtonLabel}</span>
+                </div>
+                <ChevronDown size={16} className="ml-2 text-gray-500" />
               </button>
               
               {showFilters && (
-                <div className="absolute right-0 mt-2 w-64 bg-white rounded-lg shadow-lg border border-gray-200 z-10">
+                <div className="absolute left-0 mt-2 w-96 bg-white rounded-lg shadow-lg border border-gray-200 z-10">
                   <div className="p-4">
                     <h3 className="text-sm font-medium mb-3">フィルター設定</h3>
                     
                     {filterComponent ? (
                       filterComponent
                     ) : (
-                      <div className="space-y-3">
-                        {filterOptions.map(option => (
-                          <div key={option.id} className="flex flex-col">
-                            <label className="text-sm font-medium mb-1">{option.label}</label>
-                            {option.type === 'select' && option.options && (
-                              <select
-                                value={selectedFilters[option.id] || ''}
-                                onChange={e => updateFilter(option.id, e.target.value)}
-                                className="border rounded px-2 py-1.5 text-sm"
-                              >
-                                <option value="">すべて</option>
-                                {option.options.map(opt => (
-                                  <option key={opt.value} value={opt.value}>{opt.label}</option>
-                                ))}
-                              </select>
-                            )}
-                            {option.type === 'text' && (
-                              <input
-                                type="text"
-                                value={selectedFilters[option.id] || ''}
-                                onChange={e => updateFilter(option.id, e.target.value)}
-                                className="border rounded px-2 py-1.5 text-sm"
-                              />
-                            )}
-                          </div>
-                        ))}
+                      <div className="space-y-4">
+                        {filterOptions
+                          .sort((a, b) => {
+                            // ジャンルを最初に表示
+                            if (a.id === 'genre') return -1;
+                            if (b.id === 'genre') return 1;
+                            return 0;
+                          })
+                          .map(option => {
+                            const isMultiSelect = option.id === 'genre';
+                            const isSingleSelect = option.id === 'tag' || option.id === 'fiscalPeriod';
+                            
+                            return (
+                              <div key={option.id} className="flex flex-col">
+                                <label className="text-sm font-medium mb-2">{option.label}</label>
+                                {isMultiSelect ? (
+                                  <div className="flex flex-wrap gap-2">
+                                    {option.options?.map(opt => {
+                                      const isSelected = Array.isArray(selectedFilters[option.id])
+                                        ? selectedFilters[option.id].includes(opt.value)
+                                        : false;
+                                      return (
+                                        <button
+                                          key={opt.value}
+                                          onClick={() => {
+                                            const currentValues = Array.isArray(selectedFilters[option.id])
+                                              ? selectedFilters[option.id]
+                                              : [];
+                                            if (isSelected) {
+                                              updateFilter(option.id, currentValues.filter((v: string) => v !== opt.value));
+                                            } else {
+                                              updateFilter(option.id, [...currentValues, opt.value]);
+                                            }
+                                          }}
+                                          className={`px-3 py-1 rounded-full text-sm transition-colors duration-200 ${
+                                            isSelected 
+                                              ? 'bg-blue-100 text-blue-800 border border-blue-200 hover:bg-blue-200' 
+                                              : 'bg-gray-100 text-gray-800 border border-gray-200 hover:bg-gray-200'
+                                          }`}
+                                        >
+                                          {opt.label}
+                                        </button>
+                                      );
+                                    })}
+                                  </div>
+                                ) : isSingleSelect ? (
+                                  <select
+                                    value={selectedFilters[option.id] || ''}
+                                    onChange={(e) => updateFilter(option.id, e.target.value)}
+                                    className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                  >
+                                    <option value="">すべて</option>
+                                    {option.options?.map(opt => (
+                                      <option key={opt.value} value={opt.value}>
+                                        {opt.label}
+                                      </option>
+                                    ))}
+                                  </select>
+                                ) : (
+                                  <select
+                                    value={selectedFilters[option.id] || ''}
+                                    onChange={(e) => updateFilter(option.id, e.target.value)}
+                                    className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                  >
+                                    <option value="">すべて</option>
+                                    {option.options?.map(opt => (
+                                      <option key={opt.value} value={opt.value}>
+                                        {opt.label}
+                                      </option>
+                                    ))}
+                                  </select>
+                                )}
+                              </div>
+                            );
+                          })}
                       </div>
                     )}
                     
                     <div className="flex justify-end mt-4">
                       <button
                         type="button"
-                        onClick={() => {
-                          setShowFilters(false);
-                          onSearch(keyword, selectedFilters);
-                        }}
+                        onClick={handleApplyFilters}
                         className="px-3 py-1.5 bg-blue-600 text-white rounded-md hover:bg-blue-700 text-sm"
                       >
                         適用
@@ -155,7 +255,6 @@ const SearchBar: React.FC<EnhancedSearchBarProps> = ({
             </div>
           )}
           
-          {/* 並び替えボタン */}
           <div className="relative">
             <button 
               type="button"
@@ -163,15 +262,14 @@ const SearchBar: React.FC<EnhancedSearchBarProps> = ({
                 setShowSortOptions(!showSortOptions);
                 setShowFilters(false);
               }}
-              className="flex items-center space-x-1 bg-white px-4 py-2 rounded-lg border shadow-sm text-sm font-medium"
+              className="flex items-center justify-between px-4 py-2 bg-white border border-gray-300 rounded-lg shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
-              <ArrowUpDown size={16} />
               <span>並び替え</span>
-              <ChevronDown size={16} />
+              <ChevronDown size={16} className="ml-2 text-gray-500" />
             </button>
-            
+
             {showSortOptions && sortOptions.length > 0 && (
-              <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-10">
+              <div className="absolute left-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-10">
                 <div className="py-1">
                   {sortOptions.map(option => (
                     <button

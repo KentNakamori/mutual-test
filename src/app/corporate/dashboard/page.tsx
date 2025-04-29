@@ -1,8 +1,13 @@
 // src/app/corporate/dashboard/page.tsx
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { useAuth } from "@/hooks/useAuth";
+import { useGuestToken } from "@/hooks/useGuestToken";
+import { getCorporateDashboard } from "@/libs/api";
+import { LayoutDashboard, HelpCircle, MessageSquare, Settings } from 'lucide-react';
+import { DashboardData, Filter, Period } from "@/types";
 
 // 共通コンポーネントのインポート
 import Sidebar from "@/components/common/sidebar";
@@ -14,141 +19,86 @@ import FilterBar from "@/components/features/corporate/dashboard/FilterBar";
 import DashboardGraphs from "@/components/features/corporate/dashboard/DashboardGraphs";
 import DashboardQnAList from "@/components/features/corporate/dashboard/DashboardQnAList";
 
-import { GraphDataItem, DashboardData, Filter, Period  } from "@/types"
-import { LayoutDashboard, HelpCircle, MessageSquare, Settings } from 'lucide-react';
 
-
-
-// 新しいAPI出力に合わせたモックデータ
-const getMockDashboardData = (period: Period): DashboardData => {
-  return {
-      stats: {
-        daily: [
-          { label: "アクセス数", value: 15, unit: "回" },
-          { label: "チャット質問数", value: 8, unit: "件" },
-          { label: "公開Q&A数", value: 8, unit: "件" },
-        ],
-        weekly: [
-          { label: "アクセス数", value: 102, unit: "回" },
-          { label: "チャット質問数", value: 32, unit: "件" },
-          { label: "公開Q&A数", value: 22, unit: "件" },
-        ],
-        monthly: [
-          { label: "アクセス数", value: 420, unit: "回" },
-          { label: "チャット質問数", value: 123, unit: "件" },
-          { label: "公開Q&A数", value: 31, unit: "件" },
-        ],
-      },
-      graphData: {
-        daily: [
-          { date: "2025-03-27", likeCount: 7, chatCount: 3 },
-          { date: "2025-03-30", likeCount: 8, chatCount: 5 },
-        ],
-        weekly: [
-          { date: "2025-10", likeCount: 25, chatCount: 7 },
-          { date: "2025-11", likeCount: 25, chatCount: 8 },
-          { date: "2025-12", likeCount: 26, chatCount: 8 },
-          { date: "2025-13", likeCount: 26, chatCount: 9 },
-        ],
-        monthly: [
-          { date: "2025-03", likeCount: 420, chatCount: 123 },
-        ],
-      },
-    
-    qas: {
-      published: [
-        {
-          qaId: "67ee2e69f0a6b85c7d42fbf1",
-          title: "QAタイトル 10",
-          question: "質問文 10 for company 67ee2e68f0a6b85c7d42fbdf",
-          answer: "回答文 10 for company 67ee2e68f0a6b85c7d42fbdf",
-          companyId: "67ee2e68f0a6b85c7d42fbdf",
-          likeCount: 0,
-          tags: ["tag2"],
-          genre: ["genre2"],
-          fiscalPeriod: "2025-Q4",
-          createdAt: "2025-03-11T19:17:33.636000",
-          updatedAt: "2025-04-02T00:33:58.636000",
-          isPublished: true,
-        },
-        {
-          qaId: "67ee2e69f0a6b85c7d42fbf0",
-          title: "QAタイトル 9",
-          question: "質問文 9 for company 67ee2e68f0a6b85c7d42fbdf",
-          answer: "回答文 9 for company 67ee2e68f0a6b85c7d42fbdf",
-          companyId: "67ee2e68f0a6b85c7d42fbdf",
-          likeCount: 6,
-          tags: ["tag2"],
-          genre: ["genre3"],
-          fiscalPeriod: "2025-Q1",
-          createdAt: "2025-03-25T17:14:45.636000",
-          updatedAt: "2025-03-25T04:00:49.636000",
-          isPublished: true,
-        },
-        {
-          qaId: "67ee2e69f0a6b85c7d42fbef",
-          title: "QAタイトル 8",
-          question: "質問文 8 for company 67ee2e68f0a6b85c7d42fbdf",
-          answer: "回答文 8 for company 67ee2e68f0a6b85c7d42fbdf",
-          companyId: "67ee2e68f0a6b85c7d42fbdf",
-          likeCount: 16,
-          tags: ["tag1"],
-          genre: ["genre3"],
-          fiscalPeriod: "2025-Q4",
-          createdAt: "2025-03-31T22:11:25.636000",
-          updatedAt: "2025-03-21T22:06:42.636000",
-          isPublished: true,
-        },
-        {
-          qaId: "67ee2e69f0a6b85c7d42fbec",
-          title: "QAタイトル 5",
-          question: "質問文 5 for company 67ee2e68f0a6b85c7d42fbdf",
-          answer: "回答文 5 for company 67ee2e68f0a6b85c7d42fbdf",
-          companyId: "67ee2e68f0a6b85c7d42fbdf",
-          likeCount: 13,
-          tags: ["tag3"],
-          genre: ["genre1"],
-          fiscalPeriod: "2025-Q1",
-          createdAt: "2025-04-01T08:47:04.636000",
-          updatedAt: "2025-03-21T16:13:14.636000",
-          isPublished: true,
-        },
-        {
-          qaId: "67ee2e69f0a6b85c7d42fbeb",
-          title: "QAタイトル 4",
-          question: "質問文 4 for company 67ee2e68f0a6b85c7d42fbdf",
-          answer: "回答文 4 for company 67ee2e68f0a6b85c7d42fbdf",
-          companyId: "67ee2e68f0a6b85c7d42fbdf",
-          likeCount: 18,
-          tags: ["tag3"],
-          genre: ["genre1"],
-          fiscalPeriod: "2025-Q1",
-          createdAt: "2025-03-05T12:49:28.636000",
-          updatedAt: "2025-03-19T01:09:54.636000",
-          isPublished: true,
-        },
-      ],
-    },
-  };
-};
 
 const DashboardPage: React.FC = () => {
   const router = useRouter();
+  const { token } = useAuth();
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [error, setError] = useState<string | null>(null);
+  const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
 
   const [filter, setFilter] = useState<Filter>({
     period: "monthly",
   });
 
-  // 選択された期間のデータのみを利用
-  const dashboardData: DashboardData = getMockDashboardData(filter.period);
+  useEffect(() => {
+    const fetchDashboardData = async () => {
+      if (!token) {
+        setError("認証トークンがありません");
+        return;
+      }
+
+      try {
+        setIsLoading(true);
+        const data = await getCorporateDashboard(token, { period: filter.period });
+        
+        // APIから返されるデータをそのまま使用
+        const transformedData = {
+          ...data,
+          graphData: {
+            ...data.graphData,
+            [filter.period]: data.graphData[filter.period].map(item => ({
+              ...item,
+              date: item.date
+            }))
+          }
+        };
+
+        // console.log("変換後のデータ:", transformedData);
+        setDashboardData(transformedData);
+        setError(null);
+      } catch (error) {
+        // console.error("ダッシュボードデータの取得に失敗しました:", error);
+        setError("ダッシュボードデータの取得に失敗しました");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchDashboardData();
+  }, [token, filter.period]);
 
   const handleFilterChange = (newFilter: Filter) => {
     setFilter(newFilter);
+    // console.log("フィルター変更:", newFilter);
   };
 
   const handleQACardClick = (qaId: string) => {
+    // console.log("選択されたQA:", qaId);
     router.push(`/corporate/qa/${qaId}`);
   };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-xl">読み込み中...</div>
+      </div>
+    );
+  }
+
+  if (error || !dashboardData) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-xl text-red-500">{error || "データの取得に失敗しました"}</div>
+      </div>
+    );
+  }
+
+  // console.log("現在の期間:", filter.period);
+  // console.log("表示中の統計データ:", dashboardData.stats[filter.period]);
+  // console.log("表示中のグラフデータ:", dashboardData.graphData[filter.period]);
+  console.log("公開済みQ&A:", dashboardData.qas.published);
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -190,4 +140,3 @@ const DashboardPage: React.FC = () => {
 };
 
 export default DashboardPage;
-

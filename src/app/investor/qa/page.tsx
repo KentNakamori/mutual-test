@@ -82,7 +82,6 @@ const QASearchPage: React.FC = () => {
     // モックデータがさらに必要なら、ここに追加してください。
   ];
 
-  // React Query で検索APIを叩く（token が無い場合はモックを返す）
   const { data, refetch, isLoading, error } = useQuery<{ results: QA[]; totalCount: number }>(
     ['investorQaSearch', searchKeyword, filters],
     () => {
@@ -95,12 +94,48 @@ const QASearchPage: React.FC = () => {
         ...(filters.sortKey ? { sortKey: filters.sortKey } : {}),
         ...(filters.sortDirection ? { sortDirection: filters.sortDirection } : {}),
       };
-      return token
-        ? searchInvestorQa(token, query)
-        : Promise.resolve({ results: mockQAData, totalCount: mockQAData.length });
+      if (token) {
+        return searchInvestorQa(token, query);
+      } else {
+        // mock データに対して fiscalPeriod と genre でフィルタリング
+        let filtered = mockQAData.filter(qa => {
+          let pass = true;
+          if (filters.fiscalPeriod && filters.fiscalPeriod !== '') {
+            // filters.fiscalPeriod の例: "2025-Q4" を "2025年度 Q4" に変換
+            const filterFiscal = filters.fiscalPeriod.replace('-', '年度 ');
+            pass = pass && qa.fiscalPeriod === filterFiscal;
+          }
+          if (filters.genre && filters.genre !== '') {
+            // QA.genre は配列と仮定
+            pass = pass && qa.genre.includes(filters.genre);
+          }
+          return pass;
+        });
+  
+        // 並び替え処理：sortKey と sortDirection が指定されている場合にソートを実施
+        if (filters.sortKey && filters.sortDirection) {
+          filtered.sort((a, b) => {
+            if (filters.sortKey === 'createdAt') {
+              const dateA = new Date(a.createdAt);
+              const dateB = new Date(b.createdAt);
+              return filters.sortDirection === 'desc'
+                ? dateB.getTime() - dateA.getTime()
+                : dateA.getTime() - dateB.getTime();
+            } else if (filters.sortKey === 'likeCount') {
+              return filters.sortDirection === 'desc'
+                ? b.likeCount - a.likeCount
+                : a.likeCount - b.likeCount;
+            }
+            return 0;
+          });
+        }
+  
+        return Promise.resolve({ results: filtered, totalCount: filtered.length });
+      }
     },
     { enabled: !!token }
   );
+  
 
   // 全QAデータ
   const qaItems: QA[] = data?.results || mockQAData;
@@ -152,9 +187,18 @@ const QASearchPage: React.FC = () => {
 
           <QASearchBar 
             onSearchSubmit={handleSearchSubmit}
+            onSortChange={(sortValue: string) => {
+            // sortValue は "createdAt_desc" などの形式で渡される
+              const [sortKey, sortDirection] = sortValue.split('_');
+            // filters を更新して新しい検索を実行する
+              const updatedFilters = { ...filters, sortKey, sortDirection };
+              setFilters(updatedFilters);
+              setCurrentPage(1);
+              refetch();
+            }}
             initialKeyword={searchKeyword}
             initialFilters={filters}
-/>
+          />
 
           {isLoading && <p>読み込み中…</p>}
           {error && <p>エラーが発生しました: {(error as Error).message}</p>}

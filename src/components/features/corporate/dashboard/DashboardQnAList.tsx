@@ -15,7 +15,7 @@ const DashboardQnAList: React.FC<DashboardQnAListProps> = ({ publishedQAs }) => 
 
   return (
     <div className="mb-6">
-      <h3 className="text-xl font-semibold mb-4">Q&A一覧</h3>
+      <h3 className="text-xl font-semibold mb-4">最新公開済みQ&A一覧</h3>
       <div className="grid grid-cols-1 gap-4">
         {publishedQAs.map((qa) => (
           <QACard
