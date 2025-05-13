@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import Input from '../../../ui/Input';
 import Button from '../../../ui/Button';
-import { updateCorporateAccountSettings } from '../../../../libs/api';
+import { updateCorporateAccountSettings } from '../../../../lib/api';
 import { useAuth } from '../../../../hooks/useAuth';
 
 const AccountSettingsForm: React.FC = () => {

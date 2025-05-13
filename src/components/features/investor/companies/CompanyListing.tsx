@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { Search, ChevronDown, Grid, List, ExternalLink, Filter } from 'lucide-react';
 import { useGuest } from '@/contexts/GuestContext';
 import GuestRestrictedContent from '@/components/features/investor/common/GuestRestrictedContent';
-import { getInvestorCompanies, followInvestorCompany } from '@/libs/api';
+import { getInvestorCompanies, followInvestorCompany } from '@/lib/api';
 import { useAuth } from '@/hooks/useAuth';
 
 // APIレスポンスの型定義

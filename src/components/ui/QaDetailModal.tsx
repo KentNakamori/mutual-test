@@ -8,7 +8,7 @@ import {
   getTagColor,
 } from '@/components/ui/tagConfig';
 import { Calendar, ThumbsUp, X, BookOpen, Plus, Clock, FileText, Tag, Activity, HelpCircle, CheckCircle } from 'lucide-react';
-import { updateCorporateQa, deleteCorporateQa } from '@/libs/api';
+import { updateCorporateQa, deleteCorporateQa } from '@/lib/api';
 import { useAuth } from '@/hooks/useAuth';
 
 const QaDetailModal: React.FC<QADetailModalProps> = ({

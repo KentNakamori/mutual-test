@@ -1,6 +1,6 @@
 // hooks/useQA.ts
 import { useQuery, useMutation, useQueryClient, UseQueryOptions } from 'react-query';
-import { searchInvestorQa, searchInvestorCompanyQa, likeInvestorQa, getInvestorQaCompanies } from '../libs/api';
+import { searchInvestorQa, searchInvestorCompanyQa, likeInvestorQa, getInvestorQaCompanies } from '../lib/api';
 import { useAuth } from './useAuth';
 
 export interface QASearchParams {

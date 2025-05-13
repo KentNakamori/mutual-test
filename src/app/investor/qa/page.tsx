@@ -9,7 +9,7 @@ import QAResultList from '@/components/features/investor/qa/QAResultList';
 import Pagination from '@/components/features/corporate/qa/Pagination';
 import { QA, FilterType } from '@/types';
 import { useAuth } from '@/hooks/useAuth';
-import { searchInvestorQa } from '@/libs/api';
+import { searchInvestorQa } from '@/lib/api';
 import QaDetailModal from '@/components/ui/QaDetailModal';
 import { Home, Heart, Search, MessageSquare, User } from 'lucide-react';
 

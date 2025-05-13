@@ -5,7 +5,7 @@ import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/hooks/useAuth";
 import { useGuestToken } from "@/hooks/useGuestToken";
-import { getCorporateDashboard } from "@/libs/api";
+import { getCorporateDashboard } from "@/lib/api";
 import { LayoutDashboard, HelpCircle, MessageSquare, Settings } from 'lucide-react';
 import { DashboardData, Filter, Period } from "@/types";
 
@@ -18,7 +18,6 @@ import DashboardStats from "@/components/features/corporate/dashboard/DashboardS
 import FilterBar from "@/components/features/corporate/dashboard/FilterBar";
 import DashboardGraphs from "@/components/features/corporate/dashboard/DashboardGraphs";
 import DashboardQnAList from "@/components/features/corporate/dashboard/DashboardQnAList";
-
 
 
 const DashboardPage: React.FC = () => {

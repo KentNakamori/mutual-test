@@ -1,11 +1,14 @@
+// app/api/auth/corporate-login/route.ts
+import { NextResponse } from 'next/server';
 
-// src/app/api/auth/corporate-login/route.ts
-import { handleLogin } from '@auth0/nextjs-auth0';
-export const GET = handleLogin({
-  returnTo: `${process.env.AUTH0_BASE_URL}/corporate/dashboard`,
-  authorizationParams: {
-    audience: process.env.AUTH0_AUDIENCE,
+export const GET = () => {
+  const qs = new URLSearchParams({
     connection: 'Corporate-DB',
-    scope: 'openid profile email'
-  }
-});
+    audience: process.env.AUTH0_AUDIENCE ?? '',
+    returnTo:  '/corporate/dashboard',
+  });
+  // APP_BASE_URL は .env に必須
+  return NextResponse.redirect(
+    new URL(`/auth/login?${qs.toString()}`, process.env.AUTH0_BASE_URL!)
+  );
+};

@@ -2,7 +2,9 @@
 import type { Metadata } from 'next';
 import { Inter, Roboto_Mono } from 'next/font/google';
 import './globals.css';
-import { Providers } from '@/components/common/Providers';
+import { Auth0Provider } from '@auth0/nextjs-auth0';
+
+
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-sans' });
 const robotoMono = Roboto_Mono({ subsets: ['latin'], variable: '--font-mono' });
@@ -16,9 +18,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="ja">
       <body className={`${inter.variable} ${robotoMono.variable} font-sans antialiased bg-gray-50 text-gray-900 min-h-screen`}>
-        <Providers>
+        <Auth0Provider>
           {children}
-        </Providers>
+        </Auth0Provider>
+
+      
       </body>
     </html>
   );

@@ -5,7 +5,7 @@ import {
   sendInvestorChatMessage,
   getInvestorChatDetail,
   deleteInvestorChat
-} from '../libs/api';
+} from '../lib/api';
 import { useAuth } from './useAuth';
 import { useState } from 'react';
 

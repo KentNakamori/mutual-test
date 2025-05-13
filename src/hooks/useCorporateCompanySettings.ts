@@ -1,5 +1,5 @@
 import { useQuery } from 'react-query';
-import { getCorporateCompanySettings } from '../libs/api';
+import { getCorporateCompanySettings } from '../lib/api';
 import { CompanyInfo } from '../types';
 import { useAuth } from './useAuth';
 

@@ -1,6 +1,6 @@
 // hooks/useFavorites.ts
 import { useMutation, useQueryClient } from 'react-query';
-import { followInvestorCompany } from '../libs/api';
+import { followInvestorCompany } from '../lib/api';
 import { useAuth } from './useAuth';
 
 export const useFavorites = () => {

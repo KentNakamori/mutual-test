@@ -11,7 +11,7 @@ import UploadModal from "@/components/features/corporate/qa/UploadModal";
 import QaDetailModal from "@/components/ui/QaDetailModal";
 import { QA } from "@/types";
 import { LayoutDashboard, HelpCircle, MessageSquare, Settings } from 'lucide-react';
-import { searchCorporateQa, createCorporateQa, updateCorporateQa, deleteCorporateQa } from "@/libs/api";
+import { searchCorporateQa, createCorporateQa, updateCorporateQa, deleteCorporateQa } from "@/lib/api";
 import { useAuth } from "@/hooks/useAuth";
 
 
