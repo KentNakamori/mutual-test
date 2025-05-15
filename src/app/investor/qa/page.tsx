@@ -8,8 +8,8 @@ import QASearchBar from '@/components/features/investor/qa/QASearchBar';
 import QAResultList from '@/components/features/investor/qa/QAResultList';
 import Pagination from '@/components/features/corporate/qa/Pagination';
 import { QA, FilterType } from '@/types';
-import { useAuth } from '@/hooks/useAuth';
-import { searchInvestorQa } from '@/libs/api';
+import { useUser } from "@auth0/nextjs-auth0";
+import { searchInvestorQa } from '@/lib/api';
 import QaDetailModal from '@/components/ui/QaDetailModal';
 import { Home, Heart, Search, MessageSquare, User } from 'lucide-react';
 
@@ -36,7 +36,8 @@ const QASearchPage: React.FC = () => {
   const [selectedQA, setSelectedQA] = useState<QA | null>(null);
   const [currentPage, setCurrentPage] = useState<number>(1);
   const itemsPerPage = 10;
-  const { token } = useAuth();
+  const { user, isLoading: userLoading } = useUser(); 
+  const token = user?.sub ?? null;
 
   // 簡易な日付フォーマット関数
   const formatDate = (dateStr: string) => {
@@ -95,7 +96,7 @@ const QASearchPage: React.FC = () => {
         ...(filters.sortDirection ? { sortDirection: filters.sortDirection } : {}),
       };
       if (token) {
-        return searchInvestorQa(token, query);
+        return searchInvestorQa(query, token);
       } else {
         // mock データに対して fiscalPeriod と genre でフィルタリング
         let filtered = mockQAData.filter(qa => {
@@ -133,7 +134,7 @@ const QASearchPage: React.FC = () => {
         return Promise.resolve({ results: filtered, totalCount: filtered.length });
       }
     },
-    { enabled: !!token }
+    { enabled: !!userLoading}
   );
   
 

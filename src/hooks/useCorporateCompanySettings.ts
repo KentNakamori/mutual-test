@@ -1,7 +1,7 @@
 import { useQuery } from 'react-query';
-import { getCorporateCompanySettings } from '../libs/api';
+import { getCorporateCompanySettings } from '../lib/api';
 import { CompanyInfo } from '../types';
-import { useAuth } from './useAuth';
+import { useUser } from "@auth0/nextjs-auth0";
 
 // モックデータ：バックエンドが接続されていない場合の確認用
 const mockCompanyInfo: CompanyInfo = {
@@ -12,7 +12,8 @@ const mockCompanyInfo: CompanyInfo = {
 };
 
 export const useCorporateCompanySettings = () => {
-  const { token } = useAuth();
+  const { user } = useUser();
+  const token = user?.sub ?? null;
 
   const { data, error, isLoading, refetch } = useQuery<CompanyInfo>(
     ['corporateCompanySettings'],

@@ -1,12 +1,15 @@
 
-// src/app/api/auth/investor-login/route.ts
-import { handleLogin } from '@auth0/nextjs-auth0';
-export const GET = handleLogin({
-  returnTo: `${process.env.AUTH0_BASE_URL}/investor/companies`,
-  authorizationParams: {
-    audience: process.env.AUTH0_AUDIENCE,
-    connection: 'Investor-DB',
-    scope: 'openid profile email'
-  }
-});
+// app/api/auth/investor-login/route.ts
+import { NextResponse } from 'next/server';
 
+export const GET = () => {
+  const qs = new URLSearchParams({
+    connection: 'Investor-DB',
+    audience: process.env.AUTH0_AUDIENCE ?? '',
+    returnTo:  '/investor/companies',
+  });
+  // APP_BASE_URL は .env に必須
+  return NextResponse.redirect(
+    new URL(`/auth/login?${qs.toString()}`, process.env.APP_BASE_URL!)
+  );
+};

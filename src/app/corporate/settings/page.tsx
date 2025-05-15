@@ -12,7 +12,7 @@ import SettingsTabs from "@/components/features/corporate/settings/SettingsTabs"
 
 // API 接続と認証用のカスタムフック
 import { useCorporateCompanySettings } from "@/hooks/useCorporateCompanySettings";
-import { useAuth } from "@/hooks/useAuth";
+import { useUser } from "@auth0/nextjs-auth0";
 
 import { LayoutDashboard, HelpCircle, MessageSquare, Settings } from 'lucide-react';
 

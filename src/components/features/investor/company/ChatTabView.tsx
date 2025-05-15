@@ -1,4 +1,4 @@
-// src/components/features/investor/company/InvestorChatSidebar.tsx
+// src/components/features/investor/company/InvestorChatTabview.tsx 
 "use client";
 
 import React, { useState } from 'react';
@@ -9,25 +9,35 @@ import { ChatMessage, ChatTabViewProps, ChatSession } from '@/types';
 import { useGuest } from '@/contexts/GuestContext';
 import GuestRestrictedContent from '@/components/features/investor/common/GuestRestrictedContent';
 
-
 const ChatTabView: React.FC<ChatTabViewProps> = ({ companyId }) => {
   const { isGuest } = useGuest();
+
+  // ✅ ゲストはここで return して JSX を返す
+  if (isGuest) {
+    return (
+      <div className="flex flex-col items-center justify-center h-full">
+        <GuestRestrictedContent featureName="チャット" />
+      </div>
+    );
+  }
+
   const [chatSessions, setChatSessions] = useState<ChatSession[]>([
     { sessionId: '1', title: '案件A', lastMessageTimestamp: new Date().toISOString() },
     { sessionId: '2', title: '案件B', lastMessageTimestamp: new Date().toISOString() },
     { sessionId: '3', title: '案件C', lastMessageTimestamp: new Date().toISOString() },
   ]);
+
   const [selectedSessionId, setSelectedSessionId] = useState<string>(chatSessions[0]?.sessionId || '');
   const [messages, setMessages] = useState<ChatMessage[]>([
     { messageId: "1", sender: "ai", text: "こんにちは。どのようなご質問でしょうか？", timestamp: new Date().toISOString() },
   ]);
   const [loading, setLoading] = useState<boolean>(false);
-  
+
   const handleSelectSession = (sessionId: string) => {
     setSelectedSessionId(sessionId);
     // セッション切替時の追加処理があれば記述
   };
-  
+
   const handleNewChat = () => {
     const now = new Date();
     const newSession = {
@@ -39,9 +49,10 @@ const ChatTabView: React.FC<ChatTabViewProps> = ({ companyId }) => {
     setSelectedSessionId(newSession.sessionId);
     setMessages([]);  // 新規チャットではメッセージクリア
   };
-  
+
   const handleSendMessage = (message: string) => {
     if (!message.trim()) return;
+
     const newMsg: ChatMessage = {
       messageId: Date.now().toString(),
       sender: "user",
@@ -50,6 +61,8 @@ const ChatTabView: React.FC<ChatTabViewProps> = ({ companyId }) => {
     };
     setMessages(prev => [...prev, newMsg]);
     setLoading(true);
+
+    // 擬似的なAIレスポンス
     setTimeout(() => {
       setMessages(prev => [
         ...prev,
@@ -62,15 +75,7 @@ const ChatTabView: React.FC<ChatTabViewProps> = ({ companyId }) => {
       ]);
       setLoading(false);
     }, 1000);
-
-  // ゲストユーザーの場合は制限付きコンテンツを表示
-  if (isGuest) {
-    return (
-      <div className="flex flex-col items-center justify-center h-full">
-        <GuestRestrictedContent featureName="チャット" />
-      </div>
-    );
-  }
+  };
 
   return (
     <div className="flex flex-col md:flex-row h-full">
@@ -84,15 +89,14 @@ const ChatTabView: React.FC<ChatTabViewProps> = ({ companyId }) => {
         />
       </div>
 
-      {/* 右側チャットエリア） */}
+      {/* 右側チャットエリア */}
       <div className="flex-1 h-full overflow-hidden flex flex-col">
-        {/* 上部（チャットメッセージエリア）：スクロール対象 */}
+        {/* 上部（チャットメッセージエリア） */}
         <div className="flex-1 overflow-y-auto">
-          <ChatMessages
-            messages={messages}
-          />
+          <ChatMessages messages={messages} />
         </div>
-        {/* 下部（固定の入力欄） */}
+
+        {/* 下部（入力欄） */}
         <div className="flex-shrink-0">
           <ChatInputBox onSendMessage={handleSendMessage} />
         </div>
@@ -101,4 +105,4 @@ const ChatTabView: React.FC<ChatTabViewProps> = ({ companyId }) => {
   );
 };
 
-export default InvestorChatSidebar;
+export default ChatTabView;

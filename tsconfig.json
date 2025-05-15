@@ -30,6 +30,6 @@
     ".next/types/**/*.ts",
     "src/mocks/**/*",
     "next.config.js"
-  ],
+, "src/app/api/auth/[...auth0]/route.ts.bak"  ],
   "exclude": ["node_modules"]
 }

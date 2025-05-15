@@ -6,7 +6,7 @@ import ChatMessages from '@/components/ui/ChatMessages';
 import ChatInputBox from '@/components/ui/ChatInputBox';
 import CorporateChatSidebar from './CorporateChatSidebar';
 import { ChatMessage, ChatSession } from '@/types';
-import { getCorporateChatHistory, startNewCorporateChat, sendCorporateChatMessage, getCorporateChatDetail, sendCorporateChatMessageStream } from '@/libs/api';
+import { getCorporateChatHistory, startNewCorporateChat, sendCorporateChatMessage, getCorporateChatDetail, sendCorporateChatMessageStream } from '@/lib/api';
 
 export default function IrChatPage() {
   const { data: session, status } = useSession();

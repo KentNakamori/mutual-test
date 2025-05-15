@@ -1,3 +1,5 @@
+'use client';
+
 import { useQuery, useMutation, useQueryClient, UseQueryOptions } from 'react-query';
 import { 
   getInvestorChatLogs, 
@@ -5,8 +7,8 @@ import {
   sendInvestorChatMessage,
   getInvestorChatDetail,
   deleteInvestorChat
-} from '../libs/api';
-import { useAuth } from './useAuth';
+} from '../lib/api';
+import { useUser } from '@auth0/nextjs-auth0';
 import { useState } from 'react';
 
 export interface ChatMessage {
@@ -41,8 +43,9 @@ export const useInvestorChatLogs = (
   },
   queryOptions?: UseQueryOptions
 ) => {
-  const { token, isAuthenticated } = useAuth();
-  const queryClient = useQueryClient();
+  const { user, isLoading: userLoading } = useUser();
+  const userId = user?.sub ?? null;              // 旧 token の代替
+  const isAuthenticated = !!userId;
   
   const query = {
     companyId: options?.companyId,
@@ -50,45 +53,35 @@ export const useInvestorChatLogs = (
     limit: options?.limit || 10
   };
 
-  const {
-    data,
-    isLoading,
-    error,
-    refetch
-  } = useQuery(
+  const { data, isLoading, error, refetch } = useQuery(
     ['investorChatLogs', query],
-    () => getInvestorChatLogs(query, token as string),
+    () => getInvestorChatLogs(query, userId as string),
     {
-      enabled: !!token && isAuthenticated,
-      ...queryOptions
+      enabled: isAuthenticated && !userLoading,
+      ...queryOptions,
     }
   );
 
   return {
-    chatLogs: data?.chatLogs || [],
-    totalCount: data?.totalCount || 0,
-    currentPage: data?.currentPage || 1,
-    totalPages: data?.totalPages || 1,
+    chatLogs: data?.chatLogs ?? [],
+    totalCount: data?.totalCount ?? 0,
+    currentPage: data?.currentPage ?? 1,
+    totalPages: data?.totalPages ?? 1,
     isLoading,
     error,
-    refetch
+    refetch,
   };
 };
 
 export const useInvestorChatDetail = (chatId: string) => {
-  const { token, isAuthenticated } = useAuth();
-  const queryClient = useQueryClient();
+  const { user, isLoading: userLoading } = useUser();
+  const userId = user?.sub ?? null;
 
-  const {
-    data,
-    isLoading,
-    error,
-    refetch
-  } = useQuery<ChatDetail>(
+  const { data, isLoading, error, refetch } = useQuery<ChatDetail>(
     ['investorChatDetail', chatId],
-    () => getInvestorChatDetail(chatId, token as string),
+    () => getInvestorChatDetail(chatId, userId as string),
     {
-      enabled: !!chatId && !!token && isAuthenticated
+      enabled: !!chatId && !!userId && !userLoading,
     }
   );
 
@@ -101,7 +94,8 @@ export const useInvestorChatDetail = (chatId: string) => {
 };
 
 export const useInvestorChat = () => {
-  const { token } = useAuth();
+  const { user } = useUser();
+  const userId = user?.sub ?? null;
   const queryClient = useQueryClient();
   const [streamingMessage, setStreamingMessage] = useState('');
   const [isStreaming, setIsStreaming] = useState(false);
@@ -109,8 +103,8 @@ export const useInvestorChat = () => {
   // 新規チャット作成
   const createChatMutation = useMutation(
     ({ companyId, message }: { companyId: string; message: string }) => {
-      if (!token) return Promise.reject('認証が必要です');
-      return createInvestorChat(companyId, message, token);
+      if (!userId) return Promise.reject('認証が必要です');
+      return createInvestorChat(companyId, message, userId);
     },
     {
       onSuccess: () => {
@@ -122,14 +116,14 @@ export const useInvestorChat = () => {
   // メッセージ送信（ストリーミング対応）
   const sendMessageMutation = useMutation(
     async ({ chatId, message }: { chatId: string; message: string }) => {
-      if (!token) return Promise.reject('認証が必要です');
+      if (!userId) return Promise.reject('認証が必要です');
 
       setStreamingMessage('');
       setIsStreaming(true);
 
       try {
         // チャンクを受け取るたびに状態を更新
-        await sendInvestorChatMessage(chatId, message, token, (chunk) => {
+        await sendInvestorChatMessage(chatId, message, userId, (chunk) => {
           setStreamingMessage(prev => prev + ' ' + chunk);
         });
 
@@ -152,8 +146,8 @@ export const useInvestorChat = () => {
   // チャット削除
   const deleteChatMutation = useMutation(
     (chatId: string) => {
-      if (!token) return Promise.reject('認証が必要です');
-      return deleteInvestorChat(chatId, token);
+      if (!userId) return Promise.reject('認証が必要です');
+      return deleteInvestorChat(chatId, userId);
     },
     {
       onSuccess: () => {
