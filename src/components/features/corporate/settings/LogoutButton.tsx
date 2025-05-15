@@ -1,12 +1,14 @@
 // src/components/features/corporate/settings/LogoutButton.tsx
+'use client';
 import React, { useState } from 'react';
 import Button from '../../../ui/Button';
-import { useAuth } from '../../../../hooks/useAuth';
+import { useUser } from "@auth0/nextjs-auth0";
 import { useRouter } from 'next/navigation';
 import Dialog from '../../../ui/Dialog';
 
 const LogoutButton: React.FC = () => {
-  const { logout } = useAuth();
+  const { user, isLoading } = useUser();
+  const token = user?.sub ?? null; 
   const router = useRouter();
   const [isModalOpen, setIsModalOpen] = useState(false);
 
@@ -14,10 +16,7 @@ const LogoutButton: React.FC = () => {
     setIsModalOpen(true);
   };
 
-  const confirmLogout = async () => {
-    await logout();
-    router.push('/corporate/login');
-  };
+  const confirmLogout = () => router.push('/auth/logout');
 
   return (
     <div className="flex justify-center">

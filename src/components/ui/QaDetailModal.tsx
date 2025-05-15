@@ -9,7 +9,7 @@ import {
 } from '@/components/ui/tagConfig';
 import { Calendar, ThumbsUp, X, BookOpen, Plus, Clock, FileText, Tag, Activity, HelpCircle, CheckCircle } from 'lucide-react';
 import { updateCorporateQa, deleteCorporateQa } from '@/lib/api';
-import { useAuth } from '@/hooks/useAuth';
+import { useUser } from "@auth0/nextjs-auth0";
 
 const QaDetailModal: React.FC<QADetailModalProps> = ({
   qa,
@@ -22,7 +22,8 @@ const QaDetailModal: React.FC<QADetailModalProps> = ({
   onCancelEdit,
   onSaveEdit,
 }) => {
-  const { token } = useAuth();
+  const { user } = useUser();
+  const token = user?.sub ?? null; 
   const [editableQA, setEditableQA] = useState<QA>({ ...qa });
   const [showSourceList, setShowSourceList] = useState(false);
   const [showGenreList, setShowGenreList] = useState(false);

@@ -9,6 +9,6 @@ export const GET = () => {
   });
   // APP_BASE_URL は .env に必須
   return NextResponse.redirect(
-    new URL(`/auth/login?${qs.toString()}`, process.env.AUTH0_BASE_URL!)
+    new URL(`/auth/login?${qs.toString()}`, process.env.APP_BASE_URL!)
   );
 };

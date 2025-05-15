@@ -4,7 +4,7 @@ import { Search, ChevronDown, Grid, List, ExternalLink, Filter } from 'lucide-re
 import { useGuest } from '@/contexts/GuestContext';
 import GuestRestrictedContent from '@/components/features/investor/common/GuestRestrictedContent';
 import { getInvestorCompanies, followInvestorCompany } from '@/lib/api';
-import { useAuth } from '@/hooks/useAuth';
+import { useUser } from "@auth0/nextjs-auth0";
 
 // APIレスポンスの型定義
 interface CompanyItem {
@@ -25,7 +25,8 @@ interface CompanyListResponse {
 
 const CompanyListing = () => {
   const { isGuest } = useGuest();
-  const { token } = useAuth();
+  const { user } = useUser();
+  const token = user?.sub ?? null; 
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [showGenreFilter, setShowGenreFilter] = useState(false);
   const [showSortOptions, setShowSortOptions] = useState(false);

@@ -4,13 +4,14 @@ import Input from '../../../ui/Input';
 import Button from '../../../ui/Button';
 import { CompanyInfo, CompanyInfoFormProps } from '../../../../types';
 import { updateCorporateCompanySettings } from '../../../../lib/api';
-import { useAuth } from '../../../../hooks/useAuth';
+import { useUser } from "@auth0/nextjs-auth0";
 
 const CompanyInfoForm: React.FC<CompanyInfoFormProps> = ({ initialData, onSaveSuccess }) => {
   const [formData, setFormData] = useState<CompanyInfo>(initialData);
   const [isSaving, setIsSaving] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
-  const { token } = useAuth();
+  const { user } = useUser();
+  const token = user?.sub ?? null;
 
   // 型安全に各フィールドの更新を行うため、キーは keyof CompanyInfo にします。
   const handleChange = (field: keyof CompanyInfo, value: string) => {

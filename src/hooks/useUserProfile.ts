@@ -1,7 +1,7 @@
 // hooks/useUserProfile.ts
 import { useQuery, useMutation, useQueryClient } from 'react-query';
 import { getInvestorUser, updateInvestorUser } from '../lib/api';
-import { useUser } from '@auth0/nextjs-auth0/client';
+import { useUser } from '@auth0/nextjs-auth0';
 
 export interface InvestorProfile {
   userId: string;

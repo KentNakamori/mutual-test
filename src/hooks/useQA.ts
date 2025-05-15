@@ -1,7 +1,9 @@
 // hooks/useQA.ts
+'use client'
+
 import { useQuery, useMutation, useQueryClient, UseQueryOptions } from 'react-query';
 import { searchInvestorQa, searchInvestorCompanyQa, likeInvestorQa, getInvestorQaCompanies } from '../lib/api';
-import { useAuth } from './useAuth';
+import { useUser } from "@auth0/nextjs-auth0";
 
 export interface QASearchParams {
   keyword?: string;
@@ -49,7 +51,8 @@ export interface QAItem {
 
 // 全体のQA検索
 export const useQASearch = (queryParams: QASearchParams, options?: UseQueryOptions) => {
-  const { token } = useAuth();
+  const { user, isLoading: userLoading } = useUser();
+  const token = user?.sub ?? null; 
 
   const {
     data,
@@ -60,15 +63,16 @@ export const useQASearch = (queryParams: QASearchParams, options?: UseQueryOptio
     ['qaSearch', queryParams],
     () => searchInvestorQa(queryParams, token as string),
     { 
+      keepPreviousData: true
       ...options,
-      keepPreviousData: true 
+       
     }
   );
 
   return { 
-    qaItems: data?.results || [], 
-    totalCount: data?.totalCount || 0,
-    totalPages: data?.totalPages || 0,
+    qaItems: data?.results ?? [],
+    totalCount: data?.totalCount ?? 0,
+    totalPages: data?.totalPages ?? 0,
     isLoading, 
     error, 
     refetch 
@@ -81,7 +85,9 @@ export const useCompanyQASearch = (
   queryParams: CompanyQASearchParams,
   options?: UseQueryOptions
 ) => {
-  const { token, isAuthenticated } = useAuth();
+  const { user, isLoading: userLoading } = useUser();
+  const token          = user?.sub ?? null;
+  const isAuthenticated = !!token;
 
   const {
     data,
@@ -110,7 +116,8 @@ export const useCompanyQASearch = (
 
 // QA関連企業の取得
 export const useQACompanies = () => {
-  const { token, isAuthenticated } = useAuth();
+  const { user, isLoading: userLoading } = useUser();
+  const token = user?.sub ?? null;
 
   const {
     data,
@@ -120,8 +127,8 @@ export const useQACompanies = () => {
     ['qaCompanies'],
     () => getInvestorQaCompanies(token as string),
     { 
-      enabled: !!token && isAuthenticated
-    }
+      enabled: !!token && !userLoading,
+    } 
   );
 
   return { 
@@ -133,7 +140,8 @@ export const useQACompanies = () => {
 
 // QAへのいいね/解除
 export const useQALike = () => {
-  const { token } = useAuth();
+  const { user } = useUser();
+  const token = user?.sub ?? null;
   const queryClient = useQueryClient();
 
   const mutation = useMutation(

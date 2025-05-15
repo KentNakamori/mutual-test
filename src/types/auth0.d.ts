@@ -29,7 +29,7 @@ declare module '@auth0/nextjs-auth0/client' {
     isLoading: boolean;
   }
 
-  export function useUser(): UserContext;
+  export function (): UserContext;
   export function UserProvider({ children }: { children: React.ReactNode }): JSX.Element;
 } 
 

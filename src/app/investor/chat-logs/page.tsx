@@ -7,7 +7,7 @@ import Footer from '@/components/common/footer';
 import ChatLogsSearchBar from '@/components/features/investor/chat/ChatLogsSearchBar';
 import ChatLogsList from '@/components/features/investor/chat/ChatLogsList';
 import { ChatLog, FilterType } from '@/types';
-import { useAuth } from '@/hooks/useAuth';
+import { useUser } from "@auth0/nextjs-auth0";
 import { useGuest } from '@/contexts/GuestContext';
 import GuestRestrictedContent from '@/components/features/investor/common/GuestRestrictedContent';
 import { Home, Heart, Search, MessageSquare, User } from 'lucide-react';
@@ -46,7 +46,8 @@ const menuItems = [
 ];
 
 const ChatLogsPage: React.FC = () => {
-  const { token } = useAuth();
+  const { user, isLoading: userLoading } = useUser();
+  const token = user?.sub ?? null;
   const { isGuest } = useGuest();
   const [chatLogs, setChatLogs] = useState<ChatLog[]>([]);
   const [searchKeyword, setSearchKeyword] = useState<string>('');

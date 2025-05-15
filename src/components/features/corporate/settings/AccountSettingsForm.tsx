@@ -3,7 +3,7 @@ import React, { useState } from 'react';
 import Input from '../../../ui/Input';
 import Button from '../../../ui/Button';
 import { updateCorporateAccountSettings } from '../../../../lib/api';
-import { useAuth } from '../../../../hooks/useAuth';
+import { useUser } from "@auth0/nextjs-auth0";
 
 const AccountSettingsForm: React.FC = () => {
   const [currentPass, setCurrentPass] = useState('');
@@ -13,7 +13,8 @@ const AccountSettingsForm: React.FC = () => {
   const [isSaving, setIsSaving] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
-  const { token } = useAuth();
+  const { user } = useUser();
+  const token = user?.sub ?? null;
 
   const handleSubmit = async () => {
     setErrorMsg('');

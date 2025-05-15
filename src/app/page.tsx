@@ -1,5 +1,6 @@
 ﻿import { auth0 } from '@/lib/auth0';
 import Link from 'next/link';
+import Image from 'next/image';
 import './globals.css';
 
 
@@ -7,18 +8,64 @@ export default async function Home() {
   const session = await auth0.getSession();
 
   return (
-    <main className="flex flex-col items-center justify-center min-h-screen gap-4">
-      {!session ? (
-        <>
-          <Link href="/auth/login?screen_hint=signup"><button>Sign up</button></Link>
-          <Link href="/auth/login"><button>Log in</button></Link>
-        </>
-      ) : (
-        <>
-          <h1>Welcome, {session.user?.name ?? session.user?.email}!</h1>
-          <Link href="/auth/logout"><button>Log out</button></Link>
-        </>
-      )}
+    <main className="min-h-screen flex flex-col items-center justify-center bg-gray-50 p-4">
+      <div className="bg-white p-8 rounded-lg shadow-md max-w-md w-full">
+        {/* ──────────── ロゴ ──────────── */}
+        <div className="flex justify-center mb-8">
+          <Image
+            src="/images/qa-station-logo.png"
+            alt="QA Station Logo"
+            width={180}
+            height={50}
+          />
+        </div>
+
+        {/* ──────────── ログイン前ビュー ──────────── */}
+        {!session ? (
+          <>
+            <h2 className="text-xl font-semibold mb-6 text-center">
+              ログインページを選択
+            </h2>
+
+            <div className="flex flex-col space-y-4">
+              <Link
+                href="/api/auth/corporate-login"
+                className="px-6 py-3 bg-blue-600 text-white rounded hover:bg-blue-700 text-center"
+              >
+                企業ログイン
+              </Link>
+
+              <Link
+                href="/api/auth/investor-login"
+                className="px-6 py-3 bg-green-600 text-white rounded hover:bg-green-700 text-center"
+              >
+                投資家ログイン
+              </Link>
+
+              <Link
+                href="/auth/login?screen_hint=signup"
+                className="px-6 py-3 bg-gray-600 text-white rounded hover:bg-gray-700 text-center"
+              >
+                ゲストログイン
+              </Link>
+            </div>
+
+            {/* 会社概要 */}
+            <div className="mt-8 text-center">
+              <Link href="/about" className="text-blue-500 hover:underline">
+                会社概要
+              </Link>
+            </div>
+          </>
+        ) : (
+          /* ログイン後は今回は何も表示しない */
+          null
+        )}
+      </div>
     </main>
   );
 }
+
+
+
+

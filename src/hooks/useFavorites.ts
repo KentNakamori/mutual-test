@@ -1,10 +1,12 @@
 // hooks/useFavorites.ts
+'use client';
 import { useMutation, useQueryClient } from 'react-query';
 import { followInvestorCompany } from '../lib/api';
-import { useAuth } from './useAuth';
+import { useUser } from "@auth0/nextjs-auth0";
 
 export const useFavorites = () => {
-  const { token } = useAuth();
+  const { user } = useUser();
+  const token = user?.sub ?? null;
   const queryClient = useQueryClient();
 
   // 企業フォロー状態変更のミューテーション

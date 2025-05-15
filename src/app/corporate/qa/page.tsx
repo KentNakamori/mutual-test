@@ -12,7 +12,7 @@ import QaDetailModal from "@/components/ui/QaDetailModal";
 import { QA } from "@/types";
 import { LayoutDashboard, HelpCircle, MessageSquare, Settings } from 'lucide-react';
 import { searchCorporateQa, createCorporateQa, updateCorporateQa, deleteCorporateQa } from "@/lib/api";
-import { useAuth } from "@/hooks/useAuth";
+import { useUser } from "@auth0/nextjs-auth0";
 
 
 const sidebarMenuItems = [
@@ -24,7 +24,12 @@ const sidebarMenuItems = [
 
 const QaPage: React.FC = () => {
   const router = useRouter();
-  const { token, isAuthenticated } = useAuth();
+  /*auth0*/
+  const { user, isLoading: userLoading, error: userError } = useUser();
+  const isAuthenticated = !!user;            // ← 旧 useAuth の isAuthenticated 相当
+  const token = user?.sub ?? null;
+  
+  
   const [qas, setQas] = useState<QA[]>([]);
   const [selectedQa, setSelectedQa] = useState<QA | null>(null);
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);

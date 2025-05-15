@@ -2,8 +2,6 @@
 import type { Metadata } from 'next';
 import { Inter, Roboto_Mono } from 'next/font/google';
 import './globals.css';
-import { Auth0Provider } from '@auth0/nextjs-auth0';
-
 
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-sans' });
@@ -18,9 +16,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="ja">
       <body className={`${inter.variable} ${robotoMono.variable} font-sans antialiased bg-gray-50 text-gray-900 min-h-screen`}>
-        <Auth0Provider>
           {children}
-        </Auth0Provider>
 
       
       </body>

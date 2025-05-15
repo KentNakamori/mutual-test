@@ -169,9 +169,13 @@ export async function search(query: { keyword: string; type: string }): Promise<
  * GET /corporate/dashboard?period=...&type=...
  * ※ レスポンスは IR API の仕様に合わせ、DashboardData 型を返す
  */
-export async function getCorporateDashboard(token: string, query: { period: string }): Promise<DashboardData> {
-  const queryString = new URLSearchParams(query as any).toString();
-  return apiFetch<DashboardData>(`${ENDPOINTS.corporate.dashboard}?${queryString}`, "GET", undefined, token);
+export async function getCorporateDashboard(query: { period: string }): Promise<DashboardData> {
+  const qs = new URLSearchParams(query).toString();
+  const res = await fetch(`/api/proxy/corporate/dashboard?${qs}`, {
+    cache: 'no-store',           // 最新を毎回取得
+  });
+  if (!res.ok) throw new Error('Failed to load dashboard');
+  return res.json();
 }
 
 /**
