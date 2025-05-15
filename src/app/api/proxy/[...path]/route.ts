@@ -10,25 +10,23 @@ import { NextResponse } from 'next/server';
 
 export async function GET(
     req: Request,
-    { params }: { params: { path: string[] } }
-  ) {
-    // 1) 呼び出し先パスを生成
-    const targetPath = params.path.join('/');
-    const search     = req.url.split('?')[1] ?? '';  // クエリ透過
-    const url        = `${process.env.API_BASE_URL}/${targetPath}${search ? `?${search}` : ''}`;
+    { params }: { params: Promise<{ path: string[] }> }
+) {
+    const { path } = await params;
+    const targetPath = path.join('/');
+    const search = req.url.split('?')[1] ?? '';
+    const targetUrl = `${process.env.API_BASE_URL}/${targetPath}${search ? `?${search}` : ''}`;
 
-  // 2. Auth0 から JWT を取得
-  const { token: accessToken } = await auth0.getAccessToken();
+    // 2. Auth0 から JWT を取得
+    const { token: accessToken } = await auth0.getAccessToken();
 
-  // 3. FastAPI へフォワード
-  const res = await fetch(url, {
-    method: req.method,
-    headers: { Authorization: `Bearer ${accessToken}` },
-    body:    req.method === 'GET' ? undefined : req.body,
-    // 必要なら req.headers も継承
-  });
+    // 3. FastAPI へフォワード
+    const res = await fetch(targetUrl, {
+        method: req.method,
+        headers: { Authorization: `Bearer ${accessToken}` },
+        body: req.method === 'GET' ? undefined : req.body
+    });
 
-  // 4. 返却（Content-Type 等は FastAPI のヘッダーをそのまま流用）
-  // 4) レスポンスをそのままフロントへ
-  return NextResponse.json(await res.json(), { status: res.status });
+    // 4. 返却（Content-Type 等は FastAPI のヘッダーをそのまま流用）
+    return NextResponse.json(await res.json(), { status: res.status });
 }
