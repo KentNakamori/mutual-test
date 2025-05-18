@@ -9,6 +9,9 @@ import CompanyListing from '@/components/features/investor/companies/CompanyList
 import QaDetailModal from '@/components/ui/QaDetailModal';
 import { Company, QA, CompanySearchQuery } from '@/types';
 import { Home, Heart, Search, MessageSquare, User } from 'lucide-react';
+import { auth0 } from '@/lib/auth0';
+import { redirect } from 'next/navigation';
+import { useUser } from '@auth0/nextjs-auth0';
 
 // モックデータ（例）
 const mockCompanies: Company[] = [
@@ -84,7 +87,21 @@ const menuItems = [
   { label: 'マイページ', link: '/investor/mypage', icon: <User size={20} /> },
 ];
 
-const CompaniesPage: React.FC = () => {
+const CompaniesPageClient: React.FC = () => {
+  const { user, isLoading: userLoading, error: userError } = useUser();
+  const [dataLoading, setDataLoading] = useState(true);
+  const [dataError, setDataError] = useState<string | null>(null);
+  
+  if (userLoading || dataLoading) {
+    return <div>読み込み中...</div>;
+  }
+  if (userError || !user) {
+    return <div>ログイン情報を取得できません</div>;
+  }
+  if (dataError) {
+    return <div>データの取得に失敗しました</div>;
+  }
+  
   // 検索条件（初期値）
   const [searchQuery, setSearchQuery] = useState<CompanySearchQuery>({ keyword: '', industry: '' });
 
@@ -131,4 +148,16 @@ const CompaniesPage: React.FC = () => {
   );
 };
 
-export default CompaniesPage;
+export default async function CompaniesPage() {
+  const session = await auth0.getSession();
+  if (!session?.user) {
+    redirect('/api/auth/investor-login');
+  }
+  
+  const userType = session.user['https://your-domain/userType'];
+  if (userType !== 'investor') {
+    redirect('/api/auth/investor-login');
+  }
+  
+  return <CompaniesPageClient />;
+}
