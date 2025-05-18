@@ -12,7 +12,7 @@ export const ENDPOINTS = {
       passwordResetConfirm: '/corporate/auth/password/reset/confirm',
       me: '/corporate/auth/me',
     },
-    // ダッシュボード
+    // ダッシュボード (プレフィックスなし)
     dashboard: '/corporate/dashboard',
     // Q&A関連
     qa: {
@@ -56,7 +56,7 @@ export const ENDPOINTS = {
     companies: {
       list: '/investor/companies',
       detail: (id: string) => `/investor/companies/${id}`,
-      qa: (id: string) => `/investor/companies/${id}/qa`,
+      qa: (id: string) => `/investor/companies/${id}/faq`,
       names: '/investor/companies/names',
       follow: (id: string) => `/investor/companies/${id}/follow`,
     },
@@ -64,20 +64,20 @@ export const ENDPOINTS = {
     qa: {
       search: '/investor/qa/search',
       companies: '/investor/qa/companies',
-      like: (id: string) => `/investor/qa/like/${id}`,
+      like: (id: string) => `/investor/qa/${id}/like`,
       comment: '/investor/qa/comment',
     },
     // チャット関連
     chat: {
-      history: '/investor/chat/history',
+      history: '/investor/chat/logs',
       message: '/investor/chat/message',
       new: (companyId: string) => `/investor/chat/${companyId}`,
       detail: (chatId: string) => `/investor/chat/${chatId}`,
     },
     // プロファイル関連
     profile: {
-      get: '/investor/profile',
-      update: '/investor/profile',
+      get: '/investor/users/me',
+      update: '/investor/users/me',
     },
     // トラッキング
     track: '/investor/track',
@@ -86,8 +86,20 @@ export const ENDPOINTS = {
   // 管理者向けAPI
   admin: {
     company: {
-      register: '/admin/company/register',
+      register: '/admin/companies/register',
+      list: '/admin/companies',
+      detail: (id: string) => `/admin/companies/${id}`,
+      approve: (id: string) => `/admin/companies/${id}/approve`,
     },
-    corporate: '/admin/corporate',
+    corporate: {
+      list: '/admin/corporate/users',
+      detail: (userId: string) => `/admin/corporate/users/${userId}`,
+      updateStatus: (userId: string) => `/admin/corporate/users/${userId}/status`,
+    },
   },
+  // 共通 (auth, shows) - これらは元々プレフィックスなしの想定
+  common: {
+      authTest: '/auth/test',
+      showsTest: '/shows/test'
+  }
 };

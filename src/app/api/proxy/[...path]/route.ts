@@ -20,6 +20,9 @@ export async function GET(
     // 2. Auth0 から JWT を取得
     const { token: accessToken } = await auth0.getAccessToken();
 
+    console.log('[PROXY GET] Target URL:', targetUrl);
+    console.log('[PROXY GET] Access Token:', accessToken ? accessToken.substring(0, 20) + '...' : 'No Token');
+
     // 3. FastAPI へフォワード
     const res = await fetch(targetUrl, {
         method: req.method,
@@ -28,5 +31,8 @@ export async function GET(
     });
 
     // 4. 返却（Content-Type 等は FastAPI のヘッダーをそのまま流用）
-    return NextResponse.json(await res.json(), { status: res.status });
+    const responseBody = await res.json();
+    console.log('[PROXY GET] Response Status:', res.status);
+    console.log('[PROXY GET] Response Body:', JSON.stringify(responseBody).substring(0, 200) + '...');
+    return NextResponse.json(responseBody, { status: res.status });
 }
