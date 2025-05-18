@@ -25,8 +25,11 @@ export const ENDPOINTS = {
     },
     // IR関連
     ir: {
+      history: '/corporate/irchat/history',
+      detail: (id: string) => `/corporate/irchat/${id}`,
+      newChat: '/corporate/irchat/new',
+      sendMessage: (id: string) => `/corporate/irchat/${id}/message`,
       drafts: '/corporate/irchat/drafts',
-      draft: (id: string) => `/corporate/irchat/drafts/${id}`,
       chat: '/corporate/irchat',
       mailDraft: '/corporate/maildraft',
     },
@@ -37,6 +40,7 @@ export const ENDPOINTS = {
     },
     // 文書解析
     documents: {
+      upload: '/corporate/documents/upload',
       analysis: '/corporate/documents/analysis',
     },
   },
@@ -63,6 +67,7 @@ export const ENDPOINTS = {
     // Q&A関連
     qa: {
       search: '/investor/qa/search',
+      searchByCompany: (companyId: string) => `/investor/qa/search/company/${companyId}`,
       companies: '/investor/qa/companies',
       like: (id: string) => `/investor/qa/${id}/like`,
       comment: '/investor/qa/comment',
@@ -73,6 +78,7 @@ export const ENDPOINTS = {
       message: '/investor/chat/message',
       new: (companyId: string) => `/investor/chat/${companyId}`,
       detail: (chatId: string) => `/investor/chat/${chatId}`,
+      delete: (chatId: string) => `/investor/chat/${chatId}`,
     },
     // プロファイル関連
     profile: {
@@ -86,19 +92,22 @@ export const ENDPOINTS = {
   // 管理者向けAPI
   admin: {
     company: {
-      register: '/admin/companies/register',
+      register: '/admin/company/register',
       list: '/admin/companies',
       detail: (id: string) => `/admin/companies/${id}`,
       approve: (id: string) => `/admin/companies/${id}/approve`,
     },
     corporate: {
+      registerUser: '/admin/corporate/register',
       list: '/admin/corporate/users',
       detail: (userId: string) => `/admin/corporate/users/${userId}`,
       updateStatus: (userId: string) => `/admin/corporate/users/${userId}/status`,
     },
   },
-  // 共通 (auth, shows) - これらは元々プレフィックスなしの想定
+  // 共通
   common: {
+      tokenInfo: '/auth/token',
+      listShows: '/api/shows',
       authTest: '/auth/test',
       showsTest: '/shows/test'
   }

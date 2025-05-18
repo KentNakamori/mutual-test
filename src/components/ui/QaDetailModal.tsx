@@ -92,7 +92,7 @@ const QaDetailModal: React.FC<QADetailModalProps> = ({
       console.log(`保存リクエスト: ${qa.qaId}`, requestData);
       
       // API呼び出し
-      await updateCorporateQa(token, qa.qaId, requestData);
+      await updateCorporateQa(qa.qaId, requestData);
       
       // 更新したQAをコールバックで返す
       const updatedQa: QA = {

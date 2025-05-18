@@ -51,11 +51,15 @@ async function apiFetch<T>(
   endpoint: string,
   method: "GET" | "POST" | "PATCH" | "PUT" | "DELETE",
   data?: any,
-  token?: string
+  token?: string,
+  useProxy: boolean = false, // プロキシを使用するかどうかのフラグ
+  noCache: boolean = false   // キャッシュを使用しないかどうかのフラグ
 ): Promise<T> {
   // エンドポイントの末尾のスラッシュを削除
   const normalizedEndpoint = endpoint.replace(/\/+$/, '');
-  
+  const baseUrl = useProxy ? '/api/proxy' : API_BASE_URL;
+  const url = baseUrl + normalizedEndpoint;
+
   const headers: HeadersInit = {
     // FormData の場合は自動で Content-Type が設定されるため除外
     ...(data instanceof FormData ? {} : { "Content-Type": "application/json" }),
@@ -66,41 +70,65 @@ async function apiFetch<T>(
     method,
     headers,
     ...(data ? { body: data instanceof FormData ? data : JSON.stringify(data) } : {}),
+    ...(noCache ? { cache: 'no-store' } : {}), // キャッシュ制御
   };
 
   // リクエスト情報のログ出力
-  console.log(`API ${method} Request to ${normalizedEndpoint}:`, {
-    url: API_BASE_URL + normalizedEndpoint,
+  console.log(`API ${method} Request to ${url}:`, {
     headers,
     body: data instanceof FormData ? "FormData" : data
   });
 
   try {
-    const response = await fetch(API_BASE_URL + normalizedEndpoint, config);
+    const response = await fetch(url, config);
     let result;
+
+    // DELETEリクエストなどでレスポンスボディが空の場合を考慮
+    const contentType = response.headers.get("content-type");
+    if (response.status === 204 || !contentType || !contentType.includes("application/json")) {
+      // ボディがないか、JSONでない場合は、ステータスコードで成功/失敗を判断
+      if (!response.ok) {
+         console.error("API Error Response (no JSON):", {
+          url,
+          status: response.status,
+          statusText: response.statusText,
+        });
+        throw new Error(`API Error: ${response.status} ${response.statusText}`);
+      }
+      // 成功したがJSONボディがない場合 (例: 204 No Content)
+      console.log(`API ${method} Response from ${url} (status ${response.status}): No JSON content`);
+      // @ts-ignore // Tがvoidや特定のメッセージ型であることを期待するケースに対応
+      return { message: `Operation successful with status ${response.status}` } as T;
+    }
+    
     try {
       result = await response.json();
     } catch (e) {
-      console.error("Failed to parse response JSON:", e);
-      result = { message: "Response is not JSON" };
+      console.error("Failed to parse response JSON:", e, { url, status: response.status });
+      // response.ok であってもパースに失敗した場合はエラーとして扱う
+      throw new Error("Response is not JSON parsable");
     }
     
     if (!response.ok) {
-      console.error("API Error Response:", {
-        endpoint: normalizedEndpoint,
+      console.error("API Error Response (with JSON):", {
+        url,
         status: response.status,
         statusText: response.statusText,
         data: result
       });
-      throw new Error(result.message || result.detail || `API Error: ${response.status} ${response.statusText}`);
+      throw new Error(result?.message || result?.detail || `API Error: ${response.status} ${response.statusText}`);
     }
     
     // 成功時のレスポンスもログに出力
-    console.log(`API ${method} Response from ${normalizedEndpoint}:`, result);
+    console.log(`API ${method} Response from ${url}:`, result);
     return result;
   } catch (error) {
-    console.error(`API Fetch Error (${method} ${normalizedEndpoint}):`, error);
-    throw error;
+    console.error(`API Fetch Error (${method} ${url}):`, error);
+    // エラーオブジェクトをそのままスローする
+    if (error instanceof Error) {
+        throw error;
+    }
+    throw new Error(String(error));
   }
 }
 
@@ -171,11 +199,9 @@ export async function search(query: { keyword: string; type: string }): Promise<
  */
 export async function getCorporateDashboard(query: { period: string }): Promise<DashboardData> {
   const qs = new URLSearchParams(query).toString();
-  const res = await fetch(`/api/proxy/corporate/dashboard?${qs}`, {
-    cache: 'no-store',           // 最新を毎回取得
-  });
-  if (!res.ok) throw new Error('Failed to load dashboard');
-  return res.json();
+  const endpoint = `${ENDPOINTS.corporate.dashboard}?${qs}`;
+  // 企業向けAPIはプロキシ経由、キャッシュなしをデフォルトとする
+  return apiFetch<DashboardData>(endpoint, "GET", undefined, undefined, true, true);
 }
 
 /**
@@ -228,42 +254,12 @@ export async function searchCorporateQa(
   if (query.page) queryString.append('page', query.page.toString());
   if (query.limit) queryString.append('limit', query.limit.toString());
 
-  const proxyUrl = `/api/proxy${ENDPOINTS.corporate.qa.search}?${queryString.toString()}`;
-  console.log('Search API Full URL (direct fetch):', proxyUrl);
-
-  try {
-    const response = await fetch(proxyUrl, {
-      method: "GET",
-      headers: {}, // GETの場合、Content-Typeは通常不要
-      cache: 'no-store', 
-    });
-    
-    let result;
-    try {
-      result = await response.json();
-    } catch (e) {
-      console.error("Failed to parse response JSON:", e);
-      throw new Error("Response is not JSON parsable");
-    }
-
-    if (!response.ok) {
-      console.error("API Error Response (direct fetch):", {
-        endpoint: proxyUrl,
-        status: response.status,
-        statusText: response.statusText,
-        data: result
-      });
-      const errorMessage = result?.message || result?.detail || `API Error: ${response.status} ${response.statusText}`;
-      throw new Error(errorMessage);
-    }
-    
-    console.log(`API GET Response from ${proxyUrl}:`, result);
-    return result;
-
-  } catch (error) {
-    console.error(`API Fetch Error (GET ${proxyUrl}):`, error);
-    throw error;
-  }
+  const endpoint = `${ENDPOINTS.corporate.qa.search}?${queryString.toString()}`;
+  return apiFetch<{
+    results: QA[];
+    totalCount: number;
+    totalPages: number;
+  }>(endpoint, "GET", undefined, undefined, true, true);
 }
 
 /**
@@ -283,27 +279,7 @@ export async function createCorporateQa(
     reviewStatus: QA['reviewStatus'];
   }
 ): Promise<{ qaId: string }> {
-  const proxyUrl = `/api/proxy${ENDPOINTS.corporate.qa.create}`;
-  console.log('Create API Full URL (direct fetch):', proxyUrl);
-  try {
-    const response = await fetch(proxyUrl, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(data),
-      cache: 'no-store',
-    });
-    let result = await response.json();
-    if (!response.ok) {
-      const errorMessage = result?.message || result?.detail || `API Error: ${response.status} ${response.statusText}`;
-      throw new Error(errorMessage);
-    }
-    return result;
-  } catch (error) {
-    console.error(`API Fetch Error (POST ${proxyUrl}):`, error);
-    throw error;
-  }
+  return apiFetch<{ qaId: string }>(ENDPOINTS.corporate.qa.create, "POST", data, undefined, true, true);
 }
 
 /**
@@ -325,27 +301,14 @@ export async function updateCorporateQa(
     reviewStatus?: QA['reviewStatus'];
   }
 ): Promise<{ qaId: string; updatedFields: Record<string, any> }> {
-  const proxyUrl = `/api/proxy${ENDPOINTS.corporate.qa.update(qaId)}`;
-  console.log('Update API Full URL (direct fetch):', proxyUrl);
-  try {
-    const response = await fetch(proxyUrl, {
-      method: "PATCH",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(data),
-      cache: 'no-store',
-    });
-    let result = await response.json();
-    if (!response.ok) {
-      const errorMessage = result?.message || result?.detail || `API Error: ${response.status} ${response.statusText}`;
-      throw new Error(errorMessage);
-    }
-    return result;
-  } catch (error) {
-    console.error(`API Fetch Error (PATCH ${proxyUrl}):`, error);
-    throw error;
-  }
+  return apiFetch<{ qaId: string; updatedFields: Record<string, any> }>(
+    ENDPOINTS.corporate.qa.update(qaId),
+    "PATCH",
+    data,
+    undefined, // token
+    true,      // useProxy
+    true       // noCache
+  );
 }
 
 /**
@@ -356,47 +319,14 @@ export async function updateCorporateQa(
 export async function deleteCorporateQa(
   qaId: string
 ): Promise<{ message: string }> {
-  const proxyUrl = `/api/proxy${ENDPOINTS.corporate.qa.delete(qaId)}`;
-  console.log('Delete API Full URL (direct fetch):', proxyUrl);
-
-  try {
-    const response = await fetch(proxyUrl, {
-      method: "DELETE",
-      headers: {},
-      cache: 'no-store',
-    });
-
-    let result;
-    try {
-      result = await response.json();
-    } catch (e) {
-      // DELETEリクエストでボディが空の場合、json()でエラーになることがある
-      // ステータスコードが成功(200, 204など)なら、パースエラーは無視しても良い場合もある
-      if (response.ok) {
-        console.log("Response body parsing error ignored for successful DELETE.");
-        return { message: "Delete operation successful, no content." }; 
-      }
-      console.error("Failed to parse response JSON for DELETE:", e);
-      throw new Error("Response is not JSON parsable for DELETE");
-    }
-
-    if (!response.ok) {
-      console.error("API Error Response (direct fetch DELETE):", {
-        endpoint: proxyUrl,
-        status: response.status,
-        statusText: response.statusText,
-        data: result
-      });
-      const errorMessage = result?.message || result?.detail || `API Error: ${response.status} ${response.statusText}`;
-      throw new Error(errorMessage);
-    }
-    
-    console.log(`API DELETE Response from ${proxyUrl}:`, result);
-    return result;
-  } catch (error) {
-    console.error(`API Fetch Error (DELETE ${proxyUrl}):`, error);
-    throw error;
-  }
+  return apiFetch<{ message: string }>(
+    ENDPOINTS.corporate.qa.delete(qaId),
+    "DELETE",
+    undefined, // data
+    undefined, // token
+    true,      // useProxy
+    true       // noCache
+  );
 }
 
 /**
@@ -412,210 +342,55 @@ export async function uploadCorporateQa(
   if (uploadData.meta) {
     formData.append("metadata", JSON.stringify(uploadData.meta));
   }
-  const proxyUrl = `/api/proxy${ENDPOINTS.corporate.qa.upload}`;
-  console.log('Upload API Full URL (direct fetch):', proxyUrl);
-  try {
-    const response = await fetch(proxyUrl, {
-      method: "POST",
-      body: formData, // FormDataの場合、Content-Typeは自動設定される
-      cache: 'no-store',
-    });
-    let result = await response.json();
-    if (!response.ok) {
-      const errorMessage = result?.message || result?.detail || `API Error: ${response.status} ${response.statusText}`;
-      throw new Error(errorMessage);
-    }
-    return result;
-  } catch (error) {
-    console.error(`API Fetch Error (POST ${proxyUrl} with FormData):`, error);
-    throw error;
-  }
+  return apiFetch<UploadResponse>(ENDPOINTS.corporate.qa.upload, "POST", formData, undefined, true, true);
 }
 
 export async function batchCreateCorporateQa(
   qas: CreateQARequest[]
 ): Promise<{ createdCount: number; message: string }> {
-  const proxyUrl = `/api/proxy${ENDPOINTS.corporate.qa.batchCreate}`;
-  console.log('Batch Create API Full URL (direct fetch):', proxyUrl);
-  try {
-    const response = await fetch(proxyUrl, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({ qas }),
-      cache: 'no-store',
-    });
-    let result = await response.json();
-    if (!response.ok) {
-      const errorMessage = result?.message || result?.detail || `API Error: ${response.status} ${response.statusText}`;
-      throw new Error(errorMessage);
-    }
-    return result;
-  } catch (error) {
-    console.error(`API Fetch Error (POST ${proxyUrl}):`, error);
-    throw error;
-  }
+  return apiFetch<{ createdCount: number; message: string }>(ENDPOINTS.corporate.qa.batchCreate, "POST", { qas }, undefined, true, true);
 }
 
 export async function getCorporateDrafts(
   query?: Record<string, string>
 ): Promise<{ drafts: any[] }> {
   const queryString = query ? `?${new URLSearchParams(query).toString()}` : "";
-  const proxyUrl = `/api/proxy${ENDPOINTS.corporate.ir.drafts}${queryString}`;
-  console.log('Get Drafts API Full URL (direct fetch):', proxyUrl);
-  try {
-    const response = await fetch(proxyUrl, { method: "GET", cache: 'no-store' });
-    let result = await response.json();
-    if (!response.ok) {
-      const errorMessage = result?.message || result?.detail || `API Error: ${response.status} ${response.statusText}`;
-      throw new Error(errorMessage);
-    }
-    return result;
-  } catch (error) {
-    console.error(`API Fetch Error (GET ${proxyUrl}):`, error);
-    throw error;
-  }
+  const endpoint = `${ENDPOINTS.corporate.ir.drafts}${queryString}`;
+  return apiFetch<{ drafts: any[] }>(endpoint, "GET", undefined, undefined, true, true);
 }
 
 export async function getCorporateDraftDetail(
   draftId: string
 ): Promise<{ draftId: string; messages: ChatMessage[] }> {
-  const proxyUrl = `/api/proxy${ENDPOINTS.corporate.ir.draft(draftId)}`;
-  console.log('Get Draft Detail API Full URL (direct fetch):', proxyUrl);
-  try {
-    const response = await fetch(proxyUrl, { method: "GET", cache: 'no-store' });
-    let result = await response.json();
-    if (!response.ok) {
-      const errorMessage = result?.message || result?.detail || `API Error: ${response.status} ${response.statusText}`;
-      throw new Error(errorMessage);
-    }
-    return result;
-  } catch (error) {
-    console.error(`API Fetch Error (GET ${proxyUrl}):`, error);
-    throw error;
-  }
+  return apiFetch<{ draftId: string; messages: ChatMessage[] }>(ENDPOINTS.corporate.ir.detail(draftId), "GET", undefined, undefined, true, true);
 }
 
 export async function postCorporateIrChat(
   requestData: ChatRequest & { draftId?: string; options?: { tone: string; maxLength: number } }
 ): Promise<ChatResponse> {
-  const proxyUrl = `/api/proxy${ENDPOINTS.corporate.ir.chat}`;
-  console.log('Post IR Chat API Full URL (direct fetch):', proxyUrl);
-  try {
-    const response = await fetch(proxyUrl, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(requestData),
-      cache: 'no-store',
-    });
-    let result = await response.json();
-    if (!response.ok) {
-      const errorMessage = result?.message || result?.detail || `API Error: ${response.status} ${response.statusText}`;
-      throw new Error(errorMessage);
-    }
-    return result;
-  } catch (error) {
-    console.error(`API Fetch Error (POST ${proxyUrl}):`, error);
-    throw error;
-  }
+  return apiFetch<ChatResponse>(ENDPOINTS.corporate.ir.chat, "POST", requestData, undefined, true, true);
 }
 
 export async function createCorporateMailDraft(
   requestData: MailDraftRequest
 ): Promise<MailDraftResponse> {
-  const proxyUrl = `/api/proxy${ENDPOINTS.corporate.ir.mailDraft}`;
-  console.log('Create Mail Draft API Full URL (direct fetch):', proxyUrl);
-  try {
-    const response = await fetch(proxyUrl, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(requestData),
-      cache: 'no-store',
-    });
-    let result = await response.json();
-    if (!response.ok) {
-      const errorMessage = result?.message || result?.detail || `API Error: ${response.status} ${response.statusText}`;
-      throw new Error(errorMessage);
-    }
-    return result;
-  } catch (error) {
-    console.error(`API Fetch Error (POST ${proxyUrl}):`, error);
-    throw error;
-  }
+  return apiFetch<MailDraftResponse>(ENDPOINTS.corporate.ir.mailDraft, "POST", requestData, undefined, true, true);
 }
 
 export async function getCorporateCompanySettings(): Promise<CompanyInfo> {
-  const proxyUrl = `/api/proxy${ENDPOINTS.corporate.settings.company}`;
-  console.log('Get Company Settings API Full URL (direct fetch):', proxyUrl);
-  try {
-    const response = await fetch(proxyUrl, { method: "GET", cache: 'no-store' });
-    let result = await response.json();
-    if (!response.ok) {
-      const errorMessage = result?.message || result?.detail || `API Error: ${response.status} ${response.statusText}`;
-      throw new Error(errorMessage);
-    }
-    return result;
-  } catch (error) {
-    console.error(`API Fetch Error (GET ${proxyUrl}):`, error);
-    throw error;
-  }
+  return apiFetch<CompanyInfo>(ENDPOINTS.corporate.settings.company, "GET", undefined, undefined, true, true);
 }
 
 export async function updateCorporateCompanySettings(
   updateData: CompanyInfo
 ): Promise<CompanyInfo & { message: string }> {
-  const proxyUrl = `/api/proxy${ENDPOINTS.corporate.settings.company}`;
-  console.log('Update Company Settings API Full URL (direct fetch):', proxyUrl);
-  try {
-    const response = await fetch(proxyUrl, {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(updateData),
-      cache: 'no-store',
-    });
-    let result = await response.json();
-    if (!response.ok) {
-      const errorMessage = result?.message || result?.detail || `API Error: ${response.status} ${response.statusText}`;
-      throw new Error(errorMessage);
-    }
-    return result;
-  } catch (error) {
-    console.error(`API Fetch Error (PUT ${proxyUrl}):`, error);
-    throw error;
-  }
+  return apiFetch<CompanyInfo & { message: string }>(ENDPOINTS.corporate.settings.company, "PUT", updateData, undefined, true, true);
 }
 
 export async function updateCorporateAccountSettings(
   updateData: { currentPassword: string; newPassword: string; newEmail: string }
 ): Promise<{ message: string }> {
-  const proxyUrl = `/api/proxy${ENDPOINTS.corporate.settings.account}`;
-  console.log('Update Account Settings API Full URL (direct fetch):', proxyUrl);
-  try {
-    const response = await fetch(proxyUrl, {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(updateData),
-      cache: 'no-store',
-    });
-    let result = await response.json();
-    if (!response.ok) {
-      const errorMessage = result?.message || result?.detail || `API Error: ${response.status} ${response.statusText}`;
-      throw new Error(errorMessage);
-    }
-    return result;
-  } catch (error) {
-    console.error(`API Fetch Error (PUT ${proxyUrl}):`, error);
-    throw error;
-  }
+  return apiFetch<{ message: string }>(ENDPOINTS.corporate.settings.account, "PUT", updateData, undefined, true, true);
 }
 
 /* =======================
