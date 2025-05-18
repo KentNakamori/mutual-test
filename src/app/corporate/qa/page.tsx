@@ -60,12 +60,11 @@ const QaPage: React.FC = () => {
 
   useEffect(() => {
     const fetchQAs = async () => {
-      if (!token || !isAuthenticated) return;
+      if (!isAuthenticated) return;
       
       try {
         setIsLoading(true);
         
-        // APIパラメータをバックエンドの期待する形式に変換
         const apiParams = {
           keyword: searchParams.keyword || undefined,
           genre: searchParams.genre?.length > 0 ? searchParams.genre : undefined,
@@ -88,7 +87,7 @@ const QaPage: React.FC = () => {
         });
         console.log('=== APIリクエスト直前のパラメータ ===');
         
-        const response = await searchCorporateQa(token, apiParams);
+        const response = await searchCorporateQa(apiParams);
         console.log("取得したQAデータ:", response);
         setQas(response.results);
         setTotalCount(response.totalCount);
@@ -103,8 +102,7 @@ const QaPage: React.FC = () => {
 
     fetchQAs();
   }, [
-    token, 
-    isAuthenticated, 
+    isAuthenticated,
     searchParams.keyword, 
     searchParams.genre, 
     searchParams.tag, 
@@ -209,12 +207,12 @@ const QaPage: React.FC = () => {
   };
 
   const handleDeleteQa = async (qaId: string) => {
-    if (!token || !isAuthenticated) return;
+    if (!isAuthenticated) return;
 
     try {
-      await deleteCorporateQa(token, qaId);
+      await deleteCorporateQa(qaId);
       // 削除後に検索を再実行
-      const response = await searchCorporateQa(token, searchParams);
+      const response = await searchCorporateQa(searchParams);
       setQas(response.results);
       setSelectedQa(null); // 選択中のQAをクリア
     } catch (err) {
