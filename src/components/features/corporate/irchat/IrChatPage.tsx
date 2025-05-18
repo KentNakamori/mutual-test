@@ -1,25 +1,19 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { useSession } from 'next-auth/react';
+import { useUser } from '@auth0/nextjs-auth0'
 import ChatMessages from '@/components/ui/ChatMessages';
 import ChatInputBox from '@/components/ui/ChatInputBox';
 import CorporateChatSidebar from './CorporateChatSidebar';
 import { ChatMessage, ChatSession } from '@/types';
-import { getCorporateChatHistory, startNewCorporateChat, sendCorporateChatMessage, getCorporateChatDetail, sendCorporateChatMessageStream } from '@/lib/api';
+import { getCorporateChatHistory, startNewCorporateChat, getCorporateChatDetail, sendCorporateChatMessageStream } from '@/lib/api';
 
 export default function IrChatPage() {
-  const { data: session, status } = useSession();
-  // next-auth.d.tsで型拡張をしているので、accessTokenプロパティにアクセスできます
-  const token = session?.user?.accessToken || '';
-  // 一時的にcompanyNameをcompanyIdとして使用
-  const companyId = session?.user?.companyInfo?.companyName || '';
-  const userId = session?.user?.id || '';
+  const { user, error, isLoading } = useUser();
+  const userId = user?.sub || '';
   
-  console.log('認証状態:', status);
-  console.log('トークン:', token ? '存在します' : '存在しません');
-  console.log('セッション情報:', session);
-  console.log('企業ID:', companyId);
+  console.log('認証状態:', isLoading ? '読み込み中' : error ? 'エラー' : '認証済み');
+  console.log('ユーザー情報:', user);
   console.log('ユーザーID:', userId);
   
   const [sessions, setSessions] = useState<ChatSession[]>([]);
@@ -31,15 +25,15 @@ export default function IrChatPage() {
   // セッション一覧の取得
   useEffect(() => {
     async function fetchChatSessions() {
-      if (!token || status !== 'authenticated') return;
+      if (!user || isLoading) return;
       
       try {
         setLoading(true);
-        const response = await getCorporateChatHistory(token);
+        const response = await getCorporateChatHistory();
         console.log('チャット履歴APIレスポンス:', response);
         
         // バックエンドのレスポンスをChatSession型に変換
-        const convertedSessions: ChatSession[] = response.chatLogs.map(log => ({
+        const convertedSessions: ChatSession[] = response.chatLogs.map((log: any) => ({
           sessionId: log.chatId,
           lastMessageSnippet: log.lastMessageSnippet || log.title || '新規チャット',
           lastMessageTimestamp: log.updatedAt
@@ -60,18 +54,17 @@ export default function IrChatPage() {
     }
 
     fetchChatSessions();
-  }, [token, status]);
+  }, [user, isLoading]);
 
   // 選択されたセッションのメッセージ取得
   useEffect(() => {
     async function fetchChatMessages() {
-      if (!token || !selectedSessionId || status !== 'authenticated') return;
+      if (!user || !selectedSessionId || isLoading) return;
       
       try {
         setLoading(true);
-        const response = await getCorporateChatDetail(token, selectedSessionId);
+        const response = await getCorporateChatDetail(selectedSessionId);
         console.log('チャット詳細APIレスポンス:', response);
-        // バックエンドから返されるメッセージをそのまま使用（role: 'user'|'ai'形式）
         setMessages(response.messages);
       } catch (error) {
         console.error('チャットメッセージの取得中にエラーが発生しました:', error);
@@ -83,58 +76,53 @@ export default function IrChatPage() {
     if (selectedSessionId) {
       fetchChatMessages();
     }
-  }, [selectedSessionId, token, status]);
+  }, [selectedSessionId, user, isLoading]);
 
   const handleSelectSession = (sessionId: string) => {
     setSelectedSessionId(sessionId);
   };
 
   const handleNewChat = async () => {
-    console.log('新規チャットボタンがクリックされました');
-    console.log('認証状態:', status);
-    console.log('トークン:', token ? '存在します' : '存在しません');
-    console.log('ユーザーID:', userId);
-    
-    if (!token || status !== 'authenticated' || !userId) {
+    if (!user || isLoading || !userId) {
       console.log('必要な情報が不足しています');
       return;
     }
     
     try {
       console.log('新規チャット作成を開始します');
-      // 新規チャットセッションを作成
-      const response = await startNewCorporateChat(token, {
-        userId
-      });
+      const response = await startNewCorporateChat();
       console.log('新規チャット作成レスポンス:', response);
       
-      // バックエンドから返されたチャットIDを使用
       const newSession: ChatSession = {
         sessionId: response.chatId,
         lastMessageSnippet: '新規チャット',
         lastMessageTimestamp: new Date().toISOString()
       };
-      console.log('新しいセッション:', newSession);
       
-      // セッション一覧を更新
       setSessions(prev => [newSession, ...prev]);
       setSelectedSessionId(response.chatId);
       setMessages([]);
-      console.log('セッション一覧を更新しました');
     } catch (error) {
       console.error('新規チャットの作成中にエラーが発生しました:', error);
     }
   };
 
-  // 固有のメッセージIDを生成する関数
   const generateUniqueId = (prefix: string) => {
     return `${prefix}-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
   };
 
   const handleSendMessage = async (message: string) => {
-    if (!token || !message.trim() || status !== 'authenticated' || !companyId || !userId) return;
+    if (!user || !message.trim() || isLoading) {
+      console.error('メッセージ送信に必要な情報が不足しています:', {
+        user: !!user,
+        message: message.trim(),
+        isLoading
+      });
+      return;
+    }
     
-    // ユーザーメッセージをUIに追加
+    console.log('メッセージ送信開始:', { message, selectedSessionId });
+    
     const newUserMessage: ChatMessage = {
       messageId: generateUniqueId('user'),
       role: 'user',
@@ -148,14 +136,11 @@ export default function IrChatPage() {
     try {
       let response;
       
-      // 既存のチャットか新規チャットかを判断
       if (!selectedSessionId) {
-        // 新規チャット
-        response = await startNewCorporateChat(token, {
-          userId
-        });
+        console.log('新規チャットセッションを作成します');
+        response = await startNewCorporateChat();
+        console.log('新規チャットセッション作成完了:', response);
         
-        // セッション一覧を更新
         const newSession: ChatSession = {
           sessionId: response.chatId,
           lastMessageSnippet: message.length > 30 ? message.substring(0, 30) + '...' : message,
@@ -165,7 +150,6 @@ export default function IrChatPage() {
         setSessions(prev => [newSession, ...prev]);
         setSelectedSessionId(response.chatId);
         
-        // AIの応答をUIに追加（ストリーミング）
         const aiMessageId = generateUniqueId('ai');
         const aiMessage: ChatMessage = {
           messageId: aiMessageId,
@@ -176,12 +160,12 @@ export default function IrChatPage() {
         
         setMessages(prev => [...prev, aiMessage]);
         
-        // ストリーミングレスポンスの処理
+        console.log('新規セッションへのメッセージ送信開始');
         await sendCorporateChatMessageStream(
-          token,
           response.chatId,
           message,
-          (chunk) => {
+          (chunk: string) => {
+            console.log('AIレスポンスチャンク受信:', chunk);
             setMessages(prev => prev.map(msg => {
               if (msg.messageId === aiMessageId) {
                 return {
@@ -194,8 +178,7 @@ export default function IrChatPage() {
           }
         );
       } else {
-        // 既存のチャット
-        // AIの応答をUIに追加（ストリーミング）
+        console.log('既存セッションへのメッセージ送信開始:', selectedSessionId);
         const aiMessageId = generateUniqueId('ai');
         const aiMessage: ChatMessage = {
           messageId: aiMessageId,
@@ -206,12 +189,11 @@ export default function IrChatPage() {
         
         setMessages(prev => [...prev, aiMessage]);
         
-        // ストリーミングレスポンスの処理
         await sendCorporateChatMessageStream(
-          token,
           selectedSessionId,
           message,
-          (chunk) => {
+          (chunk: string) => {
+            console.log('AIレスポンスチャンク受信:', chunk);
             setMessages(prev => prev.map(msg => {
               if (msg.messageId === aiMessageId) {
                 return {
@@ -225,9 +207,11 @@ export default function IrChatPage() {
         );
       }
       
-      // セッション一覧を更新するために再取得
-      const sessionsResponse = await getCorporateChatHistory(token);
-      const convertedSessions: ChatSession[] = sessionsResponse.chatLogs.map(log => ({
+      console.log('チャット履歴を更新します');
+      const sessionsResponse = await getCorporateChatHistory();
+      console.log('チャット履歴更新完了:', sessionsResponse);
+      
+      const convertedSessions: ChatSession[] = sessionsResponse.chatLogs.map((log: any) => ({
         sessionId: log.chatId,
         lastMessageSnippet: log.lastMessageSnippet || log.title || '新規チャット',
         lastMessageTimestamp: log.updatedAt
@@ -236,7 +220,6 @@ export default function IrChatPage() {
       
     } catch (error) {
       console.error('メッセージ送信中にエラーが発生しました:', error);
-      // エラーメッセージを表示
       const errorMessage: ChatMessage = {
         messageId: generateUniqueId('error'),
         role: 'ai',
@@ -249,11 +232,11 @@ export default function IrChatPage() {
     }
   };
 
-  if (status === 'loading') {
+  if (isLoading) {
     return <div className="flex justify-center items-center h-full">認証情報の読み込み中...</div>;
   }
 
-  if (status === 'unauthenticated') {
+  if (error || !user) {
     return <div className="flex justify-center items-center h-full">ログインしてください</div>;
   }
 
@@ -263,7 +246,6 @@ export default function IrChatPage() {
 
   return (
     <div className="flex h-[calc(100vh-5rem)]">
-      {/* 左側：チャット用サイドバー */}
       <div className="w-full md:w-64 border-r h-full bg-gray-50">
         <CorporateChatSidebar
           sessions={sessions}
@@ -272,7 +254,6 @@ export default function IrChatPage() {
           onNewChat={handleNewChat}
         />
       </div>
-      {/* 右側：チャットエリア */}
       <div className="flex-1 h-full flex flex-col bg-white">
         <div className="flex-1 overflow-y-auto p-4">
           <ChatMessages messages={messages} />

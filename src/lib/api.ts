@@ -42,6 +42,13 @@ import {
   DashboardData
 } from "../types";
 import axios from 'axios';
+import {
+  ChatHistoryItem,
+  ChatHistoryResponse,
+  ChatDetailResponse,
+  IRChatResponse,
+  IRChatMessageResponse
+} from '@/types/api';
 
 /**
  * 共通の HTTP クライアント関数
@@ -936,4 +943,112 @@ export async function trackInvestorAction(
   status: string;
 }> {
   return apiFetch<any>(ENDPOINTS.investor.track, "POST", data, token);
+}
+
+/* =======================
+   企業向け IRチャット API
+   ======================= */
+
+/**
+ * 企業向けチャット履歴取得API
+ * GET /corporate/irchat/history
+ * @returns チャット履歴
+ */
+export async function getCorporateChatHistory(
+  query?: {
+    page?: number;
+    page_size?: number;
+  }
+): Promise<ChatHistoryResponse> {
+  const queryString = query ? `?${new URLSearchParams(query as any).toString()}` : "";
+  const endpoint = `${ENDPOINTS.corporate.ir.history}${queryString}`;
+  return apiFetch<ChatHistoryResponse>(endpoint, "GET", undefined, undefined, true, true);
+}
+
+/**
+ * 企業向けチャット詳細取得API
+ * GET /corporate/irchat/{chat_id}
+ * @param chatId チャットID
+ * @returns チャット詳細
+ */
+export async function getCorporateChatDetail(
+  chatId: string
+): Promise<ChatDetailResponse> {
+  const endpoint = ENDPOINTS.corporate.ir.detail(chatId);
+  return apiFetch<ChatDetailResponse>(endpoint, "GET", undefined, undefined, true, true);
+}
+
+/**
+ * 企業向け新規チャット作成API
+ * POST /corporate/irchat/new
+ * @returns 作成されたチャットのID
+ */
+export async function startNewCorporateChat(): Promise<IRChatResponse> {
+  return apiFetch<IRChatResponse>(ENDPOINTS.corporate.ir.newChat, "POST", {}, undefined, true, true);
+}
+
+/**
+ * 企業向けチャットメッセージ送信API（ストリーミング）
+ * POST /corporate/irchat/{chat_id}/message
+ * @param chatId チャットID
+ * @param message メッセージ内容
+ * @param onChunk チャンク受信時のコールバック
+ */
+export async function sendCorporateChatMessageStream(
+  chatId: string,
+  message: string,
+  onChunk: (chunk: string) => void
+): Promise<void> {
+  const endpoint = ENDPOINTS.corporate.ir.sendMessage(chatId);
+  
+  try {
+    console.log('チャットメッセージ送信開始:', { chatId, message });
+    
+    const response = await fetch(`/api/proxy${endpoint}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ message }),
+    });
+    
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({ message: "API Error" }));
+      console.error('チャットメッセージ送信エラー:', {
+        status: response.status,
+        statusText: response.statusText,
+        error
+      });
+      throw new Error(error.message || error.detail || `API Error: ${response.status} ${response.statusText}`);
+    }
+
+    if (!response.body) {
+      console.error('レスポンスボディがnullです');
+      throw new Error('Response body is null');
+    }
+
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+
+      const chunk = decoder.decode(value);
+      const lines = chunk.split('\n');
+      
+      for (const line of lines) {
+        if (line.startsWith('data: ')) {
+          const data = line.slice(6);
+          console.log('チャットメッセージチャンク受信:', data);
+          onChunk(data);
+        }
+      }
+    }
+    
+    console.log('チャットメッセージ送信完了');
+  } catch (error) {
+    console.error('チャットメッセージ送信エラー:', error);
+    throw error;
+  }
 }

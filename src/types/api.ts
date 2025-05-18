@@ -259,4 +259,44 @@ export interface RegisterRequest {
   investmentExperience: string;
   companyName?: string;
   assetManagementScale?: string;
+}
+
+/**
+ * 企業向けIRチャット関連API（チャット機能用）
+ * - チャット履歴取得
+ * - チャット詳細取得
+ * - 新規チャット作成
+ * - メッセージ送信
+ */
+export interface ChatHistoryItem {
+  chatId: string;
+  userId: string;
+  title: string;
+  lastMessageSnippet: string;
+  updatedAt: string;
+  totalMessages: number;
+}
+
+export interface ChatHistoryResponse {
+  chatLogs: ChatHistoryItem[];
+  totalCount: number;
+  currentPage: number;
+  totalPages: number;
+}
+
+export interface ChatDetailResponse {
+  chatId: string;
+  userId: string;
+  messages: ChatMessage[];
+}
+
+export interface IRChatResponse {
+  chatId: string;
+}
+
+export interface IRChatMessageResponse {
+  chatId: string;
+  reply: string;
+  userMessageId: string;
+  aiMessageId: string;
 } 

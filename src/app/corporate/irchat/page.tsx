@@ -3,6 +3,7 @@
 
 import React from 'react';
 import { useRouter } from 'next/navigation';
+import { useUser } from '@auth0/nextjs-auth0';
 import Sidebar from '@/components/common/sidebar';
 import IrChatPage from '@/components/features/corporate/irchat/IrChatPage';
 import { LayoutDashboard, HelpCircle, MessageSquare, Settings } from 'lucide-react';
@@ -10,6 +11,15 @@ import { LayoutDashboard, HelpCircle, MessageSquare, Settings } from 'lucide-rea
 // このページはクライアントコンポーネントとしてCSRで動作する
 export default function IrChatPageRoute() {
   const router = useRouter();
+  const { user, error, isLoading } = useUser();
+
+  if (isLoading) {
+    return <div className="flex justify-center items-center h-screen">読み込み中...</div>;
+  }
+
+  if (error || !user) {
+    return <div className="flex justify-center items-center h-screen">ログインが必要です</div>;
+  }
 
   return (
     <div className="min-h-screen flex flex-col">
