@@ -1,4 +1,4 @@
-import { useQuery } from 'react-query';
+import { useQuery } from '@tanstack/react-query';
 import { getCorporateCompanySettings } from '../lib/api';
 import { CompanyInfo } from '../types';
 import { useUser } from "@auth0/nextjs-auth0";
@@ -12,27 +12,27 @@ const mockCompanyInfo: CompanyInfo = {
 };
 
 export const useCorporateCompanySettings = () => {
-  const { user } = useUser();
-  const token = user?.sub ?? null;
+  const { user, isLoading: isUserLoading, error: userError } = useUser();
 
-  const { data, error, isLoading, refetch } = useQuery<CompanyInfo>(
-    ['corporateCompanySettings'],
-    async () => {
-      if (!token) {
-        throw new Error('認証トークンがありません');
+  const { data, error, isLoading, refetch } = useQuery({
+    queryKey: ['corporateCompanySettings'],
+    queryFn: async () => {
+      // ユーザーが認証されていない場合はエラーを投げる
+      if (!user) {
+        throw new Error('認証が必要です');
       }
-      return await getCorporateCompanySettings(token);
+      // プロキシがJWTを自動的に付与するため、トークンの受け渡しは不要
+      return await getCorporateCompanySettings();
     },
-    {
-      enabled: !!token,
-      staleTime: 5 * 60 * 1000, // 5分間キャッシュ
-    }
-  );
+    enabled: !isUserLoading && !!user,
+    staleTime: 5 * 60 * 1000, // 5分間キャッシュ
+    retry: 1, // エラー時のリトライ回数を1回に制限
+  });
 
   return {
     companyInfo: data,
-    error,
-    isLoading,
+    error: error || userError, // 認証エラーとAPIエラーを統合
+    isLoading: isLoading || isUserLoading, // ユーザー情報の読み込み状態も含める
     refetch,
   };
 };

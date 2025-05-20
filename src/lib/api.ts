@@ -385,19 +385,43 @@ export async function createCorporateMailDraft(
 }
 
 export async function getCorporateCompanySettings(): Promise<CompanyInfo> {
-  return apiFetch<CompanyInfo>(ENDPOINTS.corporate.settings.company, "GET", undefined, undefined, true, true);
+  // プロキシ経由でリクエストを送信（JWTは自動的に付与される）
+  return apiFetch<CompanyInfo>(
+    ENDPOINTS.corporate.settings.company,
+    "GET",
+    undefined,
+    undefined,
+    true, // プロキシを使用
+    true  // 認証が必要
+  );
 }
 
 export async function updateCorporateCompanySettings(
   updateData: CompanyInfo
 ): Promise<CompanyInfo & { message: string }> {
-  return apiFetch<CompanyInfo & { message: string }>(ENDPOINTS.corporate.settings.company, "PUT", updateData, undefined, true, true);
+  // プロキシ経由でリクエストを送信（JWTは自動的に付与される）
+  return apiFetch<CompanyInfo & { message: string }>(
+    ENDPOINTS.corporate.settings.company,
+    "PUT",
+    updateData,
+    undefined,
+    true, // プロキシを使用
+    true  // 認証が必要
+  );
 }
 
 export async function updateCorporateAccountSettings(
   updateData: { currentPassword: string; newPassword: string; newEmail: string }
 ): Promise<{ message: string }> {
-  return apiFetch<{ message: string }>(ENDPOINTS.corporate.settings.account, "PUT", updateData, undefined, true, true);
+  // プロキシ経由でリクエストを送信（JWTは自動的に付与される）
+  return apiFetch<{ message: string }>(
+    ENDPOINTS.corporate.settings.account,
+    "PUT",
+    updateData,
+    undefined,
+    true, // プロキシを使用
+    true  // 認証が必要
+  );
 }
 
 /* =======================
