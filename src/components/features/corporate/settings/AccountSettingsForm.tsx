@@ -1,5 +1,5 @@
 // src/components/features/corporate/settings/AccountSettingsForm.tsx
-import React, { useState } from 'react';
+import React, { useState, ChangeEvent } from 'react';
 import Input from '../../../ui/Input';
 import Button from '../../../ui/Button';
 import { updateCorporateAccountSettings } from '../../../../lib/api';
@@ -13,20 +13,27 @@ const AccountSettingsForm: React.FC = () => {
   const [isSaving, setIsSaving] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
-  const { user } = useUser();
-  const token = user?.sub ?? null;
+  const { user, isLoading: isUserLoading } = useUser();
 
   const handleSubmit = async () => {
     setErrorMsg('');
     setSuccessMsg('');
+
+    if (!user) {
+      setErrorMsg('認証が必要です');
+      return;
+    }
+
     if (newPass !== confirmNewPass) {
       setErrorMsg('新しいパスワードが一致しません');
       return;
     }
+
     setIsSaving(true);
     try {
       // API経由でアカウント設定更新（PUT /corporate/settings/account）
-      await updateCorporateAccountSettings(token as string, {
+      // プロキシがJWTを自動的に付与するため、トークンの受け渡しは不要
+      await updateCorporateAccountSettings({
         currentPassword: currentPass,
         newPassword: newPass,
         newEmail,
@@ -44,6 +51,10 @@ const AccountSettingsForm: React.FC = () => {
     }
   };
 
+  // 入力値の変更ハンドラ
+  const handleInputChange = (setter: React.Dispatch<React.SetStateAction<string>>) => 
+    (e: ChangeEvent<HTMLInputElement>) => setter(e.target.value);
+
   return (
     <div className="max-w-lg mx-auto">
       <h2 className="text-2xl font-semibold mb-4">アカウント設定</h2>
@@ -53,7 +64,7 @@ const AccountSettingsForm: React.FC = () => {
           <Input 
             type="password" 
             value={currentPass} 
-            onChange={setCurrentPass} 
+            onChange={handleInputChange(setCurrentPass)} 
             placeholder="現在のパスワード" 
           />
         </div>
@@ -62,7 +73,7 @@ const AccountSettingsForm: React.FC = () => {
           <Input 
             type="password" 
             value={newPass} 
-            onChange={setNewPass} 
+            onChange={handleInputChange(setNewPass)} 
             placeholder="新しいパスワード" 
           />
         </div>
@@ -71,7 +82,7 @@ const AccountSettingsForm: React.FC = () => {
           <Input 
             type="password" 
             value={confirmNewPass} 
-            onChange={setConfirmNewPass} 
+            onChange={handleInputChange(setConfirmNewPass)} 
             placeholder="再入力" 
           />
         </div>
@@ -80,7 +91,7 @@ const AccountSettingsForm: React.FC = () => {
           <Input 
             type="email" 
             value={newEmail} 
-            onChange={setNewEmail} 
+            onChange={handleInputChange(setNewEmail)} 
             placeholder="新しいメールアドレス" 
           />
         </div>
@@ -89,7 +100,7 @@ const AccountSettingsForm: React.FC = () => {
         <Button 
           label={isSaving ? '更新中…' : '変更を保存'} 
           onClick={handleSubmit} 
-          disabled={isSaving} 
+          disabled={isSaving || isUserLoading} 
           variant="primary" 
         />
       </div>
