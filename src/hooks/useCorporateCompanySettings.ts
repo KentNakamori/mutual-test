@@ -3,14 +3,6 @@ import { getCorporateCompanySettings } from '../lib/api';
 import { CompanyInfo } from '../types';
 import { useUser } from "@auth0/nextjs-auth0";
 
-// モックデータ：バックエンドが接続されていない場合の確認用
-const mockCompanyInfo: CompanyInfo = {
-  companyName: "株式会社モック",
-  address: "東京都新宿区西新宿1-1-1",
-  email: "contact@mock.co.jp",
-  tel: "03-1234-5678",
-};
-
 export const useCorporateCompanySettings = () => {
   const { user, isLoading: isUserLoading, error: userError } = useUser();
 

@@ -80,7 +80,7 @@ const QaDetailModal: React.FC<QADetailModalProps> = ({
         title: editableQA.title,
         question: editableQA.question,
         answer: editableQA.answer,
-        tag: editableQA.tag, // tag を追加
+        tag: editableQA.tag, // tag を単一値として送信
         source: editableQA.source, // tags -> source
         genre: editableQA.genre,
         fiscalPeriod: editableQA.fiscalPeriod,
@@ -158,7 +158,7 @@ const QaDetailModal: React.FC<QADetailModalProps> = ({
     setHasChanges(true);
   };
   const handleChangeTag = (option: TagOption) => {
-    setEditableQA({ ...editableQA, tag: option.label });
+    setEditableQA({ ...editableQA, tags: [option.label] });
     setHasChanges(true);
     setShowTagList(false);
   };
@@ -270,14 +270,14 @@ const QaDetailModal: React.FC<QADetailModalProps> = ({
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">タグ</label>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">質問ルート</label>
                   <select
                     name="tag"
-                    value={editableQA.tag}
+                    value={editableQA.tag || ''}
                     onChange={(e) => handleChangeTag({ label: e.target.value } as TagOption)}
                     className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   >
-                    <option value="">タグを選択</option>
+                    <option value="">質問ルートを選択</option>
                     {TAG_OPTIONS.map((option) => (
                       <option key={option.label} value={option.label}>
                         {option.label}
@@ -343,7 +343,7 @@ const QaDetailModal: React.FC<QADetailModalProps> = ({
                 </div>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">ジャンル</label>
+                <label className="block text-sm font-medium text-gray-700 mb-1">カテゴリ</label>
                 <div className="flex flex-wrap gap-2 mb-2">
                   {editableQA.genre.map((g) => (
                     <div key={g} className={`inline-flex items-center ${getTagColor(g)} px-2 py-1 rounded-md text-xs`}>
@@ -363,7 +363,7 @@ const QaDetailModal: React.FC<QADetailModalProps> = ({
                     className="flex items-center text-sm px-2 py-1 rounded border bg-white hover:bg-gray-50"
                   >
                     <Plus size={14} className="mr-1" />
-                    ジャンルを追加
+                    カテゴリを追加
                   </button>
                   {showGenreList && (
                     <div className="absolute z-10 mt-1 w-64 bg-white rounded-md shadow-lg border py-1 max-h-48 overflow-y-auto">
@@ -412,9 +412,18 @@ const QaDetailModal: React.FC<QADetailModalProps> = ({
           </div>
         ) : (
           // 投資家向けUI（見やすく改善）
-          <div className="p-6 bg-white rounded-lg">
+          <div className="p-6 bg-white rounded-lg relative">
+            {/* 投資家向けモーダル用の閉じるボタン */}
+            <button
+              onClick={onClose}
+              className="absolute top-4 right-4 p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-colors duration-200"
+              aria-label="モーダルを閉じる"
+            >
+              <X size={20} />
+            </button>
+            
             {/* ヘッダー情報 */}
-            <div className="mb-6 pb-4 border-b border-gray-100">
+            <div className="mb-6 pb-4 border-b border-gray-100 pr-12">
               <h2 className="text-2xl font-bold text-gray-800 mb-3">{qa.title}</h2>
               <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600">
                 <div className="flex items-center">
@@ -425,12 +434,10 @@ const QaDetailModal: React.FC<QADetailModalProps> = ({
                   <FileText size={16} className="mr-2 text-blue-500" />
                   <span>{qa.fiscalPeriod}</span>
                 </div>
-                {qa.tag && (
+                {qa.tags && qa.tags.length > 0 && (
                   <div className="flex items-center">
                     <Tag size={16} className="mr-2 text-blue-500" />
-                    <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${getTagColor(qa.tag)}`}>
-                      {qa.tag}
-                    </span>
+                    <span>{qa.tags.join(', ')}</span>
                   </div>
                 )}
               </div>
@@ -482,7 +489,7 @@ const QaDetailModal: React.FC<QADetailModalProps> = ({
               <div className="p-4 bg-gray-50 rounded-lg">
                 <h4 className="text-sm font-medium text-gray-700 mb-3 flex items-center">
                   <Activity size={16} className="mr-2 text-amber-600" />
-                  ジャンル
+                  カテゴリ
                 </h4>
                 <div className="flex flex-wrap gap-2">
                   {qa.genre && qa.genre.length > 0 ? (
@@ -495,7 +502,7 @@ const QaDetailModal: React.FC<QADetailModalProps> = ({
                       </span>
                     ))
                   ) : (
-                    <span className="text-gray-500 text-sm">ジャンル未設定</span>
+                    <span className="text-gray-500 text-sm">カテゴリ未設定</span>
                   )}
                 </div>
               </div>
@@ -505,7 +512,13 @@ const QaDetailModal: React.FC<QADetailModalProps> = ({
             <div className="flex justify-end mt-4">
               <button
                 onClick={handleLike}
-                className={`flex items-center ${role === 'investor' ? 'bg-blue-50 hover:bg-blue-100 text-blue-600' : 'bg-gray-50 text-gray-400 cursor-default'} px-4 py-2 rounded-full transition-colors duration-200`}
+                className={`flex items-center px-4 py-2 rounded-full transition-colors duration-200 ${
+                  role === 'investor' 
+                    ? qa.isLiked 
+                      ? 'bg-blue-100 text-blue-600' // いいね済みの場合は青色
+                      : 'bg-blue-50 hover:bg-blue-100 text-blue-600' // 未いいねの場合は薄い青、ホバーで濃い青背景
+                    : 'bg-gray-50 text-gray-400 cursor-default' // 企業側は無効状態
+                }`}
                 disabled={role !== 'investor'}
               >
                 <ThumbsUp size={18} className="mr-2" />

@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useState, useCallback } from 'react';
-import { useQuery } from 'react-query';
+import React, { useState, useCallback, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import Sidebar from '@/components/common/sidebar';
 import Footer from '@/components/common/footer';
 import QASearchBar from '@/components/features/investor/qa/QASearchBar';
@@ -11,6 +11,7 @@ import { QA, FilterType } from '@/types';
 import { useUser } from "@auth0/nextjs-auth0";
 import { searchInvestorQa } from '@/lib/api';
 import QaDetailModal from '@/components/ui/QaDetailModal';
+import { useQALike } from '@/hooks/useQA';
 import { Home, Heart, Search, MessageSquare, User } from 'lucide-react';
 
 // 企業ID -> 企業名 を取得するマッピング用
@@ -23,6 +24,7 @@ function getCompanyName(companyId: string): string {
 }
 
 const QASearchPage: React.FC = () => {
+  const router = useRouter();
   const menuItems = [
     { label: 'トップページ', link: '/investor/companies', icon: <Home size={20} /> },
     { label: "フォロー済み企業", link: "/investor/companies/followed", icon: <Heart size={20} /> },
@@ -31,13 +33,22 @@ const QASearchPage: React.FC = () => {
     { label: 'マイページ', link: '/investor/mypage', icon: <User size={20} /> },
   ];
 
+  // Auth0 SDK v4 の認証状態
+  const { user, error: userError, isLoading: userLoading } = useUser();
+  
+  // いいね機能のフック
+  const { toggleLike, isLoading: likeLoading, error: likeError } = useQALike();
+
   const [searchKeyword, setSearchKeyword] = useState<string>('');
   const [filters, setFilters] = useState<FilterType>({});
   const [selectedQA, setSelectedQA] = useState<QA | null>(null);
   const [currentPage, setCurrentPage] = useState<number>(1);
+  const [qaItems, setQaItems] = useState<QA[]>([]);
+  const [totalCount, setTotalCount] = useState<number>(0);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [error, setError] = useState<Error | null>(null);
+  
   const itemsPerPage = 10;
-  const { user, isLoading: userLoading } = useUser(); 
-  const token = user?.sub ?? null;
 
   // 簡易な日付フォーマット関数
   const formatDate = (dateStr: string) => {
@@ -48,104 +59,56 @@ const QASearchPage: React.FC = () => {
     return `${y}/${m}/${day}`;
   };
 
-  // モックデータ（バックエンド未接続時の代替）
-  const mockQAData: QA[] = [
-    {
-      qaId: '1',
-      title: '2025年度の業績見通しについて',
-      question: '今期の業績見通しを教えてください。',
-      answer:
-        '当社では、既存事業の拡大と新規事業への投資を通じて業績の拡大を目指しており、現在の見通しでは前年比20%の成長を計画しております。新規事業ではAIを活用したサービス展開を視野に入れています。詳細は決算説明資料をご参照ください。',
-      companyId: 'comp1',
-      likeCount: 15,
-      tags: ['決算説明会'],
-      genre: ['業績'],
-      fiscalPeriod: '2025年度 Q4',
-      createdAt: '2023-09-01T00:00:00Z',
-      updatedAt: '2023-09-01T00:00:00Z',
-      isPublished: true,
-    },
-    {
-      qaId: '2',
-      title: '人材戦略について',
-      question: '優秀な人材を確保するためにどのような施策を行いますか？',
-      answer:
-        '当社はリファラル採用の強化や従業員エンゲージメントの向上を図るための福利厚生拡充など、多角的なアプローチをしています。具体的には、研修制度の充実やキャリアアップ支援などを行い、労働環境の改善にも注力しています。',
-      companyId: 'comp2',
-      likeCount: 8,
-      tags: ['決算説明動画'],
-      genre: ['人材戦略'],
-      fiscalPeriod: '2025年度 Q2',
-      createdAt: '2023-10-01T00:00:00Z',
-      updatedAt: '2023-10-01T00:00:00Z',
-      isPublished: true,
-    },
-    // モックデータがさらに必要なら、ここに追加してください。
-  ];
-
-  const { data, refetch, isLoading, error } = useQuery<{ results: QA[]; totalCount: number }>(
-    ['investorQaSearch', searchKeyword, filters],
-    () => {
-      const query: Record<string, string> = {
+  // データ取得関数
+  const fetchQaData = useCallback(async () => {
+    if (userLoading) return;
+    
+    setIsLoading(true);
+    
+    try {
+      const query: Record<string, any> = {
         keyword: searchKeyword,
         ...(filters.likeMin !== undefined ? { likeMin: filters.likeMin.toString() } : {}),
         ...(filters.dateRange
           ? { dateFrom: filters.dateRange.from || '', dateTo: filters.dateRange.to || '' }
           : {}),
+        ...(filters.tags && filters.tags.length > 0 ? { tags: filters.tags } : {}),
+        ...(filters.genre && filters.genre.length > 0 ? { genre: filters.genre } : {}),
+        ...(filters.fiscalPeriod && filters.fiscalPeriod.length > 0 ? { fiscalPeriod: filters.fiscalPeriod } : {}),
+        ...(filters.sort ? { sort: filters.sort } : {}),
+        ...(filters.order ? { order: filters.order } : {}),
+        // 後方互換性のため、古いフィルター形式もサポート
         ...(filters.sortKey ? { sortKey: filters.sortKey } : {}),
         ...(filters.sortDirection ? { sortDirection: filters.sortDirection } : {}),
+        page: currentPage,
+        limit: itemsPerPage
       };
-      if (token) {
-        return searchInvestorQa(query, token);
-      } else {
-        // mock データに対して fiscalPeriod と genre でフィルタリング
-        let filtered = mockQAData.filter(qa => {
-          let pass = true;
-          if (filters.fiscalPeriod && filters.fiscalPeriod !== '') {
-            // filters.fiscalPeriod の例: "2025-Q4" を "2025年度 Q4" に変換
-            const filterFiscal = filters.fiscalPeriod.replace('-', '年度 ');
-            pass = pass && qa.fiscalPeriod === filterFiscal;
-          }
-          if (filters.genre && filters.genre !== '') {
-            // QA.genre は配列と仮定
-            pass = pass && qa.genre.includes(filters.genre);
-          }
-          return pass;
-        });
-  
-        // 並び替え処理：sortKey と sortDirection が指定されている場合にソートを実施
-        if (filters.sortKey && filters.sortDirection) {
-          filtered.sort((a, b) => {
-            if (filters.sortKey === 'createdAt') {
-              const dateA = new Date(a.createdAt);
-              const dateB = new Date(b.createdAt);
-              return filters.sortDirection === 'desc'
-                ? dateB.getTime() - dateA.getTime()
-                : dateA.getTime() - dateB.getTime();
-            } else if (filters.sortKey === 'likeCount') {
-              return filters.sortDirection === 'desc'
-                ? b.likeCount - a.likeCount
-                : a.likeCount - b.likeCount;
-            }
-            return 0;
-          });
-        }
-  
-        return Promise.resolve({ results: filtered, totalCount: filtered.length });
-      }
-    },
-    { enabled: !!userLoading}
-  );
-  
+      
+      // Auth0 SDK v4 対応: token は渡さず、プロキシ経由で JWT を送信
+      const response = await searchInvestorQa(query, undefined);
+      setQaItems(response.results);
+      setTotalCount(response.totalCount);
+      setError(null);
+    } catch (err) {
+      console.error('QAデータ取得エラー:', err);
+      setError(err instanceof Error ? err : new Error('QAデータの取得に失敗しました'));
+      setQaItems([]);
+      setTotalCount(0);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [searchKeyword, filters, currentPage, itemsPerPage, userLoading]);
 
-  // 全QAデータ
-  const qaItems: QA[] = data?.results || mockQAData;
+  // 初回データ取得と条件変更時のデータ再取得
+  useEffect(() => {
+    if (!userLoading && user) {
+      fetchQaData();
+    }
+  }, [fetchQaData, userLoading, user]);
 
   // ページネーション計算
-  const totalPages = Math.ceil(qaItems.length / itemsPerPage);
-  // 現在のページに表示するアイテム
-  const displayedItems = qaItems.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
-
+  const totalPages = Math.ceil(totalCount / itemsPerPage);
+  
   // 検索送信時のハンドラ
   const handleSearchSubmit = useCallback(
     (keyword: string, newFilters: FilterType) => {
@@ -153,9 +116,8 @@ const QASearchPage: React.FC = () => {
       setFilters(newFilters);
       // ページを初期状態に戻す
       setCurrentPage(1);
-      refetch();
     },
-    [refetch]
+    []
   );
 
   // アイテムをクリックしたら選択状態にしてモーダルを開く
@@ -169,9 +131,57 @@ const QASearchPage: React.FC = () => {
   }, []);
 
   // いいね操作
-  const handleLike = useCallback((qaId: string) => {
-    console.log('いいね：', qaId);
-  }, []);
+  const handleLike = useCallback(async (qaId: string) => {
+    try {
+      console.log('いいね操作開始:', qaId);
+      
+      // 現在のQAアイテムを取得してisLikedの状態を確認
+      const currentQA = qaItems.find(qa => qa.qaId === qaId);
+      if (!currentQA) {
+        console.error('QAアイテムが見つかりません:', qaId);
+        return;
+      }
+      
+      // いいね状態をトグル
+      const result = await toggleLike(qaId, currentQA.isLiked || false);
+      console.log('いいね操作結果:', result);
+      
+      // ローカル状態を更新
+      setQaItems(prevItems =>
+        prevItems.map(qa =>
+          qa.qaId === qaId
+            ? {
+                ...qa,
+                likeCount: result.likeCount,
+                isLiked: result.isLiked
+              }
+            : qa
+        )
+      );
+      
+      // 選択されたQAも更新
+      if (selectedQA && selectedQA.qaId === qaId) {
+        setSelectedQA({
+          ...selectedQA,
+          likeCount: result.likeCount,
+          isLiked: result.isLiked
+        });
+      }
+      
+    } catch (error) {
+      console.error('いいね操作エラー:', error);
+      setError(error instanceof Error ? error : new Error('いいね操作に失敗しました'));
+    }
+  }, [qaItems, selectedQA, toggleLike]);
+
+  // 認証エラー表示
+  if (userError && !userLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-xl text-red-500">認証エラーが発生しました。再度ログインしてください。</div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -180,7 +190,7 @@ const QASearchPage: React.FC = () => {
           isCollapsible
           menuItems={menuItems}
           selectedItem="/investor/qa"
-          onSelectMenuItem={(link) => (window.location.href = link)}
+          onSelectMenuItem={(link) => router.push(link)}
         />
         <main className="flex-1 container mx-auto p-4">
           {/* ページ上部の表題 */}
@@ -189,32 +199,56 @@ const QASearchPage: React.FC = () => {
           <QASearchBar 
             onSearchSubmit={handleSearchSubmit}
             onSortChange={(sortValue: string) => {
-            // sortValue は "createdAt_desc" などの形式で渡される
+              // sortValue は "createdAt_desc" などの形式で渡される
               const [sortKey, sortDirection] = sortValue.split('_');
-            // filters を更新して新しい検索を実行する
-              const updatedFilters = { ...filters, sortKey, sortDirection };
+              // filters を更新して新しい検索を実行する
+              const updatedFilters = { 
+                ...filters, 
+                sort: sortKey as 'createdAt' | 'likeCount',
+                order: sortDirection as 'asc' | 'desc',
+                // 後方互換性のため、古いフィルター形式も設定
+                sortKey, 
+                sortDirection: sortDirection as 'asc' | 'desc' 
+              };
               setFilters(updatedFilters);
               setCurrentPage(1);
-              refetch();
             }}
             initialKeyword={searchKeyword}
             initialFilters={filters}
           />
 
-          {isLoading && <p>読み込み中…</p>}
-          {error && <p>エラーが発生しました: {(error as Error).message}</p>}
+          {isLoading && <p className="text-center py-4">読み込み中…</p>}
+          {error && (
+            <div className="bg-red-50 border border-red-200 p-4 rounded-lg text-red-700 mb-4">
+              <p>エラーが発生しました: {error.message}</p>
+              <button 
+                onClick={() => fetchQaData()} 
+                className="mt-2 px-4 py-1 bg-red-100 text-red-800 rounded-md text-sm hover:bg-red-200"
+              >
+                再試行
+              </button>
+            </div>
+          )}
+          
+          {likeError && (
+            <div className="bg-yellow-50 border border-yellow-200 p-4 rounded-lg text-yellow-700 mb-4">
+              <p>いいね操作でエラーが発生しました</p>
+            </div>
+          )}
 
           {/* QAResultList：1列表示（縦方向にリストアップ） */}
-          <QAResultList
-            qas={displayedItems}
-            onItemClick={handleItemClick}
-            onLike={handleLike}
-            getCompanyName={getCompanyName}
-            formatDate={formatDate}
-          />
+          {!isLoading && !error && (
+            <QAResultList
+              qas={qaItems}
+              onItemClick={handleItemClick}
+              onLike={handleLike}
+              getCompanyName={getCompanyName}
+              formatDate={formatDate}
+            />
+          )}
 
           {/* Pagination コンポーネント */}
-          {totalPages > 1 && (
+          {totalPages > 1 && !isLoading && !error && (
             <Pagination
               currentPage={currentPage}
               totalPages={totalPages}
@@ -240,9 +274,10 @@ const QASearchPage: React.FC = () => {
           { label: 'お問い合わせ', href: '/contact' },
         ]}
         copyrightText="株式会社サンプル"
-        />
-      </div>
-    );
-  };
+        onSelectLink={(href) => router.push(href)}
+      />
+    </div>
+  );
+};
   
-  export default QASearchPage;
+export default QASearchPage;

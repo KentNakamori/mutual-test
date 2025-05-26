@@ -49,6 +49,7 @@ import {
   IRChatResponse,
   IRChatMessageResponse
 } from '@/types/api';
+import { Industry } from '@/types/industry';
 
 /**
  * 共通の HTTP クライアント関数
@@ -220,7 +221,7 @@ export async function searchCorporateQa(
   query: {
     keyword?: string;
     review_status?: 'DRAFT' | 'PENDING' | 'PUBLISHED';
-    tag?: string;
+    tags?: string[];
     genre?: string[];
     fiscalPeriod?: string[];
     sort?: 'createdAt' | 'likeCount';
@@ -239,7 +240,13 @@ export async function searchCorporateQa(
   
   if (query.keyword) queryString.append('keyword', query.keyword);
   if (query.review_status) queryString.append('review_status', query.review_status);
-  if (query.tag) queryString.append('tag', query.tag);
+  
+  // タグの処理（配列）
+  if (query.tags && Array.isArray(query.tags) && query.tags.length > 0) {
+    const validTags = query.tags.filter(t => t && t.trim() !== '');
+    validTags.forEach(t => queryString.append('tags', t));
+  }
+  
   if (query.genre && Array.isArray(query.genre) && query.genre.length > 0) {
     const validGenres = query.genre.filter(g => g && g.trim() !== '');
     validGenres.forEach(g => queryString.append('genre', g));
@@ -279,7 +286,7 @@ export async function createCorporateQa(
     title: string;
     question: string;
     answer: string;
-    tag: string;
+    tags: string[];
     source?: string[];
     genre?: string[];
     fiscalPeriod?: string;
@@ -301,7 +308,7 @@ export async function updateCorporateQa(
     title?: string;
     question?: string;
     answer?: string;
-    tag?: string;
+    tags?: string[];
     source?: string[];
     genre?: string[];
     fiscalPeriod?: string;
@@ -467,23 +474,26 @@ export async function getInvestorCompanies(
   token?: string, 
   query?: { 
     keyword?: string; 
-    industry?: string;
+    industry?: Industry;
+    followed?: string; // フォロー済みでフィルタリングするためのパラメータ
   }
 ): Promise<{ 
   companies: Array<{
     companyId: string;
     companyName: string;
-    industry: string;
+    industry: Industry;
     logoUrl?: string;
     isFollowed: boolean;
     createdAt: string;
     updatedAt: string;
+    securitiesCode?: string;      // 証券コード
+    majorStockExchange?: string;  // 主要取引所
+    websiteUrl?: string;         // WebサイトURL
+    businessDescription?: string; // 企業説明
   }>; 
   totalCount: number;
   totalPages: number;
 }> {
-  // デバッグログ：入力パラメータの確認
-  console.log('getInvestorCompanies input:', { token, query });
 
   // undefinedの値を除外したクエリパラメータを作成
   const validQuery = query ? Object.fromEntries(
@@ -504,7 +514,7 @@ export async function getInvestorCompanies(
   // デバッグログ：最終的なエンドポイントの確認
   console.log('Final endpoint:', endpoint);
     
-  return apiFetch<any>(endpoint, "GET", undefined, token);
+  return apiFetch<any>(endpoint, "GET", undefined, token, true);
 }
 
 /**
@@ -520,7 +530,7 @@ export async function getInvestorCompanyDetail(
 ): Promise<{
   companyId: string;
   companyName: string;
-  industry: string;
+  industry: Industry;
   logoUrl?: string;
   createdAt: string;
   updatedAt: string;
@@ -531,9 +541,13 @@ export async function getInvestorCompanyDetail(
     tel: string;
   };
   isFollowed: boolean;
+  securitiesCode?: string;      // 証券コード
+  majorStockExchange?: string;  // 主要取引所
+  websiteUrl?: string;         // WebサイトURL
 }> {
   const endpoint = ENDPOINTS.investor.companies.detail(companyId);
-  return apiFetch<any>(endpoint, "GET", undefined, token);
+  // プロキシ経由でJWTを送信するためにuseProxyをtrueに設定
+  return apiFetch<any>(endpoint, "GET", undefined, token, true);
 }
 
 /**
@@ -575,7 +589,7 @@ export async function followInvestorCompany(
   message: string;
 }> {
   const endpoint = ENDPOINTS.investor.companies.follow(companyId);
-  return apiFetch<any>(endpoint, "POST", { action }, token);
+  return apiFetch<any>(endpoint, "POST", { action }, token, true);
 }
 
 /**
@@ -588,7 +602,7 @@ export async function followInvestorCompany(
 export async function searchInvestorQa(
   query: {
     keyword?: string;
-    tag?: string;
+    tags?: string[];
     genre?: string[];
     fiscalPeriod?: string[];
     companyId?: string;
@@ -608,9 +622,15 @@ export async function searchInvestorQa(
   const queryString = new URLSearchParams();
   
   if (query.keyword) queryString.append('keyword', query.keyword);
-  if (query.tag) queryString.append('tag', query.tag);
   if (query.companyId) queryString.append('companyId', query.companyId);
   if (query.companyName) queryString.append('companyName', query.companyName);
+  
+  // タグの処理（配列）
+  if (query.tags && Array.isArray(query.tags)) {
+    query.tags.forEach(tag => {
+      if (tag && tag.trim()) queryString.append('tags', tag);
+    });
+  }
   
   // ジャンルの処理（配列）
   if (query.genre && Array.isArray(query.genre)) {
@@ -633,7 +653,7 @@ export async function searchInvestorQa(
   if (query.limit) queryString.append('limit', query.limit.toString());
   
   const endpoint = `${ENDPOINTS.investor.qa.search}?${queryString.toString()}`;
-  return apiFetch<any>(endpoint, "GET", undefined, token);
+  return apiFetch<any>(endpoint, "GET", undefined, token, true);
 }
 
 /**
@@ -706,7 +726,7 @@ export async function getInvestorQaCompanies(
   companyId: string;
   companyName: string;
 }>>{
-  return apiFetch<any>(ENDPOINTS.investor.qa.companies, "GET", undefined, token);
+  return apiFetch<any>(ENDPOINTS.investor.qa.companies, "GET", undefined, token, true);
 }
 
 /**
@@ -714,7 +734,7 @@ export async function getInvestorQaCompanies(
  * POST /investor/qa/{qa_id}/like
  * @param qaId QA ID
  * @param action いいね操作（'ADD'または'REMOVE'）
- * @param token 認証トークン（オプション）
+ * @param token 認証トークン（オプション、プロキシ経由の場合）
  * @returns いいね状態
  */
 export async function likeInvestorQa(
@@ -728,14 +748,16 @@ export async function likeInvestorQa(
   status: string;
 }> {
   const endpoint = ENDPOINTS.investor.qa.like(qaId);
-  return apiFetch<any>(endpoint, "POST", { action }, token);
+  // バックエンドが期待する小文字形式に変換
+  const normalizedAction = action.toLowerCase() as 'add' | 'remove';
+  return apiFetch<any>(endpoint, "POST", { action: normalizedAction }, token, true);
 }
 
 /**
  * チャットログ一覧取得API
  * GET /investor/chat/logs
  * @param query クエリパラメータ
- * @param token 認証トークン
+ * @param token 認証トークン（オプション、プロキシ経由の場合）
  * @returns チャットログリスト
  */
 export async function getInvestorChatLogs(
@@ -744,7 +766,7 @@ export async function getInvestorChatLogs(
     page?: number;
     limit?: number;
   }, 
-  token: string
+  token?: string
 ): Promise<{
   chatLogs: Array<{
     chatId: string;
@@ -769,7 +791,7 @@ export async function getInvestorChatLogs(
     ? `${ENDPOINTS.investor.chat.history}?${queryString.toString()}`
     : ENDPOINTS.investor.chat.history;
     
-  return apiFetch<any>(endpoint, "GET", undefined, token);
+  return apiFetch<any>(endpoint, "GET", undefined, token, true);
 }
 
 /**
@@ -777,19 +799,30 @@ export async function getInvestorChatLogs(
  * POST /investor/chat/{companyId}
  * @param companyId 企業ID
  * @param message 初期メッセージ
- * @param token 認証トークン
+ * @param token 認証トークン（オプション、プロキシ経由の場合）
  * @returns チャット作成結果
  */
 export async function createInvestorChat(
   companyId: string,
   message: string,
-  token: string
+  token?: string
 ): Promise<{
   chatId: string;
   reply: string;
 }> {
+  console.log('createInvestorChat関数呼び出し:', {
+    companyId,
+    companyIdType: typeof companyId,
+    message,
+    messageType: typeof message,
+    token: token ? 'provided' : 'empty'
+  });
+  
   const endpoint = ENDPOINTS.investor.chat.new(companyId);
-  return apiFetch<any>(endpoint, "POST", { message }, token);
+  console.log('createInvestorChat構築されたエンドポイント:', endpoint);
+  console.log('createInvestorChatリクエストボディ:', { message });
+  
+  return apiFetch<any>(endpoint, "POST", { message }, token, true);
 }
 
 /**
@@ -797,38 +830,56 @@ export async function createInvestorChat(
  * POST /investor/chat/message
  * @param chatId チャットID
  * @param message メッセージ内容
- * @param token 認証トークン
+ * @param onChunk チャンク受信時のコールバック
+ * @param token 認証トークン（オプション、プロキシ経由の場合）
  * @returns ストリーミングレスポンス（特殊処理が必要）
  */
 export async function sendInvestorChatMessage(
   chatId: string,
   message: string,
-  token: string,
-  onChunk: (chunk: string) => void
+  onChunk: (chunk: string) => void,
+  token?: string
 ): Promise<void> {
-  const headers: HeadersInit = {
-    'Content-Type': 'application/json',
-    'Authorization': `Bearer ${token}`,
-  };
-
-  const config: RequestInit = {
-    method: 'POST',
-    headers,
-    body: JSON.stringify({
+  const endpoint = ENDPOINTS.investor.chat.message;
+  
+  try {
+    console.log('投資家チャットメッセージ送信開始:', { chatId, message });
+    console.log('sendInvestorChatMessage詳細パラメータ:', {
+      chatId,
+      chatIdType: typeof chatId,
+      message,
+      messageType: typeof message,
+      messageLength: message.length,
+      endpoint,
+      token: token ? 'provided' : 'empty'
+    });
+    
+    const requestBody = {
       chatId,
       message
-    }),
-  };
-
-  try {
-    const response = await fetch(`${API_BASE_URL}${ENDPOINTS.investor.chat.message}`, config);
+    };
+    console.log('sendInvestorChatMessageリクエストボディ:', requestBody);
+    
+    const response = await fetch(`/api/proxy${endpoint}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(requestBody),
+    });
     
     if (!response.ok) {
       const error = await response.json().catch(() => ({ message: "API Error" }));
+      console.error('投資家チャットメッセージ送信エラー:', {
+        status: response.status,
+        statusText: response.statusText,
+        error
+      });
       throw new Error(error.message || error.detail || `API Error: ${response.status} ${response.statusText}`);
     }
 
     if (!response.body) {
+      console.error('レスポンスボディがnullです');
       throw new Error('Response body is null');
     }
 
@@ -845,12 +896,15 @@ export async function sendInvestorChatMessage(
       for (const line of lines) {
         if (line.startsWith('data: ')) {
           const data = line.slice(6);
+          console.log('投資家チャットメッセージチャンク受信:', data);
           onChunk(data);
         }
       }
     }
+    
+    console.log('投資家チャットメッセージ送信完了');
   } catch (error) {
-    console.error('Streaming error:', error);
+    console.error('投資家チャットメッセージ送信エラー:', error);
     throw error;
   }
 }
@@ -859,12 +913,12 @@ export async function sendInvestorChatMessage(
  * チャット詳細取得API
  * GET /investor/chat/{chatId}
  * @param chatId チャットID
- * @param token 認証トークン
+ * @param token 認証トークン（オプション、プロキシ経由の場合）
  * @returns チャット詳細情報
  */
 export async function getInvestorChatDetail(
   chatId: string,
-  token: string
+  token?: string
 ): Promise<{
   chatId: string;
   companyId: string;
@@ -877,24 +931,24 @@ export async function getInvestorChatDetail(
   updatedAt: string;
 }> {
   const endpoint = ENDPOINTS.investor.chat.detail(chatId);
-  return apiFetch<any>(endpoint, "GET", undefined, token);
+  return apiFetch<any>(endpoint, "GET", undefined, token, true);
 }
 
 /**
  * チャット削除API
  * DELETE /investor/chat/{chatId}
  * @param chatId チャットID
- * @param token 認証トークン
+ * @param token 認証トークン（オプション、プロキシ経由の場合）
  * @returns 削除結果
  */
 export async function deleteInvestorChat(
   chatId: string,
-  token: string
+  token?: string
 ): Promise<{
   message: string;
 }> {
   const endpoint = ENDPOINTS.investor.chat.detail(chatId);
-  return apiFetch<any>(endpoint, "DELETE", undefined, token);
+  return apiFetch<any>(endpoint, "DELETE", undefined, token, true);
 }
 
 /**
@@ -913,7 +967,7 @@ export async function getInvestorUser(token: string): Promise<{
   assetManagementScale?: string;
   bio?: string;
 }> {
-  return apiFetch<any>(ENDPOINTS.investor.profile.get, "GET", undefined, token);
+  return apiFetch<any>(ENDPOINTS.investor.profile.get, "GET", undefined, token, true);
 }
 
 /**
@@ -946,7 +1000,7 @@ export async function updateInvestorUser(
     bio?: string;
   };
 }> {
-  return apiFetch<any>(ENDPOINTS.investor.profile.update, "PATCH", updateData, token);
+  return apiFetch<any>(ENDPOINTS.investor.profile.update, "PATCH", updateData, token, true);
 }
 
 /**
@@ -1075,4 +1129,46 @@ export async function sendCorporateChatMessageStream(
     console.error('チャットメッセージ送信エラー:', error);
     throw error;
   }
+}
+
+/**
+ * 新着QA取得API（企業IDの異なる新しいQAを取得）
+ * GET /investor/qa/search
+ * @param token 認証トークン（オプション）
+ * @param limit 取得件数（デフォルト: 10）
+ * @returns 新着QA一覧
+ */
+export async function getLatestQAs(
+  token?: string,
+  limit: number = 10
+): Promise<{
+  results: Array<{
+    qaId: string;
+    title: string;
+    question: string;
+    answer: string;
+    companyId: string;
+    companyName?: string;
+    likeCount: number;
+    tags?: string[];
+    source: string[];
+    genre: string[];
+    fiscalPeriod?: string;
+    reviewStatus: 'DRAFT' | 'PENDING' | 'PUBLISHED';
+    status: 'draft' | 'published' | 'archived';
+    createdAt: string;
+    updatedAt: string;
+  }>;
+  totalCount: number;
+  totalPages: number;
+}> {
+  // 新着順（作成日降順）で公開済みのQAを取得
+  const query = {
+    sort: 'createdAt' as const,
+    order: 'desc' as const,
+    limit,
+    page: 1
+  };
+  
+  return searchInvestorQa(query, token);
 }

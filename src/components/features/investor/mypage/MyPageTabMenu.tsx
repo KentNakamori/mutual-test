@@ -7,19 +7,37 @@ import ProfileForm from "./ProfileForm";
 import PasswordChangeForm from "./PasswordChangeForm";
 import NotificationSettingForm from "./NotificationSettingForm";
 import AccountDeleteForm from "./AccountDeleteForm";
-import { ProfileData, NotificationSetting, MyPageTabMenuProps } from "@/types";
+import { ProfileData, NotificationSetting } from "@/types";
 
-
+// MyPageTabMenuProps型を拡張
+export interface MyPageTabMenuProps {
+  activeTab: "profile" | "password" | "notification" | "delete";
+  onTabChange: (tab: "profile" | "password" | "notification" | "delete") => void;
+  profileData: ProfileData;
+  onSaveProfile: (updatedProfile: ProfileData) => Promise<void>;
+  onChangePassword: (currentPass: string, newPass: string) => Promise<void>;
+  onSaveNotification: (newSetting: NotificationSetting) => Promise<void>;
+  onDeleteAccount: (password: string) => Promise<void>;
+}
 
 const MyPageTabMenu: React.FC<MyPageTabMenuProps> = ({
   activeTab,
-  onChangeTab,
+  onTabChange,
   profileData,
   onSaveProfile,
   onChangePassword,
   onSaveNotification,
   onDeleteAccount,
 }) => {
+  // PasswordChangeFormとAccountDeleteFormに渡すハンドラーを型に合わせて調整
+  const handlePasswordChange = async (currentPassword: string, newPassword: string) => {
+    return onChangePassword(currentPassword, newPassword);
+  };
+
+  const handleAccountDelete = async (password: string) => {
+    return onDeleteAccount(password);
+  };
+
   const tabs = [
     {
       id: "profile",
@@ -34,7 +52,7 @@ const MyPageTabMenu: React.FC<MyPageTabMenuProps> = ({
     {
       id: "password",
       label: "パスワード変更",
-      content: <PasswordChangeForm onChangePassword={onChangePassword} />,
+      content: <PasswordChangeForm onChangePassword={handlePasswordChange} />,
     },
     {
       id: "notification",
@@ -54,7 +72,7 @@ const MyPageTabMenu: React.FC<MyPageTabMenuProps> = ({
     {
       id: "delete",
       label: "退会",
-      content: <AccountDeleteForm onDeleteAccount={onDeleteAccount} />,
+      content: <AccountDeleteForm onDeleteAccount={handleAccountDelete} />,
     },
   ];
 
@@ -64,7 +82,7 @@ const MyPageTabMenu: React.FC<MyPageTabMenuProps> = ({
         tabs={tabs}
         activeTab={activeTab}
         onChangeTab={(tabId: string) =>
-          onChangeTab(tabId as "profile" | "password" | "notification" | "delete")
+          onTabChange(tabId as "profile" | "password" | "notification" | "delete")
         }
       />
     </div>

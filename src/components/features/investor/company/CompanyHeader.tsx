@@ -1,6 +1,7 @@
 // src/components/features/investor/company/CompanyHeader.tsx
 import React from 'react';
 import { Company, CompanyHeaderProps } from '../../../../types';
+import { getIndustryLabel } from '@/types/industry';
 
 const CompanyHeader: React.FC<CompanyHeaderProps> = ({ company }) => {
   const handleBackClick = () => {
@@ -57,7 +58,7 @@ const CompanyHeader: React.FC<CompanyHeaderProps> = ({ company }) => {
           {company.websiteUrl && company.industry && (
             <span className="text-gray-400 mx-1">|</span>
           )}
-          <p className="text-gray-600">{company.industry}</p>
+          <p className="text-gray-600">{getIndustryLabel(company.industry)}</p>
         </div>
       </div>
       {/* 右側：戻るボタン */}

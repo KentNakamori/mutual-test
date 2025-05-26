@@ -35,6 +35,11 @@ export interface FilterType {
   };
   sortKey?: string;
   sortDirection?: 'asc' | 'desc';
+  tags?: string[];
+  genre?: string[];
+  fiscalPeriod?: string[];
+  sort?: 'createdAt' | 'likeCount';
+  order?: 'asc' | 'desc';
   [key: string]: any;
 }
 
@@ -71,7 +76,7 @@ export interface SearchParams {
   keyword: string;
   genre: string[];
   source: string[];
-  tag?: string;
+  tags?: string[];
   fiscalPeriod?: string;
   sort: 'createdAt' | 'likeCount';
   order: 'asc' | 'desc';

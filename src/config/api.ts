@@ -85,6 +85,10 @@ export const ENDPOINTS = {
       get: '/investor/users/me',
       update: '/investor/users/me',
     },
+    // 設定関連
+    settings: {
+      account: '/investor/settings/account',
+    },
     // トラッキング
     track: '/investor/track',
   },

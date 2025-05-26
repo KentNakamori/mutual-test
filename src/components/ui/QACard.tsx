@@ -70,16 +70,19 @@ if (mode === 'preview') {
             </div>
 
             <div className="space-y-2">
-              {qa.tag && (
-                <div className="flex items-center">
+              {/* タグの表示 */}
+              <div className="flex flex-wrap gap-1.5">
+                {qa.tags && qa.tags.map((tag, index) => (
                   <span 
-                    className={`px-3 py-1.5 rounded-full text-xs font-medium ${getTagColor(qa.tag)}`}
+                    key={`tag-${index}`} 
+                    className={`px-3 py-1.5 rounded-full text-xs font-medium ${getTagColor(tag)}`}
                   >
-                    {qa.tag}
+                    {tag}
                   </span>
-                </div>
-              )}
+                ))}
+              </div>
 
+              {/* ジャンルの表示 */}
               <div className="flex flex-wrap gap-1.5">
                 {qa.genre && qa.genre.map((genre, index) => (
                   <span 
@@ -128,10 +131,22 @@ if (mode === 'preview') {
 
               <button
                 onClick={handleLikeClick}
-                className={`flex items-center ${role === 'investor' ? 'text-gray-600 hover:text-blue-600' : 'text-gray-400'} transition-colors duration-200`}
+                className={`flex items-center transition-colors duration-200 ${
+                  role === 'investor' 
+                    ? qa.isLiked 
+                      ? 'text-blue-600' // いいね済みの場合は青色
+                      : 'text-gray-600 hover:text-blue-600' // 未いいねの場合はグレー、ホバーで青
+                    : 'text-gray-400' // 企業側は無効状態
+                }`}
                 disabled={role !== 'investor'}
               >
-                <div className={`${role === 'investor' ? 'bg-gray-100 hover:bg-blue-100' : 'bg-gray-50'} p-2 rounded-full`}>
+                <div className={`p-2 rounded-full transition-colors duration-200 ${
+                  role === 'investor' 
+                    ? qa.isLiked 
+                      ? 'bg-blue-100' // いいね済みの場合は青背景
+                      : 'bg-gray-100 hover:bg-blue-100' // 未いいねの場合はグレー背景、ホバーで青背景
+                    : 'bg-gray-50' // 企業側は無効状態
+                }`}>
                   <ThumbsUp size={16} className="mr-1" />
                 </div>
                 <span className="ml-2 text-sm font-medium">{qa.likeCount || 0}</span>

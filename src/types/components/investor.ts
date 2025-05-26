@@ -1,4 +1,5 @@
 import { Company, ProfileData } from '../models';
+import { Industry } from '../industry';
 
 /**
  * 投資家ログインページ（ログイン用）
@@ -73,7 +74,7 @@ export interface CompanyHeaderProps {
  */
 export interface CompanySearchQuery {
   keyword: string;
-  industry?: string;
+  industry?: Industry;
 }
 
 /**
@@ -144,7 +145,7 @@ export interface SearchBarProps {
   }[];
   filterComponent?: React.ReactNode;
   onSearch: (keyword: string, filters: {
-    tag?: string;
+    tags?: string[];
     genre?: string[];
     fiscalPeriod?: string;
     sort?: string;

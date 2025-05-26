@@ -4,6 +4,7 @@ import Input from '../../../ui/Input';
 import Button from '../../../ui/Button';
 import { CompanyInfo, CompanyInfoFormProps } from '../../../../types';
 import { updateCorporateCompanySettings } from '../../../../lib/api';
+import { Industry, INDUSTRY_OPTIONS, getIndustryLabel } from '@/types/industry';
 
 const CompanyInfoForm: React.FC<CompanyInfoFormProps> = ({ initialData, onSaveSuccess }) => {
   const [formData, setFormData] = useState<CompanyInfo>(initialData);
@@ -43,15 +44,30 @@ const CompanyInfoForm: React.FC<CompanyInfoFormProps> = ({ initialData, onSaveSu
           <label className="block text-sm font-medium mb-1">企業名</label>
           <Input 
             value={formData.companyName || ''} 
-            onChange={(e: ChangeEvent<HTMLInputElement>) => handleChange('companyName', e.target.value)} 
+            onChange={(value: string) => handleChange('companyName', value)} 
             placeholder="企業名を入力" 
           />
+        </div>
+        <div>
+          <label className="block text-sm font-medium mb-1">業界</label>
+          <select
+            value={formData.industry || ''}
+            onChange={(e) => handleChange('industry', e.target.value)}
+            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          >
+            <option value="">業界を選択してください</option>
+            {INDUSTRY_OPTIONS.map(option => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
         </div>
         <div>
           <label className="block text-sm font-medium mb-1">所在地</label>
           <Input 
             value={formData.address || ''} 
-            onChange={(e: ChangeEvent<HTMLInputElement>) => handleChange('address', e.target.value)} 
+            onChange={(value: string) => handleChange('address', value)} 
             placeholder="所在地を入力" 
           />
         </div>
@@ -59,7 +75,7 @@ const CompanyInfoForm: React.FC<CompanyInfoFormProps> = ({ initialData, onSaveSu
           <label className="block text-sm font-medium mb-1">メールアドレス</label>
           <Input 
             value={formData.email || ''} 
-            onChange={(e: ChangeEvent<HTMLInputElement>) => handleChange('email', e.target.value)} 
+            onChange={(value: string) => handleChange('email', value)} 
             placeholder="担当メールアドレスを入力" 
           />
         </div>
@@ -67,7 +83,7 @@ const CompanyInfoForm: React.FC<CompanyInfoFormProps> = ({ initialData, onSaveSu
           <label className="block text-sm font-medium mb-1">電話番号</label>
           <Input 
             value={formData.tel || ''} 
-            onChange={(e: ChangeEvent<HTMLInputElement>) => handleChange('tel', e.target.value)} 
+            onChange={(value: string) => handleChange('tel', value)} 
             placeholder="電話番号を入力" 
           />
         </div>
@@ -75,7 +91,7 @@ const CompanyInfoForm: React.FC<CompanyInfoFormProps> = ({ initialData, onSaveSu
           <label className="block text-sm font-medium mb-1">企業証券コード</label>
           <Input 
             value={formData.securitiesCode || ''} 
-            onChange={(e: ChangeEvent<HTMLInputElement>) => handleChange('securitiesCode', e.target.value)} 
+            onChange={(value: string) => handleChange('securitiesCode', value)} 
             placeholder="企業証券コードを入力" 
           />
         </div>
@@ -83,7 +99,7 @@ const CompanyInfoForm: React.FC<CompanyInfoFormProps> = ({ initialData, onSaveSu
           <label className="block text-sm font-medium mb-1">設立年月日</label>
           <Input 
             value={formData.establishedDate || ''} 
-            onChange={(e: ChangeEvent<HTMLInputElement>) => handleChange('establishedDate', e.target.value)} 
+            onChange={(value: string) => handleChange('establishedDate', value)} 
             placeholder="YYYY-MM-DD の形式で入力" 
           />
         </div>
@@ -91,7 +107,7 @@ const CompanyInfoForm: React.FC<CompanyInfoFormProps> = ({ initialData, onSaveSu
           <label className="block text-sm font-medium mb-1">代表者名</label>
           <Input 
             value={formData.ceo || ''} 
-            onChange={(e: ChangeEvent<HTMLInputElement>) => handleChange('ceo', e.target.value)} 
+            onChange={(value: string) => handleChange('ceo', value)} 
             placeholder="代表者名を入力" 
           />
         </div>
@@ -99,7 +115,7 @@ const CompanyInfoForm: React.FC<CompanyInfoFormProps> = ({ initialData, onSaveSu
           <label className="block text-sm font-medium mb-1">事業内容</label>
           <Input 
             value={formData.businessDescription || ''} 
-            onChange={(e: ChangeEvent<HTMLInputElement>) => handleChange('businessDescription', e.target.value)} 
+            onChange={(value: string) => handleChange('businessDescription', value)} 
             placeholder="事業内容を入力" 
           />
         </div>
@@ -107,7 +123,7 @@ const CompanyInfoForm: React.FC<CompanyInfoFormProps> = ({ initialData, onSaveSu
           <label className="block text-sm font-medium mb-1">資本金</label>
           <Input 
             value={formData.capital || ''} 
-            onChange={(e: ChangeEvent<HTMLInputElement>) => handleChange('capital', e.target.value)} 
+            onChange={(value: string) => handleChange('capital', value)} 
             placeholder="資本金を入力" 
           />
         </div>
@@ -115,7 +131,7 @@ const CompanyInfoForm: React.FC<CompanyInfoFormProps> = ({ initialData, onSaveSu
           <label className="block text-sm font-medium mb-1">従業員数</label>
           <Input 
             value={formData.employeeCount ? formData.employeeCount.toString() : ''} 
-            onChange={(e: ChangeEvent<HTMLInputElement>) => handleChange('employeeCount', e.target.value)} 
+            onChange={(value: string) => handleChange('employeeCount', value)} 
             placeholder="従業員数を入力" 
             type="number"
           />
@@ -124,7 +140,7 @@ const CompanyInfoForm: React.FC<CompanyInfoFormProps> = ({ initialData, onSaveSu
           <label className="block text-sm font-medium mb-1">WebサイトURL</label>
           <Input 
             value={formData.websiteUrl || ''} 
-            onChange={(e: ChangeEvent<HTMLInputElement>) => handleChange('websiteUrl', e.target.value)} 
+            onChange={(value: string) => handleChange('websiteUrl', value)} 
             placeholder="WebサイトURLを入力" 
           />
         </div>
@@ -132,7 +148,7 @@ const CompanyInfoForm: React.FC<CompanyInfoFormProps> = ({ initialData, onSaveSu
           <label className="block text-sm font-medium mb-1">問い合わせ用メールアドレス</label>
           <Input 
             value={formData.contactEmail || ''} 
-            onChange={(e: ChangeEvent<HTMLInputElement>) => handleChange('contactEmail', e.target.value)} 
+            onChange={(value: string) => handleChange('contactEmail', value)} 
             placeholder="問い合わせ用メールアドレスを入力" 
           />
         </div>

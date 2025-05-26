@@ -2,7 +2,8 @@
 "use client";
 
 import React, { useEffect, useState } from 'react';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
+import { useUser } from "@auth0/nextjs-auth0";
 import Sidebar from '@/components/common/sidebar';
 import CompanyHeader from '@/components/features/investor/company/CompanyHeader';
 import TabSwitcher from '@/components/features/investor/company/TabSwitcher';
@@ -10,16 +11,7 @@ import ChatTabView from '@/components/features/investor/company/ChatTabView';
 import QATabView from '@/components/features/investor/company/QATabView';
 import { Company } from '@/types';
 import { Home, Heart, Search, MessageSquare, User } from 'lucide-react';
-
-const mockCompanyData: Company = {
-  companyId: "1",
-  companyName: "Mock Company Inc.",
-  industry: "Technology",
-  logoUrl: "/company-logo.png",
-  securitiesCode: "1234",
-  majorStockExchange: "Tokyo Stock Exchange",
-  websiteUrl: "https://www.mockcompany.com",
-};
+import { getInvestorCompanyDetail } from '@/lib/api';
 
 const menuItems = [
   { label: 'トップページ', link: '/investor/companies', icon: <Home size={20} /> },
@@ -31,31 +23,113 @@ const menuItems = [
 
 const CompanyPage: React.FC = () => {
   const params = useParams();
+  const router = useRouter();
   const { companyId } = params;
+  
+  // Auth0 SDK v4の認証状態
+  const { user, error: userError, isLoading: userLoading } = useUser();
 
   const [companyData, setCompanyData] = useState<Company | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<Error | null>(null);
   const [activeTab, setActiveTab] = useState<"chat" | "qa">("chat");
 
   useEffect(() => {
-    setLoading(true);
-    setTimeout(() => {
-      setCompanyData(mockCompanyData);
-      setLoading(false);
-    }, 1000);
-  }, [companyId]);
+    // 認証状態がロード中の場合は処理しない
+    if (userLoading) return;
+    
+    const fetchCompanyData = async () => {
+      setLoading(true);
+      try {
+        // プロキシ経由でAPIリクエストを行う
+        // token=undefinedにすることでプロキシ経由でJWTを送信
+        const response = await getInvestorCompanyDetail(companyId as string, undefined);
+        
+        // APIレスポンスをCompany型に変換
+        const company: Company = {
+          companyId: response.companyId,
+          companyName: response.companyName,
+          industry: response.industry,
+          logoUrl: response.logoUrl,
+          securitiesCode: response.securitiesCode,
+          majorStockExchange: response.majorStockExchange,
+          websiteUrl: response.websiteUrl,
+        };
+        
+        setCompanyData(company);
+        setError(null);
+      } catch (err) {
+        console.error('企業データ取得エラー:', err);
+        setError(err instanceof Error ? err : new Error('企業データの取得に失敗しました'));
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    if (companyId && (!userLoading)) {
+      fetchCompanyData();
+    }
+  }, [companyId, userLoading]);
 
   const handleTabChange = (tab: "chat" | "qa") => {
     setActiveTab(tab);
   };
 
-  if (loading) {
+  // 認証エラー表示
+  if (userError) {
     return (
       <div className="flex items-center justify-center h-screen">
-        Loading...
+        <div className="text-center">
+          <p className="text-red-500 text-xl mb-4">認証エラーが発生しました</p>
+          <button 
+            onClick={() => router.push('/api/auth/login')}
+            className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
+          >
+            再ログイン
+          </button>
+        </div>
       </div>
     );
   }
+
+  // ローディング表示
+  if (userLoading || loading) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500 mx-auto mb-4"></div>
+          <p className="text-gray-600">読み込み中...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // エラー表示
+  if (error) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <div className="text-center">
+          <p className="text-red-500 text-xl mb-4">エラーが発生しました: {error.message}</p>
+          <button 
+            onClick={() => window.location.reload()}
+            className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
+          >
+            再読み込み
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // データなし
+  if (!companyData) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <p className="text-gray-500">企業情報が見つかりませんでした</p>
+      </div>
+    );
+  }
+
   return (
     <div className="h-screen flex">
       {/* サイドバー */}
@@ -63,20 +137,22 @@ const CompanyPage: React.FC = () => {
         defaultCollapsed={true}
         menuItems={menuItems}
         selectedItem=""
-        onSelectMenuItem={(link) => (window.location.href = link)}
+        onSelectMenuItem={(link) => router.push(link)}
       />
       {/* 固定サイズの main エリア */}
-      <main className="flex flex-col w-full h-full container mx-auto p-4 bg-gray-50">
-        <CompanyHeader company={companyData!} />
-        <TabSwitcher activeTab={activeTab} onChangeTab={handleTabChange} />
+      <main className="flex flex-col w-full h-full bg-gray-50">
+        <div className="px-6 pt-6">
+          <CompanyHeader company={companyData} />
+          <TabSwitcher activeTab={activeTab} onChangeTab={handleTabChange} />
+        </div>
         {/* 固定された main 内で下部のみスクロール */}
-        <div className="flex-1 overflow-y-auto">
+        <div className="flex-1 overflow-hidden">
           {activeTab === "chat" ? (
-            <ChatTabView companyId={companyData!.companyId} />
+            <ChatTabView companyId={companyData.companyId} />
           ) : (
             <QATabView
-              companyId={companyData!.companyId}
-              companyName={companyData!.companyName}
+              companyId={companyData.companyId}
+              companyName={companyData.companyName}
             />
           )}
         </div>

@@ -319,4 +319,22 @@ export interface MessageListProps {
     text: string;
     timestamp: string;
   }[];
+}
+
+/**
+ * パスワード変更フォーム（パスワード変更用）
+ * - パスワード変更
+ * - 変更処理
+ */
+export interface PasswordChangeFormProps {
+  onChangePassword: (currentPassword: string, newPassword: string) => Promise<void>;
+}
+
+/**
+ * アカウント削除フォーム（アカウント削除用）
+ * - アカウント削除
+ * - 削除処理
+ */
+export interface AccountDeleteFormProps {
+  onDeleteAccount: (password: string) => Promise<void>;
 } 
