@@ -3,7 +3,7 @@ import React from 'react';
 import SearchBar from '@/components/ui/SearchBar';
 import UploadButton from './UploadButton';
 import { TopActionBarProps } from '@/types';
-import { GENRE_OPTIONS, TAG_OPTIONS } from '@/components/ui/tagConfig';
+import { GENRE_OPTIONS, QUESTION_ROUTE_OPTIONS } from '@/components/ui/tagConfig';
 import { FilterOption } from '@/types';
 
 const TopActionBar: React.FC<TopActionBarProps> = ({ onSearch, onUploadClick }) => {
@@ -24,10 +24,10 @@ const TopActionBar: React.FC<TopActionBarProps> = ({ onSearch, onUploadClick }) 
 
   const filterOptions: FilterOption[] = [
     {
-      id: 'tags',
-      label: 'タグ',
+      id: 'question_route',
+      label: '質問ルート',
       type: 'select',
-      options: TAG_OPTIONS.map(option => ({
+      options: QUESTION_ROUTE_OPTIONS.map(option => ({
         value: option.label,
         label: option.label
       }))
@@ -86,16 +86,14 @@ const TopActionBar: React.FC<TopActionBarProps> = ({ onSearch, onUploadClick }) 
       }
     }
     
-    // タグの処理
-    let tagArray: string[] | undefined = undefined;
-    if (filters.tags) {
-      if (Array.isArray(filters.tags)) {
-        const validTags = filters.tags.filter((t: string) => t && t.trim() !== '');
-        if (validTags.length > 0) {
-          tagArray = validTags;
-        }
-      } else if (typeof filters.tags === 'string' && filters.tags.trim() !== '') {
-        tagArray = [filters.tags];
+    // question_routeの処理（単一の文字列として処理）
+    let questionRoute: string | undefined = undefined;
+    if (filters.question_route) {
+      if (typeof filters.question_route === 'string' && filters.question_route.trim() !== '') {
+        questionRoute = filters.question_route;
+      } else if (Array.isArray(filters.question_route) && filters.question_route.length > 0) {
+        // 配列の場合は最初の要素を使用
+        questionRoute = filters.question_route[0];
       }
     }
     
@@ -129,7 +127,7 @@ const TopActionBar: React.FC<TopActionBarProps> = ({ onSearch, onUploadClick }) 
     // 3. 検索条件をクリーンに整形
     const searchParams = {
       query: keyword || '',
-      tags: tagArray,
+      question_route: questionRoute,
       genre: genreArray,
       fiscalPeriod: fiscalPeriodArray,
       sort: sortKey,

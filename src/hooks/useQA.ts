@@ -7,7 +7,7 @@ import { useUser } from "@auth0/nextjs-auth0";
 
 export interface QASearchParams {
   keyword?: string;
-  tags?: string[];
+  question_route?: string;
   genre?: string[];
   fiscalPeriod?: string[];
   companyId?: string;
@@ -20,7 +20,7 @@ export interface QASearchParams {
 
 export interface CompanyQASearchParams {
   keyword?: string;
-  tags?: string[];
+  question_route?: string;
   genre?: string[];
   fiscalPeriod?: string;
   is_faq?: boolean;
@@ -38,7 +38,7 @@ export interface QAItem {
   companyId: string;
   companyName: string;
   likeCount: number;
-  tags?: string[];
+  question_route?: string;
   source?: string[];
   genre?: string[];
   fiscalPeriod?: string;

@@ -2,7 +2,7 @@
 import React from 'react';
 import { FilterOption, QASearchBarProps } from '@/types';
 import SearchBar from '@/components/ui/SearchBar';
-import { GENRE_OPTIONS, TAG_OPTIONS } from '@/components/ui/tagConfig';
+import { GENRE_OPTIONS, QUESTION_ROUTE_OPTIONS } from '@/components/ui/tagConfig';
 
 const QASearchBar: React.FC<QASearchBarProps> = ({ 
   onSearchSubmit, 
@@ -25,13 +25,13 @@ const QASearchBar: React.FC<QASearchBarProps> = ({
     return periods;
   };
 
-  // QA検索用フィルターオプション（決算期、ジャンル、タグ）
+  // QA検索用フィルターオプション（決算期、ジャンル、質問ルート）
   const qaFilterOptions: FilterOption[] = [
     {
-      id: 'tags',
-      label: 'タグ',
+      id: 'question_route',
+      label: '質問ルート',
       type: 'select',
-      options: TAG_OPTIONS.map(option => ({
+      options: QUESTION_ROUTE_OPTIONS.map(option => ({
         value: option.label,
         label: option.label
       }))
@@ -92,16 +92,14 @@ const QASearchBar: React.FC<QASearchBarProps> = ({
       }
     }
     
-    // タグの処理
-    let tagArray: string[] | undefined = undefined;
-    if (filters.tags) {
-      if (Array.isArray(filters.tags)) {
-        const validTags = filters.tags.filter((t: string) => t && t.trim() !== '');
-        if (validTags.length > 0) {
-          tagArray = validTags;
-        }
-      } else if (typeof filters.tags === 'string' && filters.tags.trim() !== '') {
-        tagArray = [filters.tags];
+    // question_routeの処理（単一の文字列として処理）
+    let questionRoute: string | undefined = undefined;
+    if (filters.question_route) {
+      if (typeof filters.question_route === 'string' && filters.question_route.trim() !== '') {
+        questionRoute = filters.question_route;
+      } else if (Array.isArray(filters.question_route) && filters.question_route.length > 0) {
+        // 配列の場合は最初の要素を使用
+        questionRoute = filters.question_route[0];
       }
     }
     
@@ -135,7 +133,7 @@ const QASearchBar: React.FC<QASearchBarProps> = ({
     // 3. 検索条件をクリーンに整形
     const searchParams = {
       keyword: keyword || '',
-      tags: tagArray,
+      question_route: questionRoute,
       genre: genreArray,
       fiscalPeriod: fiscalPeriodArray,
       sort: sortKey,

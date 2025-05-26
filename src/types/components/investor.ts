@@ -145,7 +145,7 @@ export interface SearchBarProps {
   }[];
   filterComponent?: React.ReactNode;
   onSearch: (keyword: string, filters: {
-    tags?: string[];
+    question_route?: string;
     genre?: string[];
     fiscalPeriod?: string;
     sort?: string;

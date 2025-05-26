@@ -138,7 +138,8 @@ export interface TopActionBarProps {
   onSearch: (params: { 
     query: string; 
     genre?: string[]; 
-    tags?: string[];
+    question_route?: string;
+    fiscalPeriod?: string[];
     sort?: 'createdAt' | 'likeCount';
     order?: 'asc' | 'desc';
     reviewStatus?: 'DRAFT' | 'PENDING' | 'PUBLISHED';
