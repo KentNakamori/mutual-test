@@ -69,7 +69,7 @@ const QATabView: React.FC<QATabViewProps> = ({ companyId, companyName }) => {
       
       // filtersの処理
       Object.entries(filters).forEach(([key, value]) => {
-        // 配列の場合（tags, genreなど）
+        // 配列の場合（ genreなど）
         if (Array.isArray(value)) {
           value.forEach((item) => {
             if (item) queryParams.append(key, item);

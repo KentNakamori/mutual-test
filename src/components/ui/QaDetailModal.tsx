@@ -4,7 +4,7 @@ import { QADetailModalProps, QA, TagOption } from '@/types';
 import {
   INFO_SOURCE_OPTIONS,
   GENRE_OPTIONS,
-  TAG_OPTIONS,
+  QUESTION_ROUTE_OPTIONS,
   getTagColor,
 } from '@/components/ui/tagConfig';
 import { Calendar, ThumbsUp, X, BookOpen, Plus, Clock, FileText, Tag, Activity, HelpCircle, CheckCircle } from 'lucide-react';
@@ -80,12 +80,11 @@ const QaDetailModal: React.FC<QADetailModalProps> = ({
         title: editableQA.title,
         question: editableQA.question,
         answer: editableQA.answer,
-        tag: editableQA.tag, // tag を単一値として送信
-        source: editableQA.source, // tags -> source
+        question_route: editableQA.question_route, // question_route を単一値として送信
+        source: editableQA.source,
         genre: editableQA.genre,
         fiscalPeriod: editableQA.fiscalPeriod,
         reviewStatus: reviewStatus, // reviewStatus をそのまま使用
-        // isFAQ: !!editableQA.isFAQ // isFAQ削除
       };
       
       // デバッグ情報
@@ -99,7 +98,6 @@ const QaDetailModal: React.FC<QADetailModalProps> = ({
         ...qa, // 元のQAのデータを保持
         ...editableQA, // 編集したデータで上書き
         reviewStatus: reviewStatus, // 明示的にreviewStatusを設定
-        // isPublished: reviewStatus === 'published', // 削除 (QA型から削除)
         updatedAt: new Date().toISOString() // 更新日時を現在時刻に
       };
       
@@ -158,7 +156,7 @@ const QaDetailModal: React.FC<QADetailModalProps> = ({
     setHasChanges(true);
   };
   const handleChangeTag = (option: TagOption) => {
-    setEditableQA({ ...editableQA, tags: [option.label] });
+    setEditableQA({ ...editableQA, question_route: option.label });
     setHasChanges(true);
     setShowTagList(false);
   };
@@ -272,13 +270,13 @@ const QaDetailModal: React.FC<QADetailModalProps> = ({
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">質問ルート</label>
                   <select
-                    name="tag"
-                    value={editableQA.tag || ''}
+                    name="question_route"
+                    value={editableQA.question_route || ''}
                     onChange={(e) => handleChangeTag({ label: e.target.value } as TagOption)}
                     className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   >
                     <option value="">質問ルートを選択</option>
-                    {TAG_OPTIONS.map((option) => (
+                      {QUESTION_ROUTE_OPTIONS.map((option) => (
                       <option key={option.label} value={option.label}>
                         {option.label}
                       </option>
@@ -434,10 +432,10 @@ const QaDetailModal: React.FC<QADetailModalProps> = ({
                   <FileText size={16} className="mr-2 text-blue-500" />
                   <span>{qa.fiscalPeriod}</span>
                 </div>
-                {qa.tags && qa.tags.length > 0 && (
+                {qa.question_route && (
                   <div className="flex items-center">
                     <Tag size={16} className="mr-2 text-blue-500" />
-                    <span>{qa.tags.join(', ')}</span>
+                    <span>{qa.question_route}</span>
                   </div>
                 )}
               </div>

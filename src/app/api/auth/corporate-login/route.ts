@@ -9,7 +9,7 @@ export const GET = async () => {
   if (session?.user) {
     const userType = session.user['https://your-domain/userType'];
     if (userType === 'corporate') {
-      return NextResponse.redirect(new URL('/corporate/dashboard', process.env.APP_BASE_URL!));
+      return NextResponse.redirect(new URL('/corporate/dashboard', process.env.APP_BASE_URL || 'http://localhost:3000'));
     }
   }
 
@@ -21,6 +21,6 @@ export const GET = async () => {
   });
 
   return NextResponse.redirect(
-    new URL(`/auth/login?${qs.toString()}`, process.env.APP_BASE_URL!)
+    new URL(`/auth/login?${qs.toString()}`, process.env.APP_BASE_URL || 'http://localhost:3000')
   );
 };

@@ -69,7 +69,7 @@ export interface QA {
   companyName?: string;
   reviewStatus: 'DRAFT' | 'PENDING' | 'PUBLISHED';
   likeCount: number;
-  tags?: string[];
+  question_route?: string;
   source: string[];
   genre: string[];
   fiscalPeriod?: string;

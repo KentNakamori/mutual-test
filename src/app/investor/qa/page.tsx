@@ -72,7 +72,7 @@ const QASearchPage: React.FC = () => {
         ...(filters.dateRange
           ? { dateFrom: filters.dateRange.from || '', dateTo: filters.dateRange.to || '' }
           : {}),
-        ...(filters.tags && filters.tags.length > 0 ? { tags: filters.tags } : {}),
+        ...(filters.question_route ? { question_route: filters.question_route } : {}),
         ...(filters.genre && filters.genre.length > 0 ? { genre: filters.genre } : {}),
         ...(filters.fiscalPeriod && filters.fiscalPeriod.length > 0 ? { fiscalPeriod: filters.fiscalPeriod } : {}),
         ...(filters.sort ? { sort: filters.sort } : {}),

@@ -70,17 +70,16 @@ if (mode === 'preview') {
             </div>
 
             <div className="space-y-2">
-              {/* タグの表示 */}
-              <div className="flex flex-wrap gap-1.5">
-                {qa.tags && qa.tags.map((tag, index) => (
+              {/* 質問ルートの表示 */}
+              {qa.question_route && (
+                <div className="flex flex-wrap gap-1.5">
                   <span 
-                    key={`tag-${index}`} 
-                    className={`px-3 py-1.5 rounded-full text-xs font-medium ${getTagColor(tag)}`}
+                    className={`px-3 py-1.5 rounded-full text-xs font-medium ${getTagColor(qa.question_route)}`}
                   >
-                    {tag}
+                    {qa.question_route}
                   </span>
-                ))}
-              </div>
+                </div>
+              )}
 
               {/* ジャンルの表示 */}
               <div className="flex flex-wrap gap-1.5">
@@ -158,8 +157,6 @@ if (mode === 'preview') {
     </div>
   );
 }
-
-
 
   return null;
 };

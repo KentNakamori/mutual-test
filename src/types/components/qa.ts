@@ -108,7 +108,7 @@ export interface QaListCardsWithFilterProps {
   onEdit: (qaId: string) => void;
   onDelete: (qaId: string) => void;
   filters?: {
-    tags?: string[];
+    question_route?: string;
     genre?: string[];
     fiscalPeriod?: string[];
     sort?: 'createdAt' | 'likeCount';
@@ -120,7 +120,7 @@ export interface QaListCardsWithFilterProps {
     totalPages?: number;
   };
   onFilterChange?: (filters: {
-    tags?: string[];
+    question_route?: string;
     genre?: string[];
     fiscalPeriod?: string[];
     sort?: 'createdAt' | 'likeCount';

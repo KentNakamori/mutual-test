@@ -108,7 +108,7 @@ const NewQAList: React.FC<NewQAListProps> = ({ onRowClick }) => {
                 scope="col"
                 className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
               >
-                資料
+                質問ルート
               </th>
             </tr>
           </thead>
@@ -130,11 +130,11 @@ const NewQAList: React.FC<NewQAListProps> = ({ onRowClick }) => {
                 </td>
                 <td className="px-6 py-1 whitespace-nowrap text-xs">
                   <div className="flex flex-wrap gap-1">
-                    {qa.tags && qa.tags.length > 0 && qa.tags[0] && (
+                    {qa.question_route && (
                       <span
-                        className={`px-2 py-1 rounded-full text-xs font-medium ${getTagColor(qa.tags[0])}`}
+                        className={`px-2 py-1 rounded-full text-xs font-medium ${getTagColor(qa.question_route)}`}
                       >
-                        {qa.tags[0]}
+                        {qa.question_route}
                       </span>
                     )}
                   </div>

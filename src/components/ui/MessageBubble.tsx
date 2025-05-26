@@ -1,6 +1,6 @@
 // src/components/features/corporate/irchat/MessageBubble.tsx
 import React from 'react';
-import { MessageBubbleProps } from "@/types"; 
+import { MessageBubbleProps } from "@/types";
 
 /**
  * MessageBubble コンポーネント
@@ -8,7 +8,7 @@ import { MessageBubbleProps } from "@/types";
  */
 const MessageBubble: React.FC<MessageBubbleProps> = ({ message }) => {
   const isUser = message.role === 'user';
-  
+
   return (
     <div className={`flex ${isUser ? 'justify-end' : 'justify-start'}`}>
       <div className={`p-3 rounded-lg max-w-3xl ${isUser ? 'bg-gray-200 text-black' : 'text-black'}`}>

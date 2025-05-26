@@ -3,7 +3,7 @@
 import{ TagOption } from '@/types';
 
 // タグ→質問ルート
-export const TAG_OPTIONS: TagOption[] = [
+export const QUESTION_ROUTE_OPTIONS: TagOption[] = [
   { label: '決算説明会', color: 'bg-indigo-100 text-indigo-800' },
   { label: '個人投資家説明会', color: 'bg-indigo-100 text-indigo-800' },
   { label: 'IR面談', color: 'bg-indigo-100 text-indigo-800' },
@@ -39,7 +39,7 @@ export const GENRE_OPTIONS: TagOption[] = [
  * @returns Tailwind CSS の背景色クラス
  */
 export function getTagColor(label: string): string {
-  const allOptions = [...TAG_OPTIONS, ...INFO_SOURCE_OPTIONS, ...GENRE_OPTIONS];
+  const allOptions = [...QUESTION_ROUTE_OPTIONS, ...INFO_SOURCE_OPTIONS, ...GENRE_OPTIONS];
   const found = allOptions.find((option) => option.label === label);
   return found ? found.color : 'bg-gray-300';
 }

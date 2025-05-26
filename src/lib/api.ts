@@ -221,7 +221,7 @@ export async function searchCorporateQa(
   query: {
     keyword?: string;
     review_status?: 'DRAFT' | 'PENDING' | 'PUBLISHED';
-    tags?: string[];
+    question_route?: string;
     genre?: string[];
     fiscalPeriod?: string[];
     sort?: 'createdAt' | 'likeCount';
@@ -241,10 +241,9 @@ export async function searchCorporateQa(
   if (query.keyword) queryString.append('keyword', query.keyword);
   if (query.review_status) queryString.append('review_status', query.review_status);
   
-  // タグの処理（配列）
-  if (query.tags && Array.isArray(query.tags) && query.tags.length > 0) {
-    const validTags = query.tags.filter(t => t && t.trim() !== '');
-    validTags.forEach(t => queryString.append('tags', t));
+  // question_routeの処理（単一の文字列）
+  if (query.question_route && query.question_route.trim() !== '') {
+    queryString.append('question_route', query.question_route);
   }
   
   if (query.genre && Array.isArray(query.genre) && query.genre.length > 0) {
@@ -286,7 +285,7 @@ export async function createCorporateQa(
     title: string;
     question: string;
     answer: string;
-    tags: string[];
+    question_route?: string;
     source?: string[];
     genre?: string[];
     fiscalPeriod?: string;
@@ -308,7 +307,7 @@ export async function updateCorporateQa(
     title?: string;
     question?: string;
     answer?: string;
-    tags?: string[];
+    question_route?: string;
     source?: string[];
     genre?: string[];
     fiscalPeriod?: string;
@@ -602,7 +601,7 @@ export async function followInvestorCompany(
 export async function searchInvestorQa(
   query: {
     keyword?: string;
-    tags?: string[];
+    question_route?: string;
     genre?: string[];
     fiscalPeriod?: string[];
     companyId?: string;
@@ -625,11 +624,9 @@ export async function searchInvestorQa(
   if (query.companyId) queryString.append('companyId', query.companyId);
   if (query.companyName) queryString.append('companyName', query.companyName);
   
-  // タグの処理（配列）
-  if (query.tags && Array.isArray(query.tags)) {
-    query.tags.forEach(tag => {
-      if (tag && tag.trim()) queryString.append('tags', tag);
-    });
+  // question_routeの処理（単一の文字列）
+  if (query.question_route && query.question_route.trim() !== '') {
+    queryString.append('question_route', query.question_route);
   }
   
   // ジャンルの処理（配列）
@@ -668,7 +665,7 @@ export async function searchInvestorCompanyQa(
   companyId: string,
   query: {
     keyword?: string;
-    tags?: string[];
+    question_route?: string;
     genre?: string[];
     fiscalPeriod?: string;
     is_faq?: boolean;
@@ -689,11 +686,9 @@ export async function searchInvestorCompanyQa(
   if (query.fiscalPeriod) queryString.append('fiscalPeriod', query.fiscalPeriod);
   if (query.is_faq !== undefined) queryString.append('is_faq', query.is_faq.toString());
   
-  // タグの処理（配列）
-  if (query.tags && Array.isArray(query.tags)) {
-    query.tags.forEach(tag => {
-      if (tag && tag.trim()) queryString.append('tags', tag);
-    });
+  // question_routeの処理（単一の文字列）
+  if (query.question_route && query.question_route.trim() !== '') {
+    queryString.append('question_route', query.question_route);
   }
   
   // ジャンルの処理（配列）
@@ -1150,7 +1145,7 @@ export async function getLatestQAs(
     companyId: string;
     companyName?: string;
     likeCount: number;
-    tags?: string[];
+    question_route?: string;
     source: string[];
     genre: string[];
     fiscalPeriod?: string;

@@ -35,7 +35,7 @@ export interface FilterType {
   };
   sortKey?: string;
   sortDirection?: 'asc' | 'desc';
-  tags?: string[];
+  question_route?: string;
   genre?: string[];
   fiscalPeriod?: string[];
   sort?: 'createdAt' | 'likeCount';
@@ -76,7 +76,7 @@ export interface SearchParams {
   keyword: string;
   genre: string[];
   source: string[];
-  tags?: string[];
+  question_route?: string;
   fiscalPeriod?: string;
   sort: 'createdAt' | 'likeCount';
   order: 'asc' | 'desc';
