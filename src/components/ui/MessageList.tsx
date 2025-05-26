@@ -3,7 +3,7 @@
 
 import React from 'react';
 import MessageBubble from './MessageBubble';
-import {MessageListProps } from "@/types";
+import { MessageListProps } from "@/types";
 
 /**
  * MessageList コンポーネント
