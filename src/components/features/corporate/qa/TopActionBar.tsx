@@ -24,7 +24,7 @@ const TopActionBar: React.FC<TopActionBarProps> = ({ onSearch, onUploadClick }) 
 
   const filterOptions: FilterOption[] = [
     {
-      id: 'tag',
+      id: 'tags',
       label: 'タグ',
       type: 'select',
       options: TAG_OPTIONS.map(option => ({
@@ -87,9 +87,16 @@ const TopActionBar: React.FC<TopActionBarProps> = ({ onSearch, onUploadClick }) 
     }
     
     // タグの処理
-    let tagValue: string | undefined = undefined;
-    if (filters.tag && typeof filters.tag === 'string' && filters.tag.trim() !== '') {
-      tagValue = filters.tag;
+    let tagArray: string[] | undefined = undefined;
+    if (filters.tags) {
+      if (Array.isArray(filters.tags)) {
+        const validTags = filters.tags.filter((t: string) => t && t.trim() !== '');
+        if (validTags.length > 0) {
+          tagArray = validTags;
+        }
+      } else if (typeof filters.tags === 'string' && filters.tags.trim() !== '') {
+        tagArray = [filters.tags];
+      }
     }
     
     // 2. ソートの処理
@@ -122,7 +129,7 @@ const TopActionBar: React.FC<TopActionBarProps> = ({ onSearch, onUploadClick }) 
     // 3. 検索条件をクリーンに整形
     const searchParams = {
       query: keyword || '',
-      tags: tagValue ? [tagValue] : undefined,
+      tags: tagArray,
       genre: genreArray,
       fiscalPeriod: fiscalPeriodArray,
       sort: sortKey,

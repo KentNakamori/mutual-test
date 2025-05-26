@@ -5,7 +5,7 @@ import { InputProps as BaseInputProps } from '@/types';
 // HTMLInputElementの全属性を継承して型を拡張
 interface InputProps extends Omit<BaseInputProps, 'onChange'>, 
   Omit<InputHTMLAttributes<HTMLInputElement>, 'onChange' | 'type' | 'value' | 'className'> {
-  onChange: (e: ChangeEvent<HTMLInputElement>) => void;
+  onChange: (value: string) => void;
   className?: string;
   value: string;
   type?: string;
@@ -31,11 +31,16 @@ const Input: React.FC<InputProps> = ({
     ? "border-red-600 focus:ring-red-600"
     : "border-gray-300 focus:ring-black";
 
+  // イベントから値を取り出して親コンポーネントに渡す
+  const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
+    onChange(e.target.value);
+  };
+
   return (
     <input
       type={type}
       value={value}
-      onChange={onChange}
+      onChange={handleChange}
       placeholder={placeholder}
       disabled={disabled}
       className={`${baseClasses} ${errorClasses} ${disabled ? 'bg-gray-100 cursor-not-allowed' : ''} ${className}`}

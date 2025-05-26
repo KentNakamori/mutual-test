@@ -1,7 +1,8 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Company, CompanyId, CorporateUserRegistrationData} from "@/types";
+import { Industry, INDUSTRY_OPTIONS } from '@/types/industry';
 
 // 既存の Company 型を基に、登録時のデータとして不要なプロパティを除外
 type CompanyRegistrationData = Omit<Company, "companyId" | "createdAt" | "updatedAt" | "adminUserIds">;
@@ -11,7 +12,7 @@ type CompanyRegistrationData = Omit<Company, "companyId" | "createdAt" | "update
 const AdminAccountCreationPage: React.FC = () => {
   const [companyForm, setCompanyForm] = useState<CompanyRegistrationData>({
     companyName: "",
-    industry: "",
+    industry: Industry.FINANCE,
     logoUrl: "",
     securitiesCode: "",
     establishedDate: "",
@@ -34,7 +35,7 @@ const AdminAccountCreationPage: React.FC = () => {
   const [error, setError] = useState<string>("");
 
   const handleCompanyInputChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>
   ) => {
     const { name, value } = e.target;
     setCompanyForm((prev) => ({
@@ -209,14 +210,20 @@ const AdminAccountCreationPage: React.FC = () => {
               <label className="block text-sm font-medium text-gray-700">
                 業界
               </label>
-              <input
-                type="text"
+              <select
                 name="industry"
                 value={companyForm.industry}
                 onChange={handleCompanyInputChange}
                 className="mt-1 block w-full border border-gray-300 rounded p-2"
                 required
-              />
+              >
+                <option value="">業界を選択してください</option>
+                {INDUSTRY_OPTIONS.map(option => (
+                  <option key={option.value} value={option.value}>
+                    {option.label}
+                  </option>
+                ))}
+              </select>
             </div>
             <div className="col-span-2">
               <label className="block text-sm font-medium text-gray-700">

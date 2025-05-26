@@ -7,8 +7,10 @@ import {
   DocumentId, 
   DraftId, 
   FileId, 
-  DateString 
+  DateString,
+  Timestamp
 } from './common';
+import { Industry } from './industry';
 
 /**
  * ユーザー情報（アプリケーションの認証・認可に使用）
@@ -34,7 +36,7 @@ export interface User {
 export interface Company {
   companyId: CompanyId;
   companyName: string;
-  industry: string;
+  industry: Industry;
   logoUrl?: string;
   securitiesCode?: string;        // IR API: 企業証券コード
   majorStockExchange?: string;    // 主要取引所
@@ -67,13 +69,14 @@ export interface QA {
   companyName?: string;
   reviewStatus: 'DRAFT' | 'PENDING' | 'PUBLISHED';
   likeCount: number;
-  tag?: string;
+  tags?: string[];
   source: string[];
   genre: string[];
   fiscalPeriod?: string;
   status: 'draft' | 'published' | 'archived';
   createdAt: DateString;
   updatedAt: DateString;
+  isLiked?: boolean;
 }
 
 /**
@@ -151,9 +154,18 @@ export interface FileReference {
  */
 export interface CompanyInfo {
   companyName: string;
+  industry?: Industry;
   address: string;
   email: string;
   tel?: string;
+  securitiesCode?: string;
+  establishedDate?: string;
+  ceo?: string;
+  businessDescription?: string;
+  capital?: string;
+  employeeCount?: number;
+  websiteUrl?: string;
+  contactEmail?: string;
   [key: string]: any;
 }
 
@@ -161,14 +173,14 @@ export interface CompanyInfo {
  * チャットログ（チャット履歴管理用）
  * - チャット履歴一覧表示
  * - チャット履歴検索
- * - チャット履歴アーカイブ
  */
 export interface ChatLog {
   chatId: ChatId;
+  companyId: CompanyId;
   companyName: string;
   lastMessageSnippet: string;
   updatedAt: DateString;
-  isArchived: boolean;
+  totalMessages?: number;
 }
 
 /**
@@ -186,14 +198,14 @@ export interface ChatSession {
  * - 投資家分類
  * - 投資家向け機能制御
  */
-export type InvestorType = '機関投資家' | '個人投資家' | 'アナリスト' | 'その他';
+export type InvestorType = '機関投資家' | '個人投資家' | 'アナリスト' | 'その他' | string;
 
 /**
  * 資産管理規模（投資家プロフィール用）
  * - 投資家分類
  * - 投資家向け機能制御
  */
-export type AssetManagementScale = '500万円未満' | '500万～1000万円' | '1000万～3000万' | '3000万円以上';
+export type AssetManagementScale = '500万円未満' | '500万～1000万円' | '1000万～3000万' | '3000万円以上' | string;
 
 /**
  * プロフィールデータ（ユーザープロフィール管理用）

@@ -5,16 +5,21 @@ import { useGuest } from '@/contexts/GuestContext';
 import GuestRestrictedContent from '@/components/features/investor/common/GuestRestrictedContent';
 import { getInvestorCompanies, followInvestorCompany } from '@/lib/api';
 import { useUser } from "@auth0/nextjs-auth0";
+import { Industry, INDUSTRY_OPTIONS, getIndustryLabel } from '@/types/industry';
 
 // APIレスポンスの型定義
 interface CompanyItem {
   companyId: string;
   companyName: string;
-  industry: string;
+  industry: Industry;
   logoUrl?: string;
   isFollowed: boolean;
   createdAt: string;
   updatedAt: string;
+  securitiesCode?: string;      // 証券コード
+  majorStockExchange?: string;  // 主要取引所
+  websiteUrl?: string;         // WebサイトURL
+  businessDescription?: string; // 企業説明
 }
 
 interface CompanyListResponse {
@@ -23,14 +28,21 @@ interface CompanyListResponse {
   totalPages: number;
 }
 
-const CompanyListing = () => {
+interface CompanyListingProps {
+  isFollowedOnly?: boolean;
+}
+
+const CompanyListing: React.FC<CompanyListingProps> = ({ isFollowedOnly = false }) => {
   const { isGuest } = useGuest();
-  const { user } = useUser();
-  const token = user?.sub ?? null; 
+  const { user, error: userError, isLoading: userLoading } = useUser();
+  // Auth0 SDK v4では、JWTトークンをプロキシ経由で送信するため、tokenはundefinedに設定
+  // プロキシで自動的にトークンが付与される
+  const token = undefined;
+  
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [showGenreFilter, setShowGenreFilter] = useState(false);
   const [showSortOptions, setShowSortOptions] = useState(false);
-  const [activeGenre, setActiveGenre] = useState('すべて');
+  const [activeGenre, setActiveGenre] = useState<Industry | 'すべて'>('すべて');
   const [activeSortOption, setActiveSortOption] = useState('新着順');
   const [showExchangeFilter, setShowExchangeFilter] = useState(false);
   const [activeExchange, setActiveExchange] = useState('すべて');
@@ -42,10 +54,12 @@ const CompanyListing = () => {
   // APIからデータ取得
   useEffect(() => {
     const fetchCompanies = async () => {
+      if (userLoading) return; // ユーザー情報のロード中は処理しない
+      
       setLoading(true);
       setError(null);
       try {
-        const query: { keyword?: string; industry?: string } = {};
+        const query: { keyword?: string; industry?: Industry; followed?: string } = {};
         
         if (keyword) {
           query.keyword = keyword;
@@ -55,11 +69,16 @@ const CompanyListing = () => {
           query.industry = activeGenre;
         }
 
+        // フォロー済みのみ表示フラグが有効な場合はクエリに追加
+        if (isFollowedOnly) {
+          query.followed = 'true';
+        }
+
         // デバッグログ：クエリパラメータの確認
         console.log('Fetching companies with query:', query);
-        console.log('Current token:', token);
         
-        const response = await getInvestorCompanies(token || undefined, query);
+        // Auth0 SDK v4用の対応：token=undefinedにしてプロキシ経由で認証情報を送信
+        const response = await getInvestorCompanies(undefined, query);
         console.log('API Response:', response);
         
         setCompanies(response.companies);
@@ -71,27 +90,58 @@ const CompanyListing = () => {
       }
     };
     
-    fetchCompanies();
-  }, [keyword, activeGenre, token]);
+    // ユーザー認証状態に基づいて処理
+    if (!userLoading) {
+      fetchCompanies();
+    }
+  }, [keyword, activeGenre, userLoading, isFollowedOnly]);
   
-  const genres = ['すべて', 'テクノロジー', 'エネルギー', 'ヘルスケア', '金融', '小売', '製造', '不動産', 'サービス'];
-  const exchanges = ['すべて', '東証プライム', '東証スタンダード'];
+  // フィルターとソートのオプション
+  const genres = ['すべて', ...INDUSTRY_OPTIONS.map(option => option.value)];
+  const exchanges = ['すべて', '東証プライム', '東証スタンダード', '東証グロース'];
   const sortOptions = ['新着順', '名前順 (A-Z)', '名前順 (Z-A)'];
   
-  // フィルター適用（APIからのデータに対して）
-  const filteredCompanies = companies.filter(company => 
-    (activeExchange === 'すべて' || company.industry === activeExchange)
-  );
+  // フィルター適用とソート処理
+  const getFilteredAndSortedCompanies = () => {
+    let filtered = [...companies];
+    
+    // 主要取引所フィルター（ローカルフィルタリング）
+    if (activeExchange !== 'すべて') {
+      filtered = filtered.filter(company => 
+        company.majorStockExchange === activeExchange
+      );
+    }
+    
+    // ソート処理
+    switch (activeSortOption) {
+      case '新着順':
+        filtered.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+        break;
+      case '名前順 (A-Z)':
+        filtered.sort((a, b) => a.companyName.localeCompare(b.companyName, 'ja'));
+        break;
+      case '名前順 (Z-A)':
+        filtered.sort((a, b) => b.companyName.localeCompare(a.companyName, 'ja'));
+        break;
+      default:
+        break;
+    }
+    
+    return filtered;
+  };
+  
+  const filteredCompanies = getFilteredAndSortedCompanies();
   
   // フォロー/アンフォロー処理
   const handleFollowToggle = async (companyId: string, currentFollowStatus: boolean) => {
-    if (isGuest || !token) {
+    if (isGuest || userLoading || userError || !user) {
       return;
     }
     
     try {
       const action = currentFollowStatus ? 'unfollow' : 'follow';
-      await followInvestorCompany(companyId, action, token);
+      // Auth0 SDK v4用の対応：tokenを適切な値に設定（プロキシ経由での認証）
+      await followInvestorCompany(companyId, action, "");
       
       // 成功したら、ローカルの状態を更新
       setCompanies(prev => 
@@ -113,6 +163,23 @@ const CompanyListing = () => {
     // useEffectのトリガー（APIリクエスト）
   };
   
+  // フィルターリセット
+  const handleResetFilters = () => {
+    setActiveGenre('すべて');
+    setActiveExchange('すべて');
+    setActiveSortOption('新着順');
+    setKeyword('');
+  };
+  
+  // 認証エラーの場合
+  if (userError && !isGuest) {
+    return (
+      <div className="text-center py-8">
+        <p className="text-red-500">認証エラーが発生しました。再度ログインしてください。</p>
+      </div>
+    );
+  }
+  
   return (
     <div>
       {/* 検索・フィルター・並び替えエリア */}
@@ -131,33 +198,45 @@ const CompanyListing = () => {
           />
         </form>
         
-        {/* ジャンルフィルター */}
+        {/* 業界フィルター */}
         <div className="relative">
           <button 
             onClick={() => {
               setShowGenreFilter(!showGenreFilter);
               if (showExchangeFilter) setShowExchangeFilter(false);
+              if (showSortOptions) setShowSortOptions(false);
             }}
             className="flex items-center justify-between w-48 px-4 py-2 bg-white border border-gray-300 rounded-lg shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
-            <span>ジャンル: {activeGenre}</span>
+            <span>業界: {activeGenre === 'すべて' ? 'すべて' : getIndustryLabel(activeGenre)}</span>
             <ChevronDown size={16} className="ml-2 text-gray-500" />
           </button>
       
           {showGenreFilter && (
-            <div className="absolute z-10 mt-1 w-48 bg-white rounded-md shadow-lg border border-gray-200 py-1">
-              {genres.map((genre) => (
+            <div className="absolute z-10 mt-1 w-48 bg-white rounded-md shadow-lg border border-gray-200 py-1 max-h-60 overflow-y-auto">
+              <button
+                onClick={() => {
+                  setActiveGenre('すべて');
+                  setShowGenreFilter(false);
+                }}
+                className={`block w-full px-4 py-2 text-sm text-left hover:bg-gray-100 ${
+                  activeGenre === 'すべて' ? 'bg-blue-50 text-blue-700 font-medium' : 'text-gray-700'
+                }`}
+              >
+                すべて
+              </button>
+              {INDUSTRY_OPTIONS.map((option) => (
                 <button
-                  key={genre}
+                  key={option.value}
                   onClick={() => {
-                    setActiveGenre(genre);
+                    setActiveGenre(option.value);
                     setShowGenreFilter(false);
                   }}
                   className={`block w-full px-4 py-2 text-sm text-left hover:bg-gray-100 ${
-                    activeGenre === genre ? 'bg-blue-50 text-blue-700 font-medium' : 'text-gray-700'
+                    activeGenre === option.value ? 'bg-blue-50 text-blue-700 font-medium' : 'text-gray-700'
                   }`}
                 >
-                  {genre}
+                  {option.label}
                 </button>
               ))}
             </div>
@@ -170,10 +249,11 @@ const CompanyListing = () => {
             onClick={() => {
               setShowExchangeFilter(!showExchangeFilter);
               if (showGenreFilter) setShowGenreFilter(false);
+              if (showSortOptions) setShowSortOptions(false);
             }}
             className="flex items-center justify-between w-48 px-4 py-2 bg-white border border-gray-300 rounded-lg shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
-            <span>主要取引所: {activeExchange}</span>
+            <span>取引所: {activeExchange}</span>
             <ChevronDown size={16} className="ml-2 text-gray-500" />
           </button>
       
@@ -203,6 +283,7 @@ const CompanyListing = () => {
             onClick={() => {
               setShowSortOptions(!showSortOptions);
               if (showGenreFilter) setShowGenreFilter(false);
+              if (showExchangeFilter) setShowExchangeFilter(false);
             }}
             className="flex items-center justify-between w-48 px-4 py-2 bg-white border border-gray-300 rounded-lg shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
@@ -229,6 +310,17 @@ const CompanyListing = () => {
             </div>
           )}
         </div>
+        
+        {/* フィルターリセットボタン */}
+        {(activeGenre !== 'すべて' || activeExchange !== 'すべて' || activeSortOption !== '新着順' || keyword) && (
+          <button
+            onClick={handleResetFilters}
+            className="px-3 py-2 text-sm text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg border border-gray-300"
+          >
+            <Filter size={16} className="inline mr-1" />
+            リセット
+          </button>
+        )}
           
         {/* 表示切替 */}
         <div className="ml-auto flex items-center bg-white rounded-lg border shadow-sm p-1">
@@ -247,21 +339,49 @@ const CompanyListing = () => {
         </div>
       </div>
       
-      {/* フィルターの表示 */}
-      {activeGenre !== 'すべて' && (
-        <div className="mb-4 flex items-center">
-          <span className="text-sm text-gray-600 mr-2">フィルター:</span>
-          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-            {activeGenre}
-            <button onClick={() => setActiveGenre('すべて')} className="ml-1 text-blue-600 hover:text-blue-800 focus:outline-none">
-              ×
-            </button>
-          </span>
+      {/* アクティブフィルターの表示 */}
+      {(activeGenre !== 'すべて' || activeExchange !== 'すべて' || keyword) && (
+        <div className="mb-4 flex flex-wrap items-center gap-2">
+          <span className="text-sm text-gray-600 mr-2">アクティブフィルター:</span>
+          {keyword && (
+            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+              キーワード: {keyword}
+              <button onClick={() => setKeyword('')} className="ml-1 text-blue-600 hover:text-blue-800 focus:outline-none">
+                ×
+              </button>
+            </span>
+          )}
+          {activeGenre !== 'すべて' && (
+            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+              業界: {getIndustryLabel(activeGenre)}
+              <button onClick={() => setActiveGenre('すべて')} className="ml-1 text-green-600 hover:text-green-800 focus:outline-none">
+                ×
+              </button>
+            </span>
+          )}
+          {activeExchange !== 'すべて' && (
+            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+              取引所: {activeExchange}
+              <button onClick={() => setActiveExchange('すべて')} className="ml-1 text-purple-600 hover:text-purple-800 focus:outline-none">
+                ×
+              </button>
+            </span>
+          )}
+        </div>
+      )}
+      
+      {/* 結果件数表示 */}
+      {!loading && !userLoading && !error && (
+        <div className="mb-4 text-sm text-gray-600">
+          {filteredCompanies.length}件の企業が見つかりました
+          {activeSortOption !== '新着順' && (
+            <span className="ml-2 text-gray-500">（{activeSortOption}）</span>
+          )}
         </div>
       )}
       
       {/* ローディング表示 */}
-      {loading && (
+      {(loading || userLoading) && (
         <div className="flex justify-center items-center p-8">
           <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500"></div>
           <span className="ml-2 text-gray-600">データを読み込み中...</span>
@@ -282,7 +402,7 @@ const CompanyListing = () => {
       )}
       
       {/* データ表示 */}
-      {!loading && !error && (
+      {!loading && !userLoading && !error && (
         viewMode === 'grid' ? (
           <div className="grid grid-cols-2 gap-6">
             {filteredCompanies.map(company => (
@@ -309,10 +429,18 @@ const CompanyListing = () => {
       )}
       
       {/* データが空の場合 */}
-      {!loading && !error && filteredCompanies.length === 0 && (
+      {!loading && !userLoading && !error && filteredCompanies.length === 0 && (
         <div className="text-center py-8">
           <p className="text-gray-500">該当する企業が見つかりませんでした。</p>
           <p className="text-gray-500 mt-1">検索条件を変更してお試しください。</p>
+          {(activeGenre !== 'すべて' || activeExchange !== 'すべて' || keyword) && (
+            <button
+              onClick={handleResetFilters}
+              className="mt-3 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm"
+            >
+              フィルターをリセット
+            </button>
+          )}
         </div>
       )}
     </div>
@@ -344,17 +472,55 @@ const CompanyGridCard = ({ company, isGuest, onFollowToggle }: CompanyCardProps)
               {company.companyName.charAt(0)}
             </div>
           )}
-          <div>
+          <div className="flex-1">
             <h3 className="font-medium text-gray-800">{company.companyName}</h3>
-            <p className="text-sm text-gray-500">{company.industry}</p>
+            <p className="text-sm text-gray-500">{getIndustryLabel(company.industry)}</p>
+            {company.securitiesCode && (
+              <p className="text-xs text-gray-400">証券コード: {company.securitiesCode}</p>
+            )}
           </div>
         </div>
         
-        <div className="mb-4">
+        <div className="mb-3 flex flex-wrap gap-1">
           <span className="inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-medium bg-blue-50 text-blue-700 border border-blue-100">
-            {company.industry}
+            {getIndustryLabel(company.industry)}
           </span>
+          {company.majorStockExchange && (
+            <span className="inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-medium bg-green-50 text-green-700 border border-green-100">
+              {company.majorStockExchange}
+            </span>
+          )}
         </div>
+        
+        {company.businessDescription && (
+          <div className="mt-1">
+            <p 
+              className="text-xs text-gray-600 overflow-hidden" 
+              style={{
+                display: '-webkit-box',
+                WebkitLineClamp: 1,
+                WebkitBoxOrient: 'vertical'
+              } as React.CSSProperties}
+            >
+              {company.businessDescription}
+            </p>
+          </div>
+        )}
+        
+        {company.websiteUrl && (
+          <div className="mb-3">
+            <a 
+              href={company.websiteUrl} 
+              target="_blank" 
+              rel="noopener noreferrer"
+              onClick={(e) => e.stopPropagation()}
+              className="text-xs text-blue-600 hover:text-blue-800 flex items-center"
+            >
+              <ExternalLink size={12} className="mr-1" />
+              公式サイト
+            </a>
+          </div>
+        )}
         
         {isGuest ? (
           <button
@@ -405,15 +571,54 @@ const CompanyListCard = ({ company, isGuest, onFollowToggle }: CompanyCardProps)
         
         <div className="flex-1 min-w-0">
           <div className="flex flex-wrap justify-between items-start">
-            <div>
+            <div className="flex-1 min-w-0 mr-4">
               <h3 className="font-medium text-gray-800">{company.companyName}</h3>
               <div className="flex items-center text-sm text-gray-500 mt-1">
-                <span className="text-gray-500">{company.industry}</span>
+                <span className="text-gray-500">{getIndustryLabel(company.industry)}</span>
+                {company.securitiesCode && (
+                  <>
+                    <span className="mx-2">•</span>
+                    <span className="text-xs">証券コード: {company.securitiesCode}</span>
+                  </>
+                )}
               </div>
+              {company.businessDescription && (
+                <div className="mt-1">
+                  <p 
+                    className="text-xs text-gray-600 overflow-hidden" 
+                    style={{
+                      display: '-webkit-box',
+                      WebkitLineClamp: 1,
+                      WebkitBoxOrient: 'vertical'
+                    } as React.CSSProperties}
+                  >
+                    {company.businessDescription}
+                  </p>
+                </div>
+              )}
+              {company.websiteUrl && (
+                <a 
+                  href={company.websiteUrl} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  onClick={(e) => e.stopPropagation()}
+                  className="text-xs text-blue-600 hover:text-blue-800 flex items-center mt-1"
+                >
+                  <ExternalLink size={12} className="mr-1" />
+                  公式サイト
+                </a>
+              )}
             </div>
-            <span className="inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-medium bg-blue-50 text-blue-700 border border-blue-100 mt-1">
-              {company.industry}
-            </span>
+            <div className="flex flex-col items-end gap-1">
+              <span className="inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-medium bg-blue-50 text-blue-700 border border-blue-100">
+                {getIndustryLabel(company.industry)}
+              </span>
+              {company.majorStockExchange && (
+                <span className="inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-medium bg-green-50 text-green-700 border border-green-100">
+                  {company.majorStockExchange}
+                </span>
+              )}
+            </div>
           </div>
         </div>
         

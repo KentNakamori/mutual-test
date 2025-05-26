@@ -41,7 +41,7 @@ const QaPage: React.FC = () => {
     keyword: string;
     genre: string[];
     source: string[];
-    tag?: string;
+    tags?: string[];
     fiscalPeriod?: string[];
     sort: 'createdAt' | 'likeCount';
     order: 'asc' | 'desc';
@@ -52,6 +52,7 @@ const QaPage: React.FC = () => {
     keyword: '',
     genre: [],
     source: [],
+    tags: [],
     sort: 'createdAt',
     order: 'desc',
     page: 1,
@@ -71,7 +72,7 @@ const QaPage: React.FC = () => {
           fiscalPeriod: searchParams.fiscalPeriod && searchParams.fiscalPeriod.length > 0 
             ? searchParams.fiscalPeriod 
             : undefined,
-          tag: searchParams.tag || undefined,
+          tags: searchParams.tags && searchParams.tags.length > 0 ? searchParams.tags : undefined,
           sort: searchParams.sort || 'createdAt',
           order: searchParams.order || 'desc',
           page: searchParams.page || 1,
@@ -105,7 +106,7 @@ const QaPage: React.FC = () => {
     isAuthenticated,
     searchParams.keyword, 
     searchParams.genre, 
-    searchParams.tag, 
+    searchParams.tags, 
     searchParams.fiscalPeriod, 
     searchParams.sort, 
     searchParams.order, 
@@ -129,7 +130,7 @@ const QaPage: React.FC = () => {
       ...prev,
       keyword: params.query || '',
       genre: params.genre || [],
-      tag: params.tags?.[0] || undefined, // タグは単一値として渡す
+      tags: params.tags || [], // タグは配列として処理
       fiscalPeriod: params.fiscalPeriod || undefined,
       sort: params.sort || 'createdAt',
       order: params.order || 'desc',
@@ -139,7 +140,7 @@ const QaPage: React.FC = () => {
   }, []);
 
   const handleFilterChange = useCallback((newFilters: {
-    tag?: string;
+    tags?: string[];
     genre?: string[];
     fiscalPeriod?: string[];
     sort?: 'createdAt' | 'likeCount';
@@ -154,7 +155,7 @@ const QaPage: React.FC = () => {
       // 新しいフィルター設定
       const updated = {
         ...prev,
-        tag: newFilters.tag || undefined,
+        tags: newFilters.tags || [],
         genre: newFilters.genre || [],
         fiscalPeriod: newFilters.fiscalPeriod || undefined,
         page: newFilters.page || 1,
@@ -258,7 +259,7 @@ const QaPage: React.FC = () => {
               onEdit={handleSelectQA}
               onDelete={handleDeleteQa}
               filters={{
-                tag: searchParams.tag,
+                tags: searchParams.tags,
                 genre: searchParams.genre,
                 fiscalPeriod: searchParams.fiscalPeriod,
                 sort: searchParams.sort,

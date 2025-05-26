@@ -1,6 +1,6 @@
 //src\components\features\investor\company\QASearchBar.tsx
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Input from '@/components/ui/Input';
 import Button from '@/components/ui/Button';
 import { QASearchBarProps } from '../../../../types';

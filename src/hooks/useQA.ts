@@ -1,13 +1,13 @@
 // hooks/useQA.ts
 'use client'
 
-import { useQuery, useMutation, useQueryClient, UseQueryOptions } from 'react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { searchInvestorQa, searchInvestorCompanyQa, likeInvestorQa, getInvestorQaCompanies } from '../lib/api';
 import { useUser } from "@auth0/nextjs-auth0";
 
 export interface QASearchParams {
   keyword?: string;
-  tag?: string;
+  tags?: string[];
   genre?: string[];
   fiscalPeriod?: string[];
   companyId?: string;
@@ -38,7 +38,6 @@ export interface QAItem {
   companyId: string;
   companyName: string;
   likeCount: number;
-  tag?: string;
   tags?: string[];
   source?: string[];
   genre?: string[];
@@ -50,7 +49,7 @@ export interface QAItem {
 }
 
 // 全体のQA検索
-export const useQASearch = (queryParams: QASearchParams, options?: UseQueryOptions) => {
+export const useQASearch = (queryParams: QASearchParams) => {
   const { user, isLoading: userLoading } = useUser();
   const token = user?.sub ?? null; 
 
@@ -59,15 +58,12 @@ export const useQASearch = (queryParams: QASearchParams, options?: UseQueryOptio
     isLoading,
     error,
     refetch,
-  } = useQuery(
-    ['qaSearch', queryParams],
-    () => searchInvestorQa(queryParams, token as string),
-    { 
-      keepPreviousData: true
-      ...options,
-       
-    }
-  );
+  } = useQuery({
+    queryKey: ['qaSearch', queryParams],
+    queryFn: () => searchInvestorQa(queryParams, token as string),
+    enabled: !!token && !userLoading,
+    staleTime: 5 * 60 * 1000,
+  });
 
   return { 
     qaItems: data?.results ?? [],
@@ -82,11 +78,10 @@ export const useQASearch = (queryParams: QASearchParams, options?: UseQueryOptio
 // 特定企業のQA検索
 export const useCompanyQASearch = (
   companyId: string,
-  queryParams: CompanyQASearchParams,
-  options?: UseQueryOptions
+  queryParams: CompanyQASearchParams
 ) => {
   const { user, isLoading: userLoading } = useUser();
-  const token          = user?.sub ?? null;
+  const token = user?.sub ?? null;
   const isAuthenticated = !!token;
 
   const {
@@ -94,15 +89,12 @@ export const useCompanyQASearch = (
     isLoading,
     error,
     refetch,
-  } = useQuery(
-    ['companyQaSearch', companyId, queryParams],
-    () => searchInvestorCompanyQa(companyId, queryParams, token as string),
-    { 
-      enabled: !!companyId && !!token && isAuthenticated,
-      ...options,
-      keepPreviousData: true 
-    }
-  );
+  } = useQuery({
+    queryKey: ['companyQaSearch', companyId, queryParams],
+    queryFn: () => searchInvestorCompanyQa(companyId, queryParams, token as string),
+    enabled: !!companyId && !!token && isAuthenticated && !userLoading,
+    staleTime: 5 * 60 * 1000,
+  });
 
   return { 
     qaItems: data?.results || [], 
@@ -123,13 +115,12 @@ export const useQACompanies = () => {
     data,
     isLoading,
     error,
-  } = useQuery(
-    ['qaCompanies'],
-    () => getInvestorQaCompanies(token as string),
-    { 
-      enabled: !!token && !userLoading,
-    } 
-  );
+  } = useQuery({
+    queryKey: ['qaCompanies'],
+    queryFn: () => getInvestorQaCompanies(token as string),
+    enabled: !!token && !userLoading,
+    staleTime: 5 * 60 * 1000,
+  });
 
   return { 
     companies: data || [], 
@@ -144,18 +135,16 @@ export const useQALike = () => {
   const token = user?.sub ?? null;
   const queryClient = useQueryClient();
 
-  const mutation = useMutation(
-    ({ qaId, action }: { qaId: string; action: 'ADD' | 'REMOVE' }) => {
+  const mutation = useMutation({
+    mutationFn: ({ qaId, action }: { qaId: string; action: 'ADD' | 'REMOVE' }) => {
       return likeInvestorQa(qaId, action, token as string);
     },
-    {
-      onSuccess: () => {
-        // QA関連のキャッシュを無効化（再取得を強制）
-        queryClient.invalidateQueries('qaSearch');
-        queryClient.invalidateQueries('companyQaSearch');
-      },
-    }
-  );
+    onSuccess: () => {
+      // QA関連のキャッシュを無効化（再取得を強制）
+      queryClient.invalidateQueries({ queryKey: ['qaSearch'] });
+      queryClient.invalidateQueries({ queryKey: ['companyQaSearch'] });
+    },
+  });
 
   const toggleLike = async (qaId: string, isCurrentlyLiked: boolean) => {
     const action = isCurrentlyLiked ? 'REMOVE' : 'ADD';
@@ -164,7 +153,7 @@ export const useQALike = () => {
 
   return {
     toggleLike,
-    isLoading: mutation.isLoading,
+    isLoading: mutation.isPending,
     error: mutation.error
   };
 };

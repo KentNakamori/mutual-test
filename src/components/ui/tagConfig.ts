@@ -2,7 +2,7 @@
 // タグ追加の際はここへオブジェクトを1つ追加するだけでOK
 import{ TagOption } from '@/types';
 
-// タグ
+// タグ→質問ルート
 export const TAG_OPTIONS: TagOption[] = [
   { label: '決算説明会', color: 'bg-indigo-100 text-indigo-800' },
   { label: '個人投資家説明会', color: 'bg-indigo-100 text-indigo-800' },
@@ -20,7 +20,7 @@ export const INFO_SOURCE_OPTIONS: TagOption[] = [
   { label: 'その他', color: 'bg-purple-100 text-purple-800' },
 ];
   
-// ジャンル
+// ジャンル→カテゴリ
 export const GENRE_OPTIONS: TagOption[] = [
   { label: '業績', color: 'bg-amber-100 text-amber-800' },
   { label: '事業戦略', color: 'bg-blue-100 text-blue-800' },

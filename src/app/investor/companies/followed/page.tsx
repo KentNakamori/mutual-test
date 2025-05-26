@@ -2,6 +2,8 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { useUser } from "@auth0/nextjs-auth0";
 import Sidebar from "@/components/common/sidebar";
 import Footer from "@/components/common/footer";
 import CompanyListing from '@/components/features/investor/companies/CompanyListing';
@@ -9,70 +11,43 @@ import { Company } from "@/types";
 import { useGuest } from "@/contexts/GuestContext";
 import GuestRestrictedContent from "@/components/features/investor/common/GuestRestrictedContent";
 import { Home, Heart, Search, MessageSquare, User } from 'lucide-react';
+import { getInvestorCompanies } from "@/lib/api";
 
-interface ExtendedCompany extends Company {
-  followed: boolean;
+// APIレスポンスの型定義
+interface CompanyItem {
+  companyId: string;
+  companyName: string;
+  industry: string;
+  logoUrl?: string;
+  isFollowed: boolean;
+  createdAt: string;
+  updatedAt: string;
 }
 
-const mockCompanies: ExtendedCompany[] = [
-  {
-    companyId: "1",
-    companyName: "株式会社A",
-    industry: "テクノロジー",
-    logoUrl: "/logoA.png",
-    followed: true,
-    securitiesCode: "1111",
-    majorStockExchange: "Tokyo Stock Exchange",
-    websiteUrl: "https://www.companya.co.jp",
-  },
-  {
-    companyId: "2",
-    companyName: "株式会社B",
-    industry: "エネルギー",
-    logoUrl: "/logoB.png",
-    followed: false,
-    securitiesCode: "2222",
-    majorStockExchange: "Osaka Exchange",
-    websiteUrl: "https://www.companyb.co.jp",
-  },
-  {
-    companyId: "3",
-    companyName: "株式会社C",
-    industry: "ヘルスケア",
-    logoUrl: "/logoC.png",
-    followed: true,
-    securitiesCode: "3333",
-    majorStockExchange: "Tokyo Stock Exchange",
-    websiteUrl: "https://www.companyc.co.jp",
-  },
-];
-
 const FollowedCompaniesPage: React.FC = () => {
+  const router = useRouter();
+  const { user, error: userError, isLoading: userLoading } = useUser();
   const { isGuest } = useGuest();
-  const [companies, setCompanies] = useState<ExtendedCompany[]>([]);
-  const [searchQuery, setSearchQuery] = useState<{ keyword: string; industry?: string }>({ keyword: '', industry: '' });
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   
-  useEffect(() => {
-    // ゲストユーザーの場合はデータを取得しない
-    if (isGuest) return;
-    
-    const followed = mockCompanies.filter(company => company.followed);
-    setCompanies(followed);
-  }, [isGuest]);
-  
-  const handleSearchChange = (query: { keyword: string; industry?: string }) => {
-    setSearchQuery(query);
-    const filtered = mockCompanies.filter(company =>
-      company.followed &&
-      company.companyName.toLowerCase().includes(query.keyword.toLowerCase()) &&
-      (query.industry ? company.industry.toLowerCase() === query.industry.toLowerCase() : true)
+  // 認証エラー表示
+  if (userError && !isGuest) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-xl text-red-500">認証エラーが発生しました。再度ログインしてください。</div>
+      </div>
     );
-    setCompanies(filtered);
-  };
+  }
 
-  const handleCardClick = (companyId: string) => {
-    window.location.assign(`/investor/company/${companyId}`);
-  };
+  // ローディング表示
+  if (userLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-xl">読み込み中...</div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -87,7 +62,7 @@ const FollowedCompaniesPage: React.FC = () => {
           ]}
           isCollapsible
           selectedItem="/investor/companies/followed"
-          onSelectMenuItem={(link) => window.location.assign(link)}
+          onSelectMenuItem={(link) => router.push(link)}
         />
         <main className="flex-1 container mx-auto p-4 bg-gray-50">
           <h1 className="text-2xl font-semibold mb-2">フォロー済み企業</h1>
@@ -97,7 +72,9 @@ const FollowedCompaniesPage: React.FC = () => {
               <GuestRestrictedContent featureName="フォロー済み企業" />
             </div>
           ) : (
-            <CompanyListing />
+            // CompanyListingコンポーネントを使用（APIからデータ取得済み）
+            // フォロー済み企業のフィルタリングはコンポーネント内で処理
+            <CompanyListing isFollowedOnly={true} />
           )}
         </main>
       </div>
@@ -107,6 +84,7 @@ const FollowedCompaniesPage: React.FC = () => {
           { label: "プライバシーポリシー", href: "/privacy" },
         ]}
         copyrightText="MyCompany Inc."
+        onSelectLink={(href) => router.push(href)}
       />
     </div>
   );

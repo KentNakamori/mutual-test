@@ -2,39 +2,7 @@
 import React from 'react';
 import { FilterOption, QASearchBarProps } from '@/types';
 import SearchBar from '@/components/ui/SearchBar';
-
-// QA検索用フィルターオプション（決算期、ジャンル）
-const qaFilterOptions: FilterOption[] = [
-  { 
-    id: 'fiscalPeriod', 
-    label: '決算期', 
-    type: 'select',
-    options: [
-      { value: '2025-Q1', label: '2025年度 Q1' },
-      { value: '2025-Q2', label: '2025年度 Q2' },
-      { value: '2025-Q3', label: '2025年度 Q3' },
-      { value: '2025-Q4', label: '2025年度 Q4' }
-    ]
-  },
-  { 
-    id: 'genre', 
-    label: 'ジャンル', 
-    type: 'select',
-    options: [
-      { value: '業績', label: '業績' },
-      { value: '人材戦略', label: '人材戦略' },
-      { value: '経営戦略', label: '経営戦略' }
-    ]
-  }
-];
-
-// ソートオプション（作成日順、いいね数）
-const qaSortOptions = [
-  { value: 'createdAt_desc', label: '作成日: 新しい順' },
-  { value: 'createdAt_asc', label: '作成日: 古い順' },
-  { value: 'likeCount_desc', label: 'いいね数: 高い順' },
-  { value: 'likeCount_asc', label: 'いいね数: 低い順' }
-];
+import { GENRE_OPTIONS, TAG_OPTIONS } from '@/components/ui/tagConfig';
 
 const QASearchBar: React.FC<QASearchBarProps> = ({ 
   onSearchSubmit, 
@@ -42,6 +10,147 @@ const QASearchBar: React.FC<QASearchBarProps> = ({
   initialKeyword = '', 
   initialFilters = {} 
 }) => {
+  // 直近3年分の決算期を生成
+  const generateFiscalPeriods = () => {
+    const currentYear = new Date().getFullYear();
+    const periods = [];
+    for (let year = currentYear; year >= currentYear - 2; year--) {
+      for (let quarter = 1; quarter <= 4; quarter++) {
+        periods.push({
+          value: `${year}-Q${quarter}`,
+          label: `${year}-Q${quarter}`
+        });
+      }
+    }
+    return periods;
+  };
+
+  // QA検索用フィルターオプション（決算期、ジャンル、タグ）
+  const qaFilterOptions: FilterOption[] = [
+    {
+      id: 'tags',
+      label: 'タグ',
+      type: 'select',
+      options: TAG_OPTIONS.map(option => ({
+        value: option.label,
+        label: option.label
+      }))
+    },
+    {
+      id: 'genre',
+      label: 'ジャンル',
+      type: 'select',
+      options: GENRE_OPTIONS.map(option => ({
+        value: option.label,
+        label: option.label
+      }))
+    },
+    { 
+      id: 'fiscalPeriod', 
+      label: '対象決算期', 
+      type: 'select',
+      options: generateFiscalPeriods()
+    }
+  ];
+
+  // ソートオプション（作成日順、いいね数）
+  const qaSortOptions = [
+    { value: 'createdAt_desc', label: '作成日（新しい順）' },
+    { value: 'createdAt_asc', label: '作成日（古い順）' },
+    { value: 'likeCount_desc', label: 'いいね数（多い順）' },
+    { value: 'likeCount_asc', label: 'いいね数（少ない順）' }
+  ];
+
+  const handleSearch = (keyword: string, filters: any) => {
+    console.log('QASearchBar - 受け取ったフィルター:', filters);
+    
+    // 1. フィルターの処理 - すべて明示的に処理する
+    
+    // ジャンルの処理 (配列または文字列を適切に処理)
+    let genreArray: string[] | undefined = undefined;
+    if (filters.genre) {
+      if (Array.isArray(filters.genre)) {
+        const validGenres = filters.genre.filter((g: string) => g && g.trim() !== '');
+        if (validGenres.length > 0) {
+          genreArray = validGenres;
+        }
+      } else if (typeof filters.genre === 'string' && filters.genre.trim() !== '') {
+        genreArray = [filters.genre];
+      }
+    }
+    
+    // 決算期の処理
+    let fiscalPeriodArray: string[] | undefined = undefined;
+    if (filters.fiscalPeriod) {
+      if (Array.isArray(filters.fiscalPeriod)) {
+        const validPeriods = filters.fiscalPeriod.filter((p: string) => p && p.trim() !== '');
+        if (validPeriods.length > 0) {
+          fiscalPeriodArray = validPeriods;
+        }
+      } else if (typeof filters.fiscalPeriod === 'string' && filters.fiscalPeriod.trim() !== '') {
+        fiscalPeriodArray = [filters.fiscalPeriod];
+      }
+    }
+    
+    // タグの処理
+    let tagArray: string[] | undefined = undefined;
+    if (filters.tags) {
+      if (Array.isArray(filters.tags)) {
+        const validTags = filters.tags.filter((t: string) => t && t.trim() !== '');
+        if (validTags.length > 0) {
+          tagArray = validTags;
+        }
+      } else if (typeof filters.tags === 'string' && filters.tags.trim() !== '') {
+        tagArray = [filters.tags];
+      }
+    }
+    
+    // 2. ソートの処理
+    let sortKey: 'createdAt' | 'likeCount' | undefined = undefined;
+    let sortOrder: 'asc' | 'desc' = 'desc';
+    
+    if (filters.sort && typeof filters.sort === 'string') {
+      // 'createdAt_desc' 形式からsortKeyとorderを抽出
+      const parts = filters.sort.split('_');
+      if (parts.length === 2) {
+        if (parts[0] === 'createdAt' || parts[0] === 'likeCount') {
+          sortKey = parts[0];
+        }
+        if (parts[1] === 'asc' || parts[1] === 'desc') {
+          sortOrder = parts[1];
+        }
+      }
+    }
+    
+    // 明示的なorder指定がある場合はそちらを優先
+    if (filters.order && (filters.order === 'asc' || filters.order === 'desc')) {
+      sortOrder = filters.order;
+    }
+    
+    // デフォルト値の設定
+    if (!sortKey) {
+      sortKey = 'createdAt';
+    }
+    
+    // 3. 検索条件をクリーンに整形
+    const searchParams = {
+      keyword: keyword || '',
+      tags: tagArray,
+      genre: genreArray,
+      fiscalPeriod: fiscalPeriodArray,
+      sort: sortKey,
+      order: sortOrder
+    };
+    
+    console.log('QASearchBar - 送信する検索条件:', searchParams);
+    onSearchSubmit(searchParams.keyword, searchParams);
+    
+    // ソート変更の通知
+    if (onSortChange && filters.sort) {
+      onSortChange(filters.sort);
+    }
+  };
+
   return (
     <SearchBar
       placeholder="キーワードや企業名で検索"
@@ -50,7 +159,7 @@ const QASearchBar: React.FC<QASearchBarProps> = ({
       filterOptions={qaFilterOptions}
       sortOptions={qaSortOptions}
       filterButtonLabel="詳細検索"
-      onSearch={onSearchSubmit}
+      onSearch={handleSearch}
       onSort={onSortChange}
     />
   );

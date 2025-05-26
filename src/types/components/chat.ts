@@ -48,7 +48,9 @@ export interface ChatLogsPageProps {
  * - 検索処理
  */
 export interface ChatLogsSearchBarProps {
-  onSearchSubmit: (keyword: string, filter: FilterType) => void;
+  onSearch: (keyword: string, filter: FilterType) => void | Promise<void>;
+  initialKeyword?: string;
+  loading?: boolean;
 }
 
 /**
@@ -59,7 +61,6 @@ export interface ChatLogsSearchBarProps {
 export interface ChatLogsListProps {
   logs: ChatLog[];
   onDeleteLog?: (chatId: string) => void;
-  onArchiveLog?: (chatId: string) => void;
 }
 
 /**
@@ -70,7 +71,6 @@ export interface ChatLogsListProps {
 export interface ChatLogItemProps {
   log: ChatLog;
   onDelete?: (chatId: string) => void;
-  onArchive?: (chatId: string) => void;
 }
 
 /**
