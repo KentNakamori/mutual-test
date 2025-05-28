@@ -8,7 +8,6 @@ import InvestorChatSidebar from './InvestorChatSidebar';
 import ChatMessages from '@/components/ui/ChatMessages';
 import ChatInputBox from '@/components/ui/ChatInputBox';
 import { ChatMessage, ChatTabViewProps, ChatSession } from '@/types';
-import { useGuest } from '@/contexts/GuestContext';
 import GuestRestrictedContent from '@/components/features/investor/common/GuestRestrictedContent';
 import { 
   getInvestorChatLogs, 
@@ -18,16 +17,18 @@ import {
 } from '@/lib/api';
 
 const ChatTabView: React.FC<ChatTabViewProps> = ({ companyId }) => {
-  const { isGuest } = useGuest();
   const searchParams = useSearchParams();
   const targetChatId = searchParams.get('chatId');
   
   const { user, error: userError, isLoading: userLoading } = useUser();
 
+  // ゲスト判定: ユーザーがいない、ローディングが終了、エラーがない
+  const isGuest = !user && !userLoading && !userError;
+
   // ゲストまたは認証エラーの場合は制限表示
   if (isGuest || (userError && !userLoading)) {
     return (
-      <div className="flex flex-col items-center justify-center h-full">
+      <div className="flex flex-col items-center justify-center h-full py-8">
         <GuestRestrictedContent featureName="チャット" />
       </div>
     );
@@ -39,21 +40,6 @@ const ChatTabView: React.FC<ChatTabViewProps> = ({ companyId }) => {
       <div className="flex flex-col items-center justify-center h-full">
         <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500 mb-4"></div>
         <p className="text-gray-600">ログイン情報を確認中...</p>
-      </div>
-    );
-  }
-
-  // 未ログイン時
-  if (!user && !isGuest) {
-    return (
-      <div className="flex flex-col items-center justify-center h-full">
-        <p className="text-lg mb-4">このコンテンツを利用するにはログインが必要です</p>
-        <a 
-          href="/api/auth/login"
-          className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors"
-        >
-          ログイン
-        </a>
       </div>
     );
   }

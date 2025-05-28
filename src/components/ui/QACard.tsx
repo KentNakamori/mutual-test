@@ -3,6 +3,8 @@ import React from 'react';
 import { QA, QACardProps } from '@/types';
 import { getTagColor } from '@/components/ui/tagConfig';
 import { Calendar, Users, FileText, HelpCircle, CheckCircle, BookOpen, ThumbsUp } from 'lucide-react';
+import { useUser } from '@auth0/nextjs-auth0';
+import { useRouter } from 'next/navigation';
 
 // ユーティリティ関数をオプションで受け取る型を拡張
 export type QACardMode = 'preview' | 'detail' | 'edit';
@@ -19,6 +21,12 @@ const QACard: React.FC<QACardProps> = ({
   onCancelEdit,
   onSaveEdit,
 }) => {
+  const { user, isLoading: userLoading } = useUser();
+  const router = useRouter();
+  
+  // ゲスト判定
+  const isGuest = !user && !userLoading;
+  
   // 日付の表示形式を整形する
   const formatDate = (dateStr: string) => {
     const date = new Date(dateStr);
@@ -30,6 +38,13 @@ const QACard: React.FC<QACardProps> = ({
   // いいねボタンのクリックハンドラー
   const handleLikeClick = (e: React.MouseEvent) => {
     e.stopPropagation(); // カード全体のクリックを防止
+    
+    // ゲストユーザーの場合はログインページへ
+    if (isGuest && role === 'investor') {
+      router.push('/investor/login');
+      return;
+    }
+    
     // investor側のみいいね機能を有効にする
     if (role === 'investor' && onLike) {
       onLike(qa.qaId);
@@ -128,28 +143,43 @@ if (mode === 'preview') {
                 ))}
               </div>
 
-              <button
-                onClick={handleLikeClick}
-                className={`flex items-center transition-colors duration-200 ${
-                  role === 'investor' 
-                    ? qa.isLiked 
-                      ? 'text-blue-600' // いいね済みの場合は青色
-                      : 'text-gray-600 hover:text-blue-600' // 未いいねの場合はグレー、ホバーで青
-                    : 'text-gray-400' // 企業側は無効状態
-                }`}
-                disabled={role !== 'investor'}
-              >
-                <div className={`p-2 rounded-full transition-colors duration-200 ${
-                  role === 'investor' 
-                    ? qa.isLiked 
-                      ? 'bg-blue-100' // いいね済みの場合は青背景
-                      : 'bg-gray-100 hover:bg-blue-100' // 未いいねの場合はグレー背景、ホバーで青背景
-                    : 'bg-gray-50' // 企業側は無効状態
-                }`}>
-                  <ThumbsUp size={16} className="mr-1" />
-                </div>
-                <span className="ml-2 text-sm font-medium">{qa.likeCount || 0}</span>
-              </button>
+              {/* ゲストユーザーの場合の表示 */}
+              {isGuest && role === 'investor' ? (
+                <button
+                  onClick={handleLikeClick}
+                  className="flex items-center text-gray-500 hover:text-gray-700 transition-colors duration-200"
+                  title="いいねするにはログインが必要です"
+                >
+                  <div className="p-2 rounded-full bg-gray-100 hover:bg-gray-200 transition-colors duration-200">
+                    <ThumbsUp size={16} className="mr-1" />
+                  </div>
+                  <span className="ml-2 text-sm font-medium">{qa.likeCount || 0}</span>
+                  <span className="ml-2 text-xs text-gray-500">ログインが必要</span>
+                </button>
+              ) : (
+                <button
+                  onClick={handleLikeClick}
+                  className={`flex items-center transition-colors duration-200 ${
+                    role === 'investor' 
+                      ? qa.isLiked 
+                        ? 'text-blue-600' // いいね済みの場合は青色
+                        : 'text-gray-600 hover:text-blue-600' // 未いいねの場合はグレー、ホバーで青
+                      : 'text-gray-400' // 企業側は無効状態
+                  }`}
+                  disabled={role !== 'investor'}
+                >
+                  <div className={`p-2 rounded-full transition-colors duration-200 ${
+                    role === 'investor' 
+                      ? qa.isLiked 
+                        ? 'bg-blue-100' // いいね済みの場合は青背景
+                        : 'bg-gray-100 hover:bg-blue-100' // 未いいねの場合はグレー背景、ホバーで青背景
+                      : 'bg-gray-50' // 企業側は無効状態
+                  }`}>
+                    <ThumbsUp size={16} className="mr-1" />
+                  </div>
+                  <span className="ml-2 text-sm font-medium">{qa.likeCount || 0}</span>
+                </button>
+              )}
             </div>
           </div>
         </div>

@@ -1,129 +1,158 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useUser } from '@auth0/nextjs-auth0';
 import QASearchBar from './QASearchBar';
 import QAResultList from '@/components/features/investor/qa/QAResultList';
 import QADetailModal from '@/components/ui/QaDetailModal';
-import { QA, QATabViewProps } from '@/types';
+import { QA, QATabViewProps, FilterType } from '@/types';
 
 const QATabView: React.FC<QATabViewProps> = ({ companyId, companyName }) => {
   const [qaList, setQaList] = useState<QA[]>([]);
   const [selectedQA, setSelectedQA] = useState<QA | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+  const [searchKeyword, setSearchKeyword] = useState<string>('');
+  const [filters, setFilters] = useState<FilterType>({});
   const { user, isLoading: authLoading } = useUser();
 
-  // 企業IDに紐づくQAを取得（プロキシ経由でJWTを送信）
-  useEffect(() => {
-    const fetchQAs = async () => {
-      if (authLoading) return;
-      
-      setIsLoading(true);
-      setError(null);
-      
-      try {
-        console.log(`QATabView: Fetching QAs for company ${companyId}`);
-        // Auth0 SDK v4ではトークンはプロキシ側で取得される
-        const response = await fetch(`/api/proxy/investor/qa/search/company/${companyId}`);
-        const data = await response.json();
-        
-        console.log('QATabView: API Response:', data);
-        
-        // APIレスポンスの構造を確認
-        if (data.results) {
-          console.log(`QATabView: Found ${data.results.length} QAs in results`);
-          setQaList(data.results);
-        } else if (data.items) {
-          console.log(`QATabView: Found ${data.items.length} QAs in items`);
-          setQaList(data.items);
-        } else {
-          console.error('QATabView: Unexpected API response structure:', data);
-          setError('予期しないAPIレスポンス形式です');
-          setQaList([]);
-        }
-      } catch (error) {
-        console.error('QATabView: QAの取得に失敗しました:', error);
-        setError('QAの取得に失敗しました');
-        setQaList([]);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchQAs();
-  }, [companyId, authLoading]);
-
-  // キーワード検索によるフィルタリング
-  const handleSearch = async (keyword: string, filters: Record<string, any>) => {
+  // 企業固有のQA検索API呼び出し関数
+  const fetchCompanyQAs = useCallback(async (
+    keyword?: string, 
+    searchFilters?: FilterType
+  ) => {
+    if (authLoading) return;
+    
     setIsLoading(true);
     setError(null);
     
     try {
-      console.log(`QATabView: Searching with keyword "${keyword}" and filters:`, filters);
+      console.log(`QATabView: Fetching QAs for company ${companyId} with keyword: "${keyword}"`);
+      console.log('QATabView: Filters:', searchFilters);
       
-      // URLSearchParamsは配列を直接サポートしていないため、カスタム処理が必要
+      // URLSearchParamsを使用してクエリパラメータを構築
       const queryParams = new URLSearchParams();
       
-      // 基本パラメータを追加
-      if (keyword) queryParams.append('keyword', keyword);
-      if (companyId) queryParams.append('companyId', companyId);
+      // キーワード
+      if (keyword) {
+        queryParams.append('keyword', keyword);
+      }
       
-      // filtersの処理
-      Object.entries(filters).forEach(([key, value]) => {
-        // 配列の場合（ genreなど）
-        if (Array.isArray(value)) {
-          value.forEach((item) => {
-            if (item) queryParams.append(key, item);
-          });
-        } 
-        // 単一値の場合
-        else if (value !== undefined && value !== null) {
-          queryParams.append(key, String(value));
+      // フィルターの処理
+      if (searchFilters) {
+        // 質問ルート
+        if (searchFilters.question_route) {
+          queryParams.append('question_route', searchFilters.question_route);
         }
-      });
+        
+        // ジャンル（配列）
+        if (searchFilters.genre && Array.isArray(searchFilters.genre)) {
+          searchFilters.genre.forEach((g) => {
+            if (g) queryParams.append('genre', g);
+          });
+        }
+        
+        // 決算期
+        if (searchFilters.fiscalPeriod) {
+          queryParams.append('fiscalPeriod', searchFilters.fiscalPeriod);
+        }
+        
+        // ソート
+        if (searchFilters.sort) {
+          queryParams.append('sort', searchFilters.sort);
+        }
+        
+        // ソート順序
+        if (searchFilters.order) {
+          queryParams.append('order', searchFilters.order);
+        }
+      }
       
-      console.log(`QATabView: Search query params: ${queryParams.toString()}`);
+      // デフォルトソートを設定（フィルターで指定されていない場合）
+      if (!queryParams.has('sort')) {
+        queryParams.append('sort', 'createdAt');
+      }
+      if (!queryParams.has('order')) {
+        queryParams.append('order', 'desc');
+      }
       
-      // Auth0 SDK v4ではトークンはプロキシ側で取得される
-      const response = await fetch(`/api/proxy/investor/qa/search?${queryParams}`);
+      // ページネーション（企業ページでは現在未使用だが、将来的に追加可能）
+      queryParams.append('page', '1');
+      queryParams.append('limit', '100'); // 企業ページでは多めに取得
+      
+      console.log(`QATabView: Query params: ${queryParams.toString()}`);
+      
+      // 企業固有のAPI endpointを使用
+      const response = await fetch(`/api/proxy/investor/qa/search/company/${companyId}?${queryParams}`);
+      
+      if (!response.ok) {
+        throw new Error(`HTTPエラー: ${response.status}`);
+      }
+      
       const data = await response.json();
-      
-      console.log('QATabView: Search API Response:', data);
+      console.log('QATabView: API Response:', data);
       
       // APIレスポンスの構造を確認
       if (data.results) {
-        console.log(`QATabView: Found ${data.results.length} QAs in search results`);
+        console.log(`QATabView: Found ${data.results.length} QAs in results`);
         setQaList(data.results);
       } else if (data.items) {
-        console.log(`QATabView: Found ${data.items.length} QAs in search items`);
+        console.log(`QATabView: Found ${data.items.length} QAs in items`);
         setQaList(data.items);
       } else {
-        console.error('QATabView: Unexpected search API response structure:', data);
-        setError('予期しない検索APIレスポンス形式です');
+        console.error('QATabView: Unexpected API response structure:', data);
+        setError('予期しないAPIレスポンス形式です');
         setQaList([]);
       }
     } catch (error) {
-      console.error('QATabView: QAの検索に失敗しました:', error);
-      setError('QAの検索に失敗しました');
+      console.error('QATabView: QAの取得に失敗しました:', error);
+      setError(error instanceof Error ? error.message : 'QAの取得に失敗しました');
       setQaList([]);
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [companyId, authLoading]);
+
+  // 初回データ取得（フィルターなし）
+  useEffect(() => {
+    if (!authLoading) {
+      fetchCompanyQAs();
+    }
+  }, [fetchCompanyQAs, authLoading]);
+
+  // 検索・フィルタリング処理
+  const handleSearch = useCallback((keyword: string, newFilters: FilterType) => {
+    console.log('QATabView: Search triggered with keyword:', keyword, 'filters:', newFilters);
+    setSearchKeyword(keyword);
+    setFilters(newFilters);
+    fetchCompanyQAs(keyword, newFilters);
+  }, [fetchCompanyQAs]);
+
+  // ソート変更処理
+  const handleSortChange = useCallback((sortValue: string) => {
+    console.log('QATabView: Sort changed to:', sortValue);
+    const [sortKey, sortDirection] = sortValue.split('_');
+    const updatedFilters = { 
+      ...filters, 
+      sort: sortKey as 'createdAt' | 'likeCount',
+      order: sortDirection as 'asc' | 'desc'
+    };
+    setFilters(updatedFilters);
+    fetchCompanyQAs(searchKeyword, updatedFilters);
+  }, [filters, searchKeyword, fetchCompanyQAs]);
 
   // QAアイテムをクリックした際の処理
-  const handleSelectQA = (qa: QA) => {
+  const handleSelectQA = useCallback((qa: QA) => {
     console.log('QATabView: Selected QA:', qa);
     setSelectedQA(qa);
-  };
+  }, []);
 
   // モーダルクローズ時の処理
-  const handleCloseModal = () => {
+  const handleCloseModal = useCallback(() => {
     console.log('QATabView: Closing QA detail modal');
     setSelectedQA(null);
-  };
+  }, []);
 
   // いいね操作用のハンドラ
-  const handleLike = async (qaId: string) => {
+  const handleLike = useCallback(async (qaId: string) => {
     try {
       console.log(`QATabView: Liking QA ${qaId}`);
       
@@ -133,25 +162,45 @@ const QATabView: React.FC<QATabViewProps> = ({ companyId, companyName }) => {
         headers: {
           'Content-Type': 'application/json',
         },
+        body: JSON.stringify({ action: 'ADD' }) // APIで必要なリクエストボディ
       });
+      
+      if (!response.ok) {
+        throw new Error(`HTTPエラー: ${response.status}`);
+      }
+      
       const data = await response.json();
       console.log('QATabView: Like API Response:', data);
       
-      if (data.success) {
-        console.log(`QATabView: Successfully liked QA ${qaId}, new like count: ${data.likeCount}`);
+      if (data.likeCount !== undefined) {
+        console.log(`QATabView: Successfully updated like for QA ${qaId}, new like count: ${data.likeCount}`);
         // いいね数が更新されたQAをリストに反映
         setQaList(prevList =>
           prevList.map(qa =>
-            qa.qaId === qaId ? { ...qa, likeCount: data.likeCount } : qa
+            qa.qaId === qaId ? { 
+              ...qa, 
+              likeCount: data.likeCount,
+              isLiked: data.isLiked
+            } : qa
           )
         );
+        
+        // 選択されたQAも更新
+        if (selectedQA && selectedQA.qaId === qaId) {
+          setSelectedQA({
+            ...selectedQA,
+            likeCount: data.likeCount,
+            isLiked: data.isLiked
+          });
+        }
       } else {
-        console.error('QATabView: Like operation failed:', data);
+        console.error('QATabView: Like operation response missing likeCount:', data);
       }
     } catch (error) {
       console.error('QATabView: いいねの更新に失敗しました:', error);
+      setError('いいねの更新に失敗しました');
     }
-  };
+  }, [selectedQA]);
 
   // 日付フォーマット関数
   const formatDate = (dateStr: string) => {
@@ -163,12 +212,23 @@ const QATabView: React.FC<QATabViewProps> = ({ companyId, companyName }) => {
 
   return (
     <div className="h-full overflow-y-auto p-4">
-      <QASearchBar onSearchSubmit={handleSearch} />
+      <QASearchBar 
+        onSearchSubmit={handleSearch}
+        onSortChange={handleSortChange}
+        initialKeyword={searchKeyword}
+        initialFilters={filters}
+      />
       
       {/* エラー表示 */}
       {error && (
         <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
           <p>{error}</p>
+          <button 
+            onClick={() => fetchCompanyQAs(searchKeyword, filters)} 
+            className="mt-2 px-4 py-1 bg-red-100 text-red-800 rounded-md text-sm hover:bg-red-200"
+          >
+            再試行
+          </button>
         </div>
       )}
       

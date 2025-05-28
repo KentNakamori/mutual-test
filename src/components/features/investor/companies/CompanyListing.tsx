@@ -1,11 +1,9 @@
 // src/components/features/investor/companies/CompanyListing.tsx
 import React, { useState, useEffect } from 'react';
-import { Search, ChevronDown, Grid, List, ExternalLink, Filter } from 'lucide-react';
-import { useGuest } from '@/contexts/GuestContext';
-import GuestRestrictedContent from '@/components/features/investor/common/GuestRestrictedContent';
-import { getInvestorCompanies, followInvestorCompany } from '@/lib/api';
-import { useUser } from "@auth0/nextjs-auth0";
+import { Heart, Filter, Search, Grid, List, ChevronDown, ExternalLink } from 'lucide-react';
 import { Industry, INDUSTRY_OPTIONS, getIndustryLabel } from '@/types/industry';
+import GuestRestrictedContent from '@/components/features/investor/common/GuestRestrictedContent';
+import { useUser } from '@auth0/nextjs-auth0';
 
 // APIレスポンスの型定義
 interface CompanyItem {
@@ -33,10 +31,9 @@ interface CompanyListingProps {
 }
 
 const CompanyListing: React.FC<CompanyListingProps> = ({ isFollowedOnly = false }) => {
-  const { isGuest } = useGuest();
   const { user, error: userError, isLoading: userLoading } = useUser();
-  // Auth0 SDK v4では、JWTトークンをプロキシ経由で送信するため、tokenはundefinedに設定
-  // プロキシで自動的にトークンが付与される
+  // ゲスト判定: ユーザーがいない、ローディングが終了、エラーがない
+  const isGuest = !user && !userLoading && !userError;
   const token = undefined;
   
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
@@ -48,53 +45,58 @@ const CompanyListing: React.FC<CompanyListingProps> = ({ isFollowedOnly = false 
   const [activeExchange, setActiveExchange] = useState('すべて');
   const [keyword, setKeyword] = useState('');
   const [companies, setCompanies] = useState<CompanyItem[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   
   // APIからデータ取得
   useEffect(() => {
     const fetchCompanies = async () => {
-      if (userLoading) return; // ユーザー情報のロード中は処理しない
-      
       setLoading(true);
       setError(null);
+      
       try {
-        const query: { keyword?: string; industry?: Industry; followed?: string } = {};
+        const response = await fetch('/api/proxy/investor/companies');
         
-        if (keyword) {
-          query.keyword = keyword;
+        // 401エラー（認証エラー）の場合は空の配列を返す（ゲストとして扱う）
+        if (response.status === 401) {
+          console.warn('認証エラー: ゲストユーザーとして処理します');
+          setCompanies([]);
+          return;
         }
         
-        if (activeGenre !== 'すべて') {
-          query.industry = activeGenre;
+        if (!response.ok) {
+          throw new Error('データの取得に失敗しました');
         }
-
-        // フォロー済みのみ表示フラグが有効な場合はクエリに追加
-        if (isFollowedOnly) {
-          query.followed = 'true';
-        }
-
-        // デバッグログ：クエリパラメータの確認
-        console.log('Fetching companies with query:', query);
         
-        // Auth0 SDK v4用の対応：token=undefinedにしてプロキシ経由で認証情報を送信
-        const response = await getInvestorCompanies(undefined, query);
-        console.log('API Response:', response);
+        const data = await response.json();
+        console.log('取得した企業データ:', data);
         
-        setCompanies(response.companies);
+        // dataが配列の場合とオブジェクトの場合の両方に対応
+        const companiesList = Array.isArray(data) ? data : data.companies || [];
+        
+        // フォロー済みフィルターを適用
+        const filteredData = isFollowedOnly 
+          ? companiesList.filter(company => company.isFollowed === true)
+          : companiesList;
+        
+        setCompanies(filteredData);
       } catch (err) {
-        console.error('企業データの取得に失敗しました', err);
-        setError('企業データの取得に失敗しました。再度お試しください。');
+        console.error('企業データ取得エラー:', err);
+        
+        // ネットワークエラーなどの場合
+        if (err instanceof TypeError && err.message.includes('fetch')) {
+          setError('ネットワークエラー: サーバーに接続できません');
+        } else {
+          setError(err instanceof Error ? err.message : '企業データの取得に失敗しました');
+        }
       } finally {
         setLoading(false);
       }
     };
-    
-    // ユーザー認証状態に基づいて処理
-    if (!userLoading) {
-      fetchCompanies();
-    }
-  }, [keyword, activeGenre, userLoading, isFollowedOnly]);
+
+    // ゲストユーザーでもデータを取得
+    fetchCompanies();
+  }, [isFollowedOnly]);
   
   // フィルターとソートのオプション
   const genres = ['すべて', ...INDUSTRY_OPTIONS.map(option => option.value)];
@@ -132,25 +134,36 @@ const CompanyListing: React.FC<CompanyListingProps> = ({ isFollowedOnly = false 
   
   const filteredCompanies = getFilteredAndSortedCompanies();
   
-  // フォロー/アンフォロー処理
+  // フォロー切り替え処理
   const handleFollowToggle = async (companyId: string, currentFollowStatus: boolean) => {
-    if (isGuest || userLoading || userError || !user) {
+    if (isGuest) {
+      window.location.assign('/investor/login');
       return;
     }
-    
+
     try {
-      const action = currentFollowStatus ? 'unfollow' : 'follow';
-      // Auth0 SDK v4用の対応：tokenを適切な値に設定（プロキシ経由での認証）
-      await followInvestorCompany(companyId, action, "");
-      
-      // 成功したら、ローカルの状態を更新
-      setCompanies(prev => 
-        prev.map(company => 
-          company.companyId === companyId 
-            ? { ...company, isFollowed: !currentFollowStatus } 
+      const method = currentFollowStatus ? 'DELETE' : 'POST';
+      const response = await fetch(`/api/proxy/investor/companies/${companyId}/follow`, {
+        method,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error('フォロー操作に失敗しました');
+      }
+
+      // 企業リストを更新
+      setCompanies(prevCompanies =>
+        prevCompanies.map(company =>
+          company.companyId === companyId
+            ? { ...company, isFollowed: !currentFollowStatus }
             : company
         )
       );
+      
+      console.log(`${currentFollowStatus ? 'フォロー解除' : 'フォロー'}しました: ${companyId}`);
     } catch (err) {
       console.error('フォロー操作に失敗しました', err);
       alert('フォロー操作に失敗しました。再度お試しください。');
@@ -170,15 +183,6 @@ const CompanyListing: React.FC<CompanyListingProps> = ({ isFollowedOnly = false 
     setActiveSortOption('新着順');
     setKeyword('');
   };
-  
-  // 認証エラーの場合
-  if (userError && !isGuest) {
-    return (
-      <div className="text-center py-8">
-        <p className="text-red-500">認証エラーが発生しました。再度ログインしてください。</p>
-      </div>
-    );
-  }
   
   return (
     <div>

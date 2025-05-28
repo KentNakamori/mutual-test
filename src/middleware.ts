@@ -6,18 +6,29 @@ export async function middleware(req: NextRequest) {
   // ① Auth0 Edge ミドルウェアを先に実行（Cookie → req.auth）
   const authRes = await auth0.middleware(req);
 
-  // ② 公開または認証ルートはそのまま返す
-  if (req.nextUrl.pathname.startsWith('/auth') ||
-      req.nextUrl.pathname === '/') {
+  // ② 公開ルート（ゲストアクセス可能）
+  const publicRoutes = [
+    '/auth',
+    '/',
+    '/about',
+    '/investor/companies',
+    '/investor/company',
+    '/investor/qa',
+    '/investor/login',
+  ];
+
+  // 公開ルートかどうかをチェック
+  const isPublicRoute = publicRoutes.some(route => 
+    req.nextUrl.pathname.startsWith(route)
+  );
+
+  if (isPublicRoute) {
     return authRes;
   }
 
-  // ③ それ以外はセッションを必須に
-  const session = await auth0.getSession();
-  if (!session) {
-    return NextResponse.redirect(new URL('/auth/login', req.url));
-  }
-
+  // ③ 認証が必要なルート（ミドルウェアでの強制リダイレクトは削除）
+  // ページ側でGuestRestrictedContentを表示するため、ここでは通過させる
+  
   // ④ 正常ならページ/API へ続行
   return authRes;
 }

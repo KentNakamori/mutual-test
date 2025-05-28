@@ -1,8 +1,10 @@
 // src/components/common/sidebar.tsx
 import React, { useState } from 'react';
 import Image from 'next/image';
-import { FaBars, FaAngleDoubleLeft } from 'react-icons/fa';
+import { FaBars, FaAngleDoubleLeft, FaSignOutAlt, FaSignInAlt } from 'react-icons/fa';
 import { SidebarMenuItem, SidebarProps } from '@/types';
+import { useRouter } from 'next/navigation';
+import { useUser } from '@auth0/nextjs-auth0';
 
 interface ExtendedSidebarProps extends SidebarProps {
   defaultCollapsed?: boolean;
@@ -16,12 +18,14 @@ interface ExtendedSidebarProps extends SidebarProps {
  *   - 折りたたみ可能なメニュー
  *   - アイコンとラベルの表示
  *   - 選択状態の視覚的フィードバック
+ *   - ログアウト機能
  * 
  * 主な機能：
  * - サイドバーの展開/折りたたみ
  * - メニュー項目の選択
  * - レスポンシブデザイン
  * - アニメーション付きの遷移
+ * - Auth0ログアウト
  * 
  * @component
  * @param {SidebarProps} props - サイドバーのプロパティ
@@ -40,11 +44,24 @@ const Sidebar: React.FC<ExtendedSidebarProps> = ({
   defaultCollapsed = false,
 }) => {
   const [isOpen, setIsOpen] = useState(!defaultCollapsed);
+  const router = useRouter();
+  const { user, isLoading } = useUser();
 
   const handleToggleSidebar = () => {
     if (isCollapsible !== false) {
       setIsOpen(!isOpen);
     }
+  };
+
+  const handleLogout = () => {
+    // Auth0のログアウトフローを使用
+    router.push('/auth/logout');
+  };
+
+  const handleLogin = () => {
+    // 現在のURLをreturnToパラメータとして渡す
+    const returnTo = typeof window !== 'undefined' ? window.location.pathname : '/';
+    router.push(`/api/auth/login?returnTo=${encodeURIComponent(returnTo)}`);
   };
 
   return (
@@ -105,6 +122,33 @@ const Sidebar: React.FC<ExtendedSidebarProps> = ({
           </li>
         ))}
       </ul>
+
+      {/* ログアウト/ログインボタン */}
+      {!isLoading && (
+        <div className="mt-auto pt-2 border-t border-gray-200">
+          {user ? (
+            <button
+              className="w-full p-2 rounded hover:bg-red-50 hover:text-red-600 cursor-pointer transition-colors group"
+              onClick={handleLogout}
+            >
+              <div className={`flex items-center h-10 ${isOpen ? 'space-x-2' : 'justify-center'}`}>
+                <FaSignOutAlt className="flex-shrink-0 group-hover:text-red-600" size={20} />
+                {isOpen && <span className="truncate group-hover:text-red-600">ログアウト</span>}
+              </div>
+            </button>
+          ) : (
+            <button
+              className="w-full p-2 rounded hover:bg-blue-50 hover:text-blue-600 cursor-pointer transition-colors group"
+              onClick={handleLogin}
+            >
+              <div className={`flex items-center h-10 ${isOpen ? 'space-x-2' : 'justify-center'}`}>
+                <FaSignInAlt className="flex-shrink-0 group-hover:text-blue-600" size={20} />
+                {isOpen && <span className="truncate group-hover:text-blue-600">ログイン</span>}
+              </div>
+            </button>
+          )}
+        </div>
+      )}
     </aside>
   );
 };

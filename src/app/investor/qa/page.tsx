@@ -101,10 +101,11 @@ const QASearchPage: React.FC = () => {
 
   // 初回データ取得と条件変更時のデータ再取得
   useEffect(() => {
-    if (!userLoading && user) {
+    // ゲストユーザーでもデータを取得
+    if (!userLoading) {
       fetchQaData();
     }
-  }, [fetchQaData, userLoading, user]);
+  }, [fetchQaData, userLoading]);
 
   // ページネーション計算
   const totalPages = Math.ceil(totalCount / itemsPerPage);
@@ -132,6 +133,12 @@ const QASearchPage: React.FC = () => {
 
   // いいね操作
   const handleLike = useCallback(async (qaId: string) => {
+    // ゲストユーザーの場合はログイン画面にリダイレクト
+    if (!user) {
+      router.push('/investor/login');
+      return;
+    }
+
     try {
       console.log('いいね操作開始:', qaId);
       
@@ -172,16 +179,7 @@ const QASearchPage: React.FC = () => {
       console.error('いいね操作エラー:', error);
       setError(error instanceof Error ? error : new Error('いいね操作に失敗しました'));
     }
-  }, [qaItems, selectedQA, toggleLike]);
-
-  // 認証エラー表示
-  if (userError && !userLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-xl text-red-500">認証エラーが発生しました。再度ログインしてください。</div>
-      </div>
-    );
-  }
+  }, [qaItems, selectedQA, toggleLike, user, router]);
 
   return (
     <div className="min-h-screen flex flex-col">

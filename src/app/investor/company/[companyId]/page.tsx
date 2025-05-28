@@ -34,6 +34,16 @@ const CompanyPage: React.FC = () => {
   const [error, setError] = useState<Error | null>(null);
   const [activeTab, setActiveTab] = useState<"chat" | "qa">("chat");
 
+  // ゲスト判定
+  const isGuest = !user && !userLoading && !userError;
+
+  // ゲストユーザーの場合はデフォルトタブをQ&Aに設定
+  useEffect(() => {
+    if (isGuest && activeTab === "chat") {
+      setActiveTab("qa");
+    }
+  }, [isGuest]);
+
   useEffect(() => {
     // 認証状態がロード中の場合は処理しない
     if (userLoading) return;
@@ -66,7 +76,7 @@ const CompanyPage: React.FC = () => {
       }
     };
     
-    if (companyId && (!userLoading)) {
+    if (companyId) {
       fetchCompanyData();
     }
   }, [companyId, userLoading]);
@@ -74,23 +84,6 @@ const CompanyPage: React.FC = () => {
   const handleTabChange = (tab: "chat" | "qa") => {
     setActiveTab(tab);
   };
-
-  // 認証エラー表示
-  if (userError) {
-    return (
-      <div className="flex items-center justify-center h-screen">
-        <div className="text-center">
-          <p className="text-red-500 text-xl mb-4">認証エラーが発生しました</p>
-          <button 
-            onClick={() => router.push('/api/auth/login')}
-            className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
-          >
-            再ログイン
-          </button>
-        </div>
-      </div>
-    );
-  }
 
   // ローディング表示
   if (userLoading || loading) {
