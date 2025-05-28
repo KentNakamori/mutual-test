@@ -1,8 +1,18 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  output: 'standalone',
   reactStrictMode: true,
-  // シンプルなものに変更
-  experimental: {},  // 空のオブジェクトにする
+  swcMinify: true,
+  // Docker環境でのホットリロードを有効化
+  webpack: (config, { isServer }) => {
+    if (!isServer) {
+      config.watchOptions = {
+        poll: 1000,
+        aggregateTimeout: 300,
+      }
+    }
+    return config
+  },
 }
 
 module.exports = nextConfig

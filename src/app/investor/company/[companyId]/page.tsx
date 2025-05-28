@@ -140,13 +140,13 @@ const CompanyPage: React.FC = () => {
         onSelectMenuItem={(link) => router.push(link)}
       />
       {/* 固定サイズの main エリア */}
-      <main className="flex flex-col w-full h-full bg-gray-50">
+      <main className="flex flex-col w-full h-screen bg-gray-50">
         <div className="px-6 pt-6">
           <CompanyHeader company={companyData} />
           <TabSwitcher activeTab={activeTab} onChangeTab={handleTabChange} />
         </div>
         {/* 固定された main 内で下部のみスクロール */}
-        <div className="flex-1 overflow-hidden">
+        <div className="flex-1 overflow-hidden min-h-0">
           {activeTab === "chat" ? (
             <ChatTabView companyId={companyData.companyId} />
           ) : (

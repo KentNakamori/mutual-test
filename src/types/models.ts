@@ -280,4 +280,46 @@ export interface Stat {
  * 期間（ダッシュボード用）
  * - 期間選択
  */
-export type Period = "daily" | "weekly" | "monthly"; 
+export type Period = "daily" | "weekly" | "monthly";
+
+/**
+ * ファイルコレクション（ファイル管理用）
+ * - アップロードされたファイルの管理
+ * - ファイル一覧表示
+ * - ファイル削除
+ */
+export interface FileCollection {
+  id: string;
+  companyId: CompanyId;
+  fileName: string;
+  fileSize: number;
+  fileType: string;
+  documentType: string;
+  fiscalYear: string;  // バックエンドに合わせて変更
+  uploadDate: DateString;  // バックエンドに合わせて変更
+  isProcessed?: boolean;
+  s3Key?: string | null;
+  chunksCount?: number;
+}
+
+/**
+ * ファイルチャンク（ファイル内容管理用）
+ * - PDFのページごとの情報管理
+ * - 文字起こし結果の保存
+ */
+export interface FileChunk {
+  id: string;
+  fileId: string;
+  pageNumber: number;
+  chunkSummary: string;
+  chunkDetailDescription: string;
+}
+
+/**
+ * ファイル管理APIレスポンス
+ */
+export interface FileManagementResponse {
+  files: FileCollection[];
+  totalCount: number;
+  totalPages: number;
+} 

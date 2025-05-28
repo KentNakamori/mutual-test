@@ -1,0 +1,21 @@
+version: '3.8'
+
+services:
+  app:
+    build:
+      context: .
+      target: builder
+    ports:
+      - "3000:3000"
+    volumes:
+      - .:/app
+      - /app/node_modules
+      - /app/.next
+    environment:
+      - NODE_ENV=development
+      - AUTH0_SECRET=${AUTH0_SECRET}
+      - AUTH0_BASE_URL=${AUTH0_BASE_URL}
+      - AUTH0_ISSUER_BASE_URL=${AUTH0_ISSUER_BASE_URL}
+      - AUTH0_CLIENT_ID=${AUTH0_CLIENT_ID}
+      - AUTH0_CLIENT_SECRET=${AUTH0_CLIENT_SECRET}
+    command: npm run dev 

@@ -1,5 +1,4 @@
 // src/config/api.ts
-import { API_BASE_URL } from './auth';
 
 export const ENDPOINTS = {
   // 企業向けAPI
@@ -43,6 +42,12 @@ export const ENDPOINTS = {
       upload: '/corporate/documents/upload',
       analysis: '/corporate/documents/analysis',
     },
+    // ファイル管理
+    files: {
+      list: '/corporate/files',
+      upload: '/corporate/files/upload',
+      delete: (id: string) => `/corporate/files/${id}`,
+    },
   },
   
   // 投資家向けAPI
@@ -75,8 +80,9 @@ export const ENDPOINTS = {
     // チャット関連
     chat: {
       history: '/investor/chat/logs',
-      message: '/investor/chat/message',
+      message: (chatId: string) => `/investor/chat/${chatId}/message`,
       new: (companyId: string) => `/investor/chat/${companyId}`,
+      newWithMessage: (companyId: string) => `/investor/chat/${companyId}/with-message`,
       detail: (chatId: string) => `/investor/chat/${chatId}`,
       delete: (chatId: string) => `/investor/chat/${chatId}`,
     },

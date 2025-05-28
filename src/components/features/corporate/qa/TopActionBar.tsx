@@ -1,12 +1,11 @@
 // src/components/features/corporate/qa/TopActionBar.tsx
 import React from 'react';
 import SearchBar from '@/components/ui/SearchBar';
-import UploadButton from './UploadButton';
 import { TopActionBarProps } from '@/types';
 import { GENRE_OPTIONS, QUESTION_ROUTE_OPTIONS } from '@/components/ui/tagConfig';
 import { FilterOption } from '@/types';
 
-const TopActionBar: React.FC<TopActionBarProps> = ({ onSearch, onUploadClick }) => {
+const TopActionBar: React.FC<TopActionBarProps> = ({ onSearch }) => {
   // 直近3年分の決算期を生成
   const generateFiscalPeriods = () => {
     const currentYear = new Date().getFullYear();
@@ -139,16 +138,13 @@ const TopActionBar: React.FC<TopActionBarProps> = ({ onSearch, onUploadClick }) 
   };
 
   return (
-    <div className="flex justify-between items-start mb-4">
-      <div className="flex-grow mr-4">
-        <SearchBar
-          placeholder="Q&Aを検索"
-          filterOptions={filterOptions}
-          sortOptions={sortOptions}
-          onSearch={handleSearch}
-        />
-      </div>
-      <UploadButton onClick={onUploadClick} />
+    <div className="mb-4">
+      <SearchBar
+        placeholder="Q&Aを検索"
+        filterOptions={filterOptions}
+        sortOptions={sortOptions}
+        onSearch={handleSearch}
+      />
     </div>
   );
 };

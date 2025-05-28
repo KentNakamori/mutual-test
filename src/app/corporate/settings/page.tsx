@@ -14,7 +14,7 @@ import SettingsTabs from "@/components/features/corporate/settings/SettingsTabs"
 import { useCorporateCompanySettings } from "@/hooks/useCorporateCompanySettings";
 import { useUser } from "@auth0/nextjs-auth0";
 
-import { LayoutDashboard, HelpCircle, MessageSquare, Settings } from 'lucide-react';
+import { LayoutDashboard, HelpCircle, MessageSquare, Settings, FileText } from 'lucide-react';
 
 const SettingsPage: React.FC = () => {
   const router = useRouter();
@@ -42,12 +42,13 @@ const SettingsPage: React.FC = () => {
   return (
     <div className="min-h-screen flex flex-col">
       <div className="flex flex-1">
-        {/* サイドバー：ダッシュボード、Q&A管理、IRチャット、設定 */}
+        {/* サイドバー：ダッシュボード、Q&A管理、IRチャット、ファイル管理、設定 */}
         <Sidebar
           menuItems={[
             { label: "ダッシュボード", link: "/corporate/dashboard", icon: <LayoutDashboard size={20} /> },
             { label: "Q&A管理", link: "/corporate/qa", icon: <HelpCircle size={20} /> },
             { label: "IRチャット", link: "/corporate/irchat", icon: <MessageSquare size={20} /> },
+            { label: "ファイル管理", link: "/corporate/files", icon: <FileText size={20} /> },
             { label: "設定", link: "/corporate/settings", icon: <Settings size={20} /> },
           ]}
           isCollapsible

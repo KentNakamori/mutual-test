@@ -6,6 +6,7 @@ import { NextResponse } from 'next/server';
  * すべての GET リクエストを FastAPI へそのままプロキシする
  *  - 取得した Access-Token を Authorization ヘッダーに付与
  *  - クエリストリングは透過
+ *  - Server-Sent Events (SSE) のストリーミングに対応
  */
 
 async function handler(
@@ -46,6 +47,10 @@ async function handler(
     // クライアントからのContent-Typeを尊重する (FormDataなどのため)
     if (req.headers.has('Content-Type')) {
         headers['Content-Type'] = req.headers.get('Content-Type')!;
+    }
+    // SSEのためのAcceptヘッダーを転送
+    if (req.headers.has('Accept')) {
+        headers['Accept'] = req.headers.get('Accept')!;
     }
 
 
@@ -91,21 +96,64 @@ async function handler(
         // セキュリティ上の理由や不要なヘッダーを削除または上書きすることも可能
         // responseHeaders.delete('x-powered-by');
 
-        let responseData: any;
         const responseContentType = res.headers.get('Content-Type');
+        console.log(`[PROXY ${req.method}] Response Content-Type:`, responseContentType);
 
+        // Server-Sent Events (text/event-stream) の場合は特別な処理
+        if (responseContentType && responseContentType.includes('text/event-stream')) {
+            console.log(`[PROXY ${req.method}] Handling SSE stream...`);
+            
+            // ストリーミングレスポンスを作成
+            const stream = new ReadableStream({
+                async start(controller) {
+                    const reader = res.body?.getReader();
+                    if (!reader) {
+                        controller.close();
+                        return;
+                    }
+
+                    try {
+                        while (true) {
+                            const { done, value } = await reader.read();
+                            if (done) break;
+                            
+                            // チャンクをそのまま転送
+                            controller.enqueue(value);
+                        }
+                    } catch (error) {
+                        console.error('[PROXY SSE] Streaming error:', error);
+                        controller.error(error);
+                    } finally {
+                        controller.close();
+                    }
+                }
+            });
+
+            // 重要: text/event-stream のレスポンスヘッダーを設定
+            responseHeaders.set('Content-Type', 'text/event-stream');
+            responseHeaders.set('Cache-Control', 'no-cache');
+            responseHeaders.set('Connection', 'keep-alive');
+            responseHeaders.set('X-Accel-Buffering', 'no'); // Nginxなどでバッファリングを無効化
+
+            return new Response(stream, {
+                status: res.status,
+                headers: responseHeaders,
+            });
+        }
+
+        // 通常のレスポンス処理（既存のコード）
         if (res.status === 204) { // No Content の場合
             console.log(`[PROXY ${req.method}] Response Status: 204 No Content`);
             return new NextResponse(null, { status: res.status, headers: responseHeaders });
         }
 
         if (responseContentType && responseContentType.includes('application/json')) {
-            responseData = await res.json();
+            const responseData = await res.json();
             console.log(`[PROXY ${req.method}] Response Status:`, res.status);
             console.log(`[PROXY ${req.method}] Response Body (JSON):`, JSON.stringify(responseData).substring(0, 200) + '...');
             return new NextResponse(JSON.stringify(responseData), { status: res.status, headers: responseHeaders });
         } else if (responseContentType && responseContentType.startsWith('text/')) {
-            responseData = await res.text();
+            const responseData = await res.text();
             console.log(`[PROXY ${req.method}] Response Status:`, res.status);
             console.log(`[PROXY ${req.method}] Response Body (Text):`, responseData.substring(0, 200) + '...');
             return new NextResponse(responseData, { status: res.status, headers: responseHeaders });

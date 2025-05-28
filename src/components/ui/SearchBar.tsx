@@ -207,19 +207,49 @@ const SearchBar: React.FC<EnhancedSearchBarProps> = ({
                                       );
                                     })}
                                   </div>
-                                ) : isSingleSelect ? (
-                                  <select
-                                    value={selectedFilters[option.id] || ''}
-                                    onChange={(e) => updateFilter(option.id, e.target.value)}
-                                    className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                                  >
-                                    <option value="">すべて</option>
-                                    {option.options?.map(opt => (
-                                      <option key={opt.value} value={opt.value}>
-                                        {opt.label}
-                                      </option>
-                                    ))}
-                                  </select>
+                                ) : option.id === 'fiscalPeriod' ? (
+                                  <div className="flex items-center gap-2">
+                                    <div className="flex items-center gap-1">
+                                      <input
+                                        type="number"
+                                        value={selectedFilters[option.id]?.split('-Q')[0] || ''}
+                                        onChange={(e) => {
+                                          const year = e.target.value;
+                                          const quarter = selectedFilters[option.id]?.split('-Q')[1] || '';
+                                          if (!year) {
+                                            updateFilter(option.id, '');
+                                          } else {
+                                            updateFilter(option.id, quarter ? `${year}-Q${quarter}` : year);
+                                          }
+                                        }}
+                                        placeholder="年度"
+                                        className="w-20 px-2 py-1 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                        min="1900"
+                                        max="2100"
+                                      />
+                                      <span className="text-gray-600">年度</span>
+                                    </div>
+                                    <div className="flex items-center gap-1">
+                                      <span className="text-gray-600">Q</span>
+                                      <input
+                                        type="number"
+                                        value={selectedFilters[option.id]?.split('-Q')[1] || ''}
+                                        onChange={(e) => {
+                                          const year = selectedFilters[option.id]?.split('-Q')[0] || '';
+                                          const quarter = e.target.value;
+                                          if (!year) {
+                                            updateFilter(option.id, '');
+                                          } else {
+                                            updateFilter(option.id, quarter ? `${year}-Q${quarter}` : year);
+                                          }
+                                        }}
+                                        placeholder="Q"
+                                        className="w-16 px-2 py-1 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                        min="1"
+                                        max="99"
+                                      />
+                                    </div>
+                                  </div>
                                 ) : (
                                   <select
                                     value={selectedFilters[option.id] || ''}
