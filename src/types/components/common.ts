@@ -275,7 +275,7 @@ export interface PaginationProps {
 export interface FilterOption {
   id: string;
   label: string;
-  type: 'select' | 'text' | 'date' | 'checkbox';
+  type: 'select' | 'text' | 'date' | 'checkbox' | 'fiscalPeriod';
   options?: { value: string; label: string }[];
 }
 
@@ -295,6 +295,8 @@ export interface SortOption {
 export interface ChatInputBoxProps {
   onSendMessage: (message: string) => void;
   loading?: boolean;
+  inputValue?: string;
+  onInputChange?: (value: string) => void;
 }
 
 /**

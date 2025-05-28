@@ -10,22 +10,7 @@ const QASearchBar: React.FC<QASearchBarProps> = ({
   initialKeyword = '', 
   initialFilters = {} 
 }) => {
-  // 直近3年分の決算期を生成
-  const generateFiscalPeriods = () => {
-    const currentYear = new Date().getFullYear();
-    const periods = [];
-    for (let year = currentYear; year >= currentYear - 2; year--) {
-      for (let quarter = 1; quarter <= 4; quarter++) {
-        periods.push({
-          value: `${year}-Q${quarter}`,
-          label: `${year}-Q${quarter}`
-        });
-      }
-    }
-    return periods;
-  };
-
-  // QA検索用フィルターオプション（決算期、ジャンル、質問ルート）
+  // QA検索用フィルターオプション（ジャンル、質問ルート、対象決算期）
   const qaFilterOptions: FilterOption[] = [
     {
       id: 'question_route',
@@ -45,11 +30,10 @@ const QASearchBar: React.FC<QASearchBarProps> = ({
         label: option.label
       }))
     },
-    { 
-      id: 'fiscalPeriod', 
-      label: '対象決算期', 
-      type: 'select',
-      options: generateFiscalPeriods()
+    {
+      id: 'fiscalPeriod',
+      label: '対象決算期',
+      type: 'fiscalPeriod'
     }
   ];
 
@@ -81,15 +65,8 @@ const QASearchBar: React.FC<QASearchBarProps> = ({
     
     // 決算期の処理
     let fiscalPeriodArray: string[] | undefined = undefined;
-    if (filters.fiscalPeriod) {
-      if (Array.isArray(filters.fiscalPeriod)) {
-        const validPeriods = filters.fiscalPeriod.filter((p: string) => p && p.trim() !== '');
-        if (validPeriods.length > 0) {
-          fiscalPeriodArray = validPeriods;
-        }
-      } else if (typeof filters.fiscalPeriod === 'string' && filters.fiscalPeriod.trim() !== '') {
-        fiscalPeriodArray = [filters.fiscalPeriod];
-      }
+    if (filters.fiscalPeriod && filters.fiscalPeriod.trim() !== '') {
+      fiscalPeriodArray = [filters.fiscalPeriod];
     }
     
     // question_routeの処理（単一の文字列として処理）
@@ -150,16 +127,18 @@ const QASearchBar: React.FC<QASearchBarProps> = ({
   };
 
   return (
-    <SearchBar
-      placeholder="キーワードや企業名で検索"
-      initialKeyword={initialKeyword}
-      initialFilters={initialFilters}
-      filterOptions={qaFilterOptions}
-      sortOptions={qaSortOptions}
-      filterButtonLabel="詳細検索"
-      onSearch={handleSearch}
-      onSort={onSortChange}
-    />
+    <div className="mb-4">
+      <SearchBar
+        placeholder="キーワードや企業名で検索"
+        initialKeyword={initialKeyword}
+        initialFilters={initialFilters}
+        filterOptions={qaFilterOptions}
+        sortOptions={qaSortOptions}
+        filterButtonLabel="詳細検索"
+        onSearch={handleSearch}
+        onSort={onSortChange}
+      />
+    </div>
   );
 };
 

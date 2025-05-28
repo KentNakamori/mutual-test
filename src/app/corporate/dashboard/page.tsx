@@ -9,6 +9,7 @@ import {
   HelpCircle,
   MessageSquare,
   Settings,
+  FileText,
 } from 'lucide-react';
 
 import {
@@ -92,6 +93,7 @@ const DashboardPage: React.FC = () => {
             { label: 'ダッシュボード', link: '/corporate/dashboard', icon: <LayoutDashboard size={20} /> },
             { label: 'Q&A管理',       link: '/corporate/qa',        icon: <HelpCircle size={20} /> },
             { label: 'IRチャット',    link: '/corporate/irchat',    icon: <MessageSquare size={20} /> },
+            { label: 'ファイル管理',  link: '/corporate/files',     icon: <FileText size={20} /> },
             { label: '設定',          link: '/corporate/settings',  icon: <Settings size={20} /> },
           ]}
           isCollapsible

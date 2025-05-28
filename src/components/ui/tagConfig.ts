@@ -14,9 +14,10 @@ export const QUESTION_ROUTE_OPTIONS: TagOption[] = [
   
 // 情報ソース
 export const INFO_SOURCE_OPTIONS: TagOption[] = [
-  { label: '決算説明会', color: 'bg-purple-100 text-purple-800' },
+  { label: '決算説明会資料', color: 'bg-purple-100 text-purple-800' },
   { label: '有価証券報告書', color: 'bg-purple-100 text-purple-800' },
-  { label: '決算説明動画', color: 'bg-purple-100 text-purple-800' },
+  { label: '決算短信', color: 'bg-purple-100 text-purple-800' },
+  { label: '決算説明会の書き起こし', color: 'bg-purple-100 text-purple-800' },
   { label: 'その他', color: 'bg-purple-100 text-purple-800' },
 ];
   

@@ -1,7 +1,7 @@
 // src/components/features/investor/company/InvestorChatTabview.tsx 
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useUser } from "@auth0/nextjs-auth0";
 import { useSearchParams } from 'next/navigation';
 import InvestorChatSidebar from './InvestorChatSidebar';
@@ -12,7 +12,7 @@ import { useGuest } from '@/contexts/GuestContext';
 import GuestRestrictedContent from '@/components/features/investor/common/GuestRestrictedContent';
 import { 
   getInvestorChatLogs, 
-  createInvestorChat, 
+  startNewInvestorChat,
   getInvestorChatDetail, 
   sendInvestorChatMessage 
 } from '@/lib/api';
@@ -20,12 +20,11 @@ import {
 const ChatTabView: React.FC<ChatTabViewProps> = ({ companyId }) => {
   const { isGuest } = useGuest();
   const searchParams = useSearchParams();
-  const targetChatId = searchParams.get('chatId'); // URLからchatIdを取得
+  const targetChatId = searchParams.get('chatId');
   
-  // Auth0 SDK v4 の認証状態
   const { user, error: userError, isLoading: userLoading } = useUser();
 
-  // ✅ ゲストまたは認証エラーの場合は制限表示
+  // ゲストまたは認証エラーの場合は制限表示
   if (isGuest || (userError && !userLoading)) {
     return (
       <div className="flex flex-col items-center justify-center h-full">
@@ -34,7 +33,7 @@ const ChatTabView: React.FC<ChatTabViewProps> = ({ companyId }) => {
     );
   }
 
-  // ✅ 認証情報のロード中
+  // 認証情報のロード中
   if (userLoading) {
     return (
       <div className="flex flex-col items-center justify-center h-full">
@@ -44,7 +43,7 @@ const ChatTabView: React.FC<ChatTabViewProps> = ({ companyId }) => {
     );
   }
 
-  // ✅ 未ログイン時
+  // 未ログイン時
   if (!user && !isGuest) {
     return (
       <div className="flex flex-col items-center justify-center h-full">
@@ -64,6 +63,10 @@ const ChatTabView: React.FC<ChatTabViewProps> = ({ companyId }) => {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [isInitialized, setIsInitialized] = useState<boolean>(false);
+  const [inputValue, setInputValue] = useState<string>('');
+  
+  // メッセージIDの重複を防ぐためのカウンター
+  const messageCounterRef = useRef<number>(0);
 
   // チャットセッション一覧の取得
   useEffect(() => {
@@ -74,20 +77,20 @@ const ChatTabView: React.FC<ChatTabViewProps> = ({ companyId }) => {
         setLoading(true);
         console.log('投資家チャットログ取得開始:', { companyId });
         
-        // 特定企業のチャットログを取得
         const response = await getInvestorChatLogs(
           { companyId, page: 1, limit: 50 },
-          '' // プロキシ経由でJWTを送信するため空文字列
+          ''
         );
         
         console.log('投資家チャットログAPIレスポンス:', response);
         
-        // APIレスポンスをChatSession型に変換
-        const convertedSessions: ChatSession[] = response.chatLogs.map((log: any) => ({
-          sessionId: log.chatId,
-          lastMessageSnippet: log.lastMessageSnippet || log.title || '新規チャット',
-          lastMessageTimestamp: log.updatedAt
-        }));
+        const convertedSessions: ChatSession[] = response.chatLogs
+          .filter((log: any) => log.chatId) // chatIdが存在するもののみ
+          .map((log: any) => ({
+            sessionId: log.chatId,
+            lastMessageSnippet: log.lastMessageSnippet || log.title || '新規チャット',
+            lastMessageTimestamp: log.updatedAt
+          }));
         
         setChatSessions(convertedSessions);
         
@@ -96,13 +99,11 @@ const ChatTabView: React.FC<ChatTabViewProps> = ({ companyId }) => {
           console.log('URLで指定されたチャットを選択:', targetChatId);
           setSelectedSessionId(targetChatId);
         } else if (convertedSessions.length > 0 && !selectedSessionId) {
-          // 最初のセッションを選択（targetChatIdが指定されていない、または見つからない場合）
           setSelectedSessionId(convertedSessions[0].sessionId);
         }
         setIsInitialized(true);
       } catch (error) {
         console.error('投資家チャットログの取得中にエラーが発生しました:', error);
-        // エラーが発生してもUIは表示する
         setIsInitialized(true);
       } finally {
         setLoading(false);
@@ -117,21 +118,11 @@ const ChatTabView: React.FC<ChatTabViewProps> = ({ companyId }) => {
     async function fetchChatMessages() {
       if (!user || !selectedSessionId || userLoading) return;
       
-      // 一時的なセッションの場合はメッセージ取得をスキップ
-      if (selectedSessionId.startsWith('temp-')) {
-        console.log('一時的なセッションのため、メッセージ取得をスキップ:', selectedSessionId);
-        setMessages([]);
-        return;
-      }
-      
       try {
         setLoading(true);
         console.log('投資家チャット詳細取得開始:', { selectedSessionId });
         
-        const response = await getInvestorChatDetail(
-          selectedSessionId,
-          '' // プロキシ経由でJWTを送信するため空文字列
-        );
+        const response = await getInvestorChatDetail(selectedSessionId, '');
         
         console.log('投資家チャット詳細APIレスポンス:', response);
         setMessages(response.messages);
@@ -159,29 +150,27 @@ const ChatTabView: React.FC<ChatTabViewProps> = ({ companyId }) => {
     }
     
     try {
-      console.log('投資家新規チャット作成開始:', { companyId });
-      
-      // ローカルで一時的な新規セッションを作成（APIは呼び出さない）
-      const tempSessionId = `temp-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+      console.log('新規チャット作成を開始します');
+      const response = await startNewInvestorChat(companyId);
+      console.log('新規チャット作成レスポンス:', response);
       
       const newSession: ChatSession = {
-        sessionId: tempSessionId,
+        sessionId: response.chatId,
         lastMessageSnippet: '新規チャット',
         lastMessageTimestamp: new Date().toISOString()
-    };
+      };
       
-    setChatSessions(prev => [newSession, ...prev]);
-      setSelectedSessionId(tempSessionId);
+      setChatSessions(prev => [newSession, ...prev]);
+      setSelectedSessionId(response.chatId);
       setMessages([]);
-      
-      console.log('投資家新規チャット作成完了（ローカル）:', { tempSessionId });
     } catch (error) {
-      console.error('投資家新規チャットの作成中にエラーが発生しました:', error);
+      console.error('新規チャットの作成中にエラーが発生しました:', error);
     }
   };
 
   const generateUniqueId = (prefix: string) => {
-    return `${prefix}-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
+    messageCounterRef.current += 1;
+    return `${prefix}-${Date.now()}-${messageCounterRef.current}-${Math.random().toString(36).substring(2, 9)}`;
   };
 
   const handleSendMessage = async (message: string) => {
@@ -196,8 +185,14 @@ const ChatTabView: React.FC<ChatTabViewProps> = ({ companyId }) => {
     
     console.log('投資家メッセージ送信開始:', { message, selectedSessionId, companyId });
     
+    // ユニークなIDを生成（重複チェック付き）
+    let userMessageId = generateUniqueId('user');
+    while (messages.some(msg => msg.messageId === userMessageId)) {
+      userMessageId = generateUniqueId('user');
+    }
+    
     const newUserMessage: ChatMessage = {
-      messageId: generateUniqueId('user'),
+      messageId: userMessageId,
       role: 'user',
       text: message,
       timestamp: new Date().toISOString(),
@@ -206,148 +201,203 @@ const ChatTabView: React.FC<ChatTabViewProps> = ({ companyId }) => {
     setMessages(prev => [...prev, newUserMessage]);
     setLoading(true);
 
+    // AIメッセージのプレースホルダーを作成（重複チェック付き）
+    let aiMessageId = generateUniqueId('ai');
+    while (messages.some(msg => msg.messageId === aiMessageId) || aiMessageId === userMessageId) {
+      aiMessageId = generateUniqueId('ai');
+    }
+    
+    const aiMessage: ChatMessage = {
+      messageId: aiMessageId,
+      role: 'ai',
+      text: '',
+      timestamp: new Date().toISOString(),
+    };
+    setMessages(prev => [...prev, aiMessage]);
+
     try {
-      let currentChatId = selectedSessionId;
+      let currentSessionId = selectedSessionId;
       
-      // セッションが選択されていない、または一時的なセッションの場合は新規作成
-      if (!currentChatId || currentChatId.startsWith('temp-')) {
-        console.log('投資家新規チャットセッション作成:', { companyId, message });
-        console.log('createInvestorChat呼び出しパラメータ:', {
-          companyId: companyId,
-          companyIdType: typeof companyId,
-          message: message,
-          messageType: typeof message,
-          messageLength: message.length
+      // セッションが選択されていない場合はエラー
+      if (!currentSessionId) {
+        console.error('チャットセッションが選択されていません。新規チャットを作成してください。');
+        setMessages(prev => {
+          const newMessages = [...prev];
+          const targetIndex = newMessages.findIndex(msg => msg.messageId === aiMessageId);
+          
+          if (targetIndex !== -1) {
+            newMessages[targetIndex] = {
+              ...newMessages[targetIndex],
+              text: 'チャットセッションが選択されていません。新規チャットを作成してください。',
+              timestamp: new Date().toISOString(),
+            };
+          }
+          
+          return newMessages;
         });
-        
-        const newChatResponse = await createInvestorChat(
-          companyId,
-          message, // 実際のメッセージで新規チャットを作成
-          '' // プロキシ経由でJWTを送信するため空文字列
-        );
-        
-        console.log('投資家新規チャットセッション作成完了:', newChatResponse);
-        currentChatId = newChatResponse.chatId;
-        
-        const newSession: ChatSession = {
-          sessionId: currentChatId,
-          lastMessageSnippet: message.length > 30 ? message.substring(0, 30) + '...' : message,
-          lastMessageTimestamp: new Date().toISOString(),
-        };
-        
-        // 一時的なセッションを削除して新しいセッションに置き換え
-        setChatSessions(prev => {
-          const filteredSessions = prev.filter(session => !session.sessionId.startsWith('temp-'));
-          return [newSession, ...filteredSessions];
-        });
-        setSelectedSessionId(currentChatId);
-        
-        // 初期レスポンスがある場合は表示
-        if (newChatResponse.reply) {
-          const aiMessage: ChatMessage = {
-          messageId: generateUniqueId('ai'),
-            role: 'ai',
-            text: newChatResponse.reply,
-            timestamp: new Date().toISOString(),
-          };
-          setMessages(prev => [...prev, aiMessage]);
-        }
-      } else {
-        // 既存セッションにメッセージ送信
-        console.log('投資家既存セッションへのメッセージ送信:', { currentChatId, message });
-        
-        const aiMessageId = generateUniqueId('ai');
-        const aiMessage: ChatMessage = {
-          messageId: aiMessageId,
-          role: 'ai',
-          text: '',
-          timestamp: new Date().toISOString(),
-        };
-        
-        setMessages(prev => [...prev, aiMessage]);
-        
-        // ストリーミングでメッセージ送信
-        await sendInvestorChatMessage(
-          currentChatId,
-          message,
-          (chunk: string) => {
-            console.log('投資家AIレスポンスチャンク受信:', chunk);
-            setMessages(prev => prev.map(msg => {
-              if (msg.messageId === aiMessageId) {
-                return {
-                  ...msg,
-                  text: msg.text + chunk,
-                };
-              }
-              return msg;
-            }));
-          },
-          '' // プロキシ経由でJWTを送信するため空文字列
-        );
+        setLoading(false);
+        return;
       }
       
-      // チャット履歴を更新
-      console.log('投資家チャット履歴更新開始');
-      const sessionsResponse = await getInvestorChatLogs(
-        { companyId, page: 1, limit: 50 },
-        '' // プロキシ経由でJWTを送信するため空文字列
+      console.log('メッセージ送信開始:', currentSessionId);
+      // ストリーミング処理（新規・既存両方で実行）
+      await sendInvestorChatMessage(
+        currentSessionId,
+        message,
+        // onChunk: 文字単位でメッセージを更新
+        (chunk: string) => {
+          console.log('📨 チャンク受信:', chunk);
+          setMessages(prev => {
+            // 新しい配列を作成して確実に再レンダリングをトリガー
+            const newMessages = [...prev];
+            const targetIndex = newMessages.findIndex(msg => msg.messageId === aiMessageId);
+            
+            if (targetIndex !== -1) {
+              // 既存のメッセージオブジェクトを新しいオブジェクトで置き換え
+              newMessages[targetIndex] = {
+                ...newMessages[targetIndex],
+                text: newMessages[targetIndex].text + chunk,
+                timestamp: new Date().toISOString(), // タイムスタンプも更新
+              };
+            }
+            
+            return newMessages;
+          });
+        },
+        '', // プロキシ経由でJWTを送信するため空文字列
+        // onStart: ストリーミング開始時の処理
+        () => {
+          console.log('🚀 投資家ストリーミング開始');
+          // ストリーミング開始時に空のメッセージを確認
+          setMessages(prev => {
+            const newMessages = [...prev];
+            const targetIndex = newMessages.findIndex(msg => msg.messageId === aiMessageId);
+            
+            if (targetIndex !== -1 && newMessages[targetIndex].text === '') {
+              console.log('✅ AIメッセージの準備完了');
+            }
+            
+            return newMessages;
+          });
+        },
+        // onEnd: ストリーミング完了時の処理
+        (fullResponse: string) => {
+          console.log('🏁 投資家ストリーミング完了:', fullResponse.length, '文字');
+          // 最終的なメッセージを確定（念のため）
+          setMessages(prev => {
+            const newMessages = [...prev];
+            const targetIndex = newMessages.findIndex(msg => msg.messageId === aiMessageId);
+            
+            if (targetIndex !== -1) {
+              newMessages[targetIndex] = {
+                ...newMessages[targetIndex],
+                text: fullResponse,
+                timestamp: new Date().toISOString(),
+              };
+            }
+            
+            return newMessages;
+          });
+        },
+        // onError: エラー時の処理
+        (error: string) => {
+          console.error('❌ 投資家ストリーミングエラー:', error);
+          setMessages(prev => {
+            const newMessages = [...prev];
+            const targetIndex = newMessages.findIndex(msg => msg.messageId === aiMessageId);
+            
+            if (targetIndex !== -1) {
+              newMessages[targetIndex] = {
+                ...newMessages[targetIndex],
+                text: `エラーが発生しました: ${error}`,
+                timestamp: new Date().toISOString(),
+              };
+            }
+            
+            return newMessages;
+          });
+        }
       );
       
-      const convertedSessions: ChatSession[] = sessionsResponse.chatLogs.map((log: any) => ({
-        sessionId: log.chatId,
-        lastMessageSnippet: log.lastMessageSnippet || log.title || '新規チャット',
-        lastMessageTimestamp: log.updatedAt
-      }));
+      // チャット履歴を更新
+      console.log('投資家チャット履歴を更新します');
+      const sessionsResponse = await getInvestorChatLogs(
+        { companyId, page: 1, limit: 50 },
+        ''
+      );
+      console.log('投資家チャット履歴更新完了:', sessionsResponse);
+      
+      const convertedSessions: ChatSession[] = sessionsResponse.chatLogs
+        .filter((log: any) => log.chatId) // chatIdが存在するもののみ
+        .map((log: any) => ({
+          sessionId: log.chatId,
+          lastMessageSnippet: log.lastMessageSnippet || log.title || '新規チャット',
+          lastMessageTimestamp: log.updatedAt
+        }));
       setChatSessions(convertedSessions);
       
     } catch (error) {
       console.error('投資家メッセージ送信中にエラーが発生しました:', error);
-      const errorMessage: ChatMessage = {
-        messageId: generateUniqueId('error'),
-        role: 'ai',
-        text: 'メッセージの送信中にエラーが発生しました。もう一度お試しください。',
-        timestamp: new Date().toISOString(),
-      };
-      setMessages(prev => [...prev, errorMessage]);
+      // エラーメッセージがすでに表示されていない場合のみ追加
+      setMessages(prev => {
+        const lastMessage = prev[prev.length - 1];
+        if (lastMessage && lastMessage.messageId === aiMessageId && !lastMessage.text.startsWith('エラーが発生しました')) {
+          return prev.map(msg => {
+            if (msg.messageId === aiMessageId) {
+              return {
+                ...msg,
+                text: 'メッセージの送信中にエラーが発生しました。もう一度お試しください。',
+              };
+            }
+            return msg;
+          });
+        }
+        return prev;
+      });
     } finally {
       setLoading(false);
     }
   };
 
-  // FAQからの質問送信用ハンドラー
-  const handleSendQuestion = (question: string) => {
-    handleSendMessage(question);
+  // FAQ質問選択ハンドラー
+  const handleQuestionSelect = (question: string) => {
+    setInputValue(question);
   };
 
+  if (userLoading) {
+    return <div className="flex justify-center items-center h-full">認証情報の読み込み中...</div>;
+  }
+
+  if (userError || !user) {
+    return <div className="flex justify-center items-center h-full">ログインしてください</div>;
+  }
+
   if (!isInitialized) {
-    return (
-      <div className="flex flex-col items-center justify-center h-full">
-        <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500 mb-4"></div>
-        <p className="text-gray-600">チャット情報を読み込み中...</p>
-      </div>
-    );
+    return <div className="flex justify-center items-center h-full">チャット情報を読み込み中...</div>;
   }
 
   return (
-    <div className="flex flex-col md:flex-row h-full">
-      {/* 左側サイドバー：固定幅 */}
-      <div className="w-full md:w-64 border-r h-full bg-gray-50">
+    <div className="flex h-full min-h-0">
+      <div className="w-full md:w-64 border-r h-full bg-gray-50 overflow-hidden min-h-0">
         <InvestorChatSidebar
           sessions={chatSessions}
           selectedSessionId={selectedSessionId}
           onSelectSession={handleSelectSession}
           onNewChat={handleNewChat}
-          onSendQuestion={handleSendQuestion}
+          onQuestionSelect={handleQuestionSelect}
         />
       </div>
-
-      {/* 右側チャットエリア */}
-      <div className="flex-1 h-full flex flex-col bg-white">
-        <div className="flex-1 overflow-y-auto">
+      <div className="flex-1 h-full flex flex-col bg-white min-h-0">
+        <div className="flex-1 overflow-y-auto p-4 min-h-0">
           <ChatMessages messages={messages} />
         </div>
-        <div className="bg-white">
-          <ChatInputBox onSendMessage={handleSendMessage} loading={loading} />
+        <div className="p-4 bg-white">
+          <ChatInputBox 
+            onSendMessage={handleSendMessage} 
+            loading={loading}
+            inputValue={inputValue}
+            onInputChange={setInputValue}
+          />
         </div>
       </div>
     </div>

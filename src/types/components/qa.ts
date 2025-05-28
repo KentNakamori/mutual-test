@@ -162,4 +162,19 @@ export interface GeneratedQaListProps {
   qaDrafts: QA[];
   onUpdateDraft: (index: number, updatedQa: QA) => void;
   onDeleteDraft: (index: number) => void;
+}
+
+/**
+ * トップアクションバーのプロパティ
+ */
+export interface TopActionBarProps {
+  onSearch: (params: {
+    query: string;
+    genre?: string[];
+    question_route?: string;
+    fiscalPeriod?: string[];
+    sort?: 'createdAt' | 'likeCount';
+    order?: 'asc' | 'desc';
+    reviewStatus?: 'DRAFT' | 'PENDING' | 'PUBLISHED';
+  }) => void;
 } 

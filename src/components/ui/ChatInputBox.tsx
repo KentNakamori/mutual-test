@@ -5,14 +5,30 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Send } from 'lucide-react';
 import { ChatInputBoxProps } from '@/types';
 
-const ChatInputBox: React.FC<ChatInputBoxProps> = ({ onSendMessage, loading = false }) => {
-  const [inputValue, setInputValue] = useState<string>("");
+const ChatInputBox: React.FC<ChatInputBoxProps> = ({ 
+  onSendMessage, 
+  loading = false, 
+  inputValue = "",
+  onInputChange 
+}) => {
+  const [internalInputValue, setInternalInputValue] = useState<string>("");
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
+  // 外部から制御される場合は外部の値を使用、そうでなければ内部の値を使用
+  const currentInputValue = onInputChange ? inputValue : internalInputValue;
+  
+  const handleInputChange = (value: string) => {
+    if (onInputChange) {
+      onInputChange(value);
+    } else {
+      setInternalInputValue(value);
+    }
+  };
+
   const handleSend = () => {
-    if (inputValue.trim() === "") return;
-    onSendMessage(inputValue);
-    setInputValue("");
+    if (currentInputValue.trim() === "") return;
+    onSendMessage(currentInputValue);
+    handleInputChange("");
   };
 
   // テキストエリアの高さを自動調整する
@@ -23,15 +39,15 @@ const ChatInputBox: React.FC<ChatInputBoxProps> = ({ onSendMessage, loading = fa
     // 高さをリセットしてから実際のコンテンツの高さに合わせる
     textarea.style.height = 'auto';
     textarea.style.height = `${textarea.scrollHeight}px`;
-  }, [inputValue]);
+  }, [currentInputValue]);
 
   return (
     <div className="px-6 py-4">
       <div className="flex items-center p-2 bg-gray-50 rounded-lg max-w-5xl mx-auto">
         <textarea
           ref={textareaRef}
-          value={inputValue}
-          onChange={(e) => setInputValue(e.target.value)}
+          value={currentInputValue}
+          onChange={(e) => handleInputChange(e.target.value)}
           placeholder="メッセージを入力..."
           className="flex-1 py-2 px-4 resize-none outline-none focus:outline-none text-sm max-h-32 bg-transparent rounded-l-lg overflow-y-auto"
           rows={1}
@@ -46,9 +62,9 @@ const ChatInputBox: React.FC<ChatInputBoxProps> = ({ onSendMessage, loading = fa
         <div className="flex items-center px-2">
           <button
             onClick={handleSend}
-            disabled={!inputValue.trim() || loading}
+            disabled={!currentInputValue.trim() || loading}
             className={`p-2 rounded-lg ${
-              !inputValue.trim() || loading
+              !currentInputValue.trim() || loading
                 ? 'bg-gray-300 text-gray-400'
                 : 'bg-blue-600 text-white hover:bg-blue-700'
             } transition-colors duration-200 focus:outline-none`}

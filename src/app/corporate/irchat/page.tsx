@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation';
 import { useUser } from '@auth0/nextjs-auth0';
 import Sidebar from '@/components/common/sidebar';
 import IrChatPage from '@/components/features/corporate/irchat/IrChatPage';
-import { LayoutDashboard, HelpCircle, MessageSquare, Settings } from 'lucide-react';
+import { LayoutDashboard, HelpCircle, MessageSquare, Settings, FileText } from 'lucide-react';
 
 // このページはクライアントコンポーネントとしてCSRで動作する
 export default function IrChatPageRoute() {
@@ -30,6 +30,7 @@ export default function IrChatPageRoute() {
             { label: "ダッシュボード", link: "/corporate/dashboard", icon: <LayoutDashboard size={20} /> },
             { label: "Q&A管理", link: "/corporate/qa", icon: <HelpCircle size={20} /> },
             { label: "IRチャット", link: "/corporate/irchat", icon: <MessageSquare size={20} /> },
+            { label: "ファイル管理", link: "/corporate/files", icon: <FileText size={20} /> },
             { label: "設定", link: "/corporate/settings", icon: <Settings size={20} /> },
           ]}
           isCollapsible

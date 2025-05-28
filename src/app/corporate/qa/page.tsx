@@ -7,10 +7,9 @@ import Sidebar from "@/components/common/sidebar";
 import Footer from "@/components/common/footer";
 import TopActionBar from "@/components/features/corporate/qa/TopActionBar";
 import QaListCards from "@/components/features/corporate/qa/QaListCards";
-import UploadModal from "@/components/features/corporate/qa/UploadModal";
 import QaDetailModal from "@/components/ui/QaDetailModal";
 import { QA } from "@/types";
-import { LayoutDashboard, HelpCircle, MessageSquare, Settings } from 'lucide-react';
+import { LayoutDashboard, HelpCircle, MessageSquare, Settings, FileText } from 'lucide-react';
 import { searchCorporateQa, createCorporateQa, updateCorporateQa, deleteCorporateQa } from "@/lib/api";
 import { useUser } from "@auth0/nextjs-auth0";
 
@@ -19,6 +18,7 @@ const sidebarMenuItems = [
   { label: "ダッシュボード", link: "/corporate/dashboard", icon: <LayoutDashboard size={20} />},
   { label: "Q&A管理", link: "/corporate/qa", icon: <HelpCircle size={20} /> },
   { label: "IRチャット", link: "/corporate/irchat" , icon: <MessageSquare size={20} />},
+  { label: "ファイル管理", link: "/corporate/files", icon: <FileText size={20} /> },
   { label: "設定", link: "/corporate/settings", icon: <Settings size={20} />  },
 ];
 
@@ -32,7 +32,6 @@ const QaPage: React.FC = () => {
   
   const [qas, setQas] = useState<QA[]>([]);
   const [selectedQa, setSelectedQa] = useState<QA | null>(null);
-  const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [totalCount, setTotalCount] = useState(0);
@@ -212,21 +211,13 @@ const QaPage: React.FC = () => {
 
     try {
       await deleteCorporateQa(qaId);
-      // 削除後に検索を再実行
       const response = await searchCorporateQa(searchParams);
       setQas(response.results);
-      setSelectedQa(null); // 選択中のQAをクリア
+      setSelectedQa(null);
     } catch (err) {
       console.error("QAの削除に失敗しました:", err);
       setError("QAの削除に失敗しました");
     }
-  };
-
-  const handleOpenUploadModal = () => setIsUploadModalOpen(true);
-  const handleCloseUploadModal = () => setIsUploadModalOpen(false);
-  const handleConfirmUpload = (newQas: QA[]) => {
-    setQas((prev) => [...newQas, ...prev]);
-    handleCloseUploadModal();
   };
 
   return (
@@ -240,14 +231,14 @@ const QaPage: React.FC = () => {
         />
         <main className="flex-1 p-6 bg-gray-50">
           <div className="mb-6">
-            <h1 className="text-2xl font-bold">QA データベース・資料登録</h1>
+            <h1 className="text-2xl font-bold">QA データベース</h1>
           </div>
           {error && (
             <div className="mb-4 p-4 bg-red-100 text-red-700 rounded">
               {error}
             </div>
           )}
-          <TopActionBar onSearch={handleSearch} onUploadClick={handleOpenUploadModal} />
+          <TopActionBar onSearch={handleSearch} />
           {isLoading ? (
             <div className="flex justify-center items-center h-64">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
@@ -283,7 +274,6 @@ const QaPage: React.FC = () => {
         copyrightText="MyApp Inc."
         onSelectLink={(href) => router.push(href)}
       />
-      {/* QA詳細モーダル（role="corporate"で編集ボタン付き） */}
       {selectedQa && (
         <QaDetailModal
           qa={selectedQa}
@@ -302,9 +292,6 @@ const QaPage: React.FC = () => {
             setSelectedQa(null);
           }}
         />
-      )}
-      {isUploadModalOpen && (
-        <UploadModal onClose={handleCloseUploadModal} onConfirm={handleConfirmUpload} />
       )}
     </div>
   );
