@@ -5,9 +5,17 @@ import { NextResponse } from 'next/server';
 /**
  * すべての GET リクエストを FastAPI へそのままプロキシする
  *  - 取得した Access-Token を Authorization ヘッダーに付与
+ *  - ゲストユーザーの場合は特別なヘッダーを追加
  *  - クエリストリングは透過
  *  - Server-Sent Events (SSE) のストリーミングに対応
  */
+
+// ゲストアクセス可能なエンドポイント
+const GUEST_ACCESSIBLE_ENDPOINTS = [
+    'investor/companies',      // 企業一覧
+    'investor/company',        // 企業詳細
+    'investor/qa/search',      // Q&A検索
+];
 
 async function handler(
     req: Request,
@@ -20,7 +28,14 @@ async function handler(
     const targetBaseUrl = process.env.API_BASE_URL || 'http://localhost:8000';
     const targetUrl = `${targetBaseUrl}/${targetPath}${search ? `?${search}` : ''}`;
 
+    // ゲストアクセス可能かチェック
+    const isGuestAccessible = GUEST_ACCESSIBLE_ENDPOINTS.some(endpoint => 
+        targetPath.startsWith(endpoint)
+    );
+
     let accessToken: string | undefined;
+    let isGuest = false;
+    
     try {
         // アクセストークンの取得方法を元に戻す
         const tokenResponse = await auth0.getAccessToken();
@@ -31,19 +46,38 @@ async function handler(
         }
     } catch (error) {
         console.warn('[PROXY] Failed to get access token using auth0.getAccessToken():', error);
+        
+        // トークンがない場合、ゲストアクセス可能なエンドポイントならゲストとして扱う
+        if (isGuestAccessible) {
+            isGuest = true;
+            console.log('[PROXY] Treating as guest user for accessible endpoint:', targetPath);
+        }
+    }
+    
+    // トークンもなく、ゲストアクセス不可能なエンドポイントの場合は認証エラー
+    if (!accessToken && !isGuest) {
+        console.log('[PROXY] Authentication required for endpoint:', targetPath);
+        return NextResponse.json(
+            { error: 'Authentication required', message: 'このエンドポイントにはログインが必要です' }, 
+            { status: 401 }
+        );
     }
     
     console.log(`[PROXY ${req.method}] Target URL:`, targetUrl);
     if (accessToken) {
         console.log(`[PROXY ${req.method}] Access Token:`, accessToken.substring(0, 20) + '...');
-    } else {
-        console.log(`[PROXY ${req.method}] No Access Token found or obtained.`);
+    } else if (isGuest) {
+        console.log(`[PROXY ${req.method}] Guest user access`);
     }
 
     const headers: HeadersInit = {};
     if (accessToken) {
         headers['Authorization'] = `Bearer ${accessToken}`;
+    } else if (isGuest) {
+        // ゲストユーザー識別用のヘッダーを追加
+        headers['X-Guest-Access'] = 'true';
     }
+    
     // クライアントからのContent-Typeを尊重する (FormDataなどのため)
     if (req.headers.has('Content-Type')) {
         headers['Content-Type'] = req.headers.get('Content-Type')!;
@@ -52,7 +86,6 @@ async function handler(
     if (req.headers.has('Accept')) {
         headers['Accept'] = req.headers.get('Accept')!;
     }
-
 
     let body: BodyInit | null | undefined = undefined;
     // GET や HEAD リクエストではボディを送信しない

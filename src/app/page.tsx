@@ -51,10 +51,10 @@ export default async function Home() {
           </Link>
 
           <Link
-            href="/auth/login?screen_hint=signup"
+            href="/investor/companies"
             className="px-6 py-3 bg-gray-600 text-white rounded hover:bg-gray-700 text-center"
           >
-            ゲストログイン
+            ゲストとして閲覧
           </Link>
         </div>
 

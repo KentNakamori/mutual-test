@@ -9,6 +9,7 @@ import MyPageTabMenu from "@/components/features/investor/mypage/MyPageTabMenu";
 import { ProfileData, NotificationSetting } from "@/types";
 import { Home, Heart, Search, MessageSquare, User } from 'lucide-react';
 import { getInvestorUser, updateInvestorUser, deleteInvestorAccount } from "@/lib/api";
+import GuestRestrictedContent from '@/components/features/investor/common/GuestRestrictedContent';
 
 // サイドバーのメニュー項目
 const menuItems = [
@@ -29,14 +30,22 @@ const MyPage = () => {
   const [error, setError] = useState<Error | null>(null);
   const [activeTab, setActiveTab] = useState<"profile" | "password" | "notification" | "delete">("profile");
 
+  // ゲスト判定
+  const isGuest = !user && !userLoading && !userError;
+
   // プロフィールデータの取得
   useEffect(() => {
     const fetchProfile = async () => {
       if (userLoading) return;
       
+      // ゲストの場合はデータ取得をスキップ
+      if (isGuest) {
+        setIsLoading(false);
+        return;
+      }
+      
       if (!user) {
-        // 未認証の場合はログインページにリダイレクト
-        router.push('/api/auth/login');
+        setIsLoading(false);
         return;
       }
       
@@ -59,7 +68,7 @@ const MyPage = () => {
     };
     
     fetchProfile();
-  }, [user, userLoading, router]);
+  }, [user, userLoading, isGuest]);
 
   const handleSaveProfile = async (updatedProfile: ProfileData) => {
     try {
@@ -126,15 +135,20 @@ const MyPage = () => {
   // 認証エラー表示
   if (userError) {
     return (
-      <div className="flex items-center justify-center h-screen">
-        <div className="text-center">
-          <p className="text-red-500 text-xl mb-4">認証エラーが発生しました</p>
-          <button 
-            onClick={() => router.push('/api/auth/login')}
-            className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
-          >
-            再ログイン
-          </button>
+      <div className="min-h-screen flex flex-col">
+        <div className="flex flex-1">
+          <Sidebar
+            isCollapsible
+            menuItems={menuItems}
+            selectedItem="/investor/mypage"
+            onSelectMenuItem={(link) => router.push(link)}
+          />
+          <main className="flex-1 container mx-auto p-4">
+            <h1 className="text-2xl font-semibold mb-4">マイページ</h1>
+            <div className="flex flex-col items-center justify-center h-full py-8">
+              <GuestRestrictedContent featureName="マイページ" />
+            </div>
+          </main>
         </div>
       </div>
     );
@@ -143,11 +157,51 @@ const MyPage = () => {
   // ローディング表示
   if (userLoading || isLoading) {
     return (
-      <div className="flex items-center justify-center h-screen">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500 mx-auto mb-4"></div>
-          <p className="text-gray-600">読み込み中...</p>
+      <div className="min-h-screen flex flex-col">
+        <div className="flex flex-1">
+          <Sidebar
+            isCollapsible
+            menuItems={menuItems}
+            selectedItem="/investor/mypage"
+            onSelectMenuItem={(link) => router.push(link)}
+          />
+          <main className="flex-1 container mx-auto p-4">
+            <div className="flex items-center justify-center h-full">
+              <div className="text-center">
+                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500 mx-auto mb-4"></div>
+                <p className="text-gray-600">読み込み中...</p>
+              </div>
+            </div>
+          </main>
         </div>
+      </div>
+    );
+  }
+
+  // ゲストユーザーの場合
+  if (isGuest) {
+    return (
+      <div className="min-h-screen flex flex-col">
+        <div className="flex flex-1">
+          <Sidebar
+            isCollapsible
+            menuItems={menuItems}
+            selectedItem="/investor/mypage"
+            onSelectMenuItem={(link) => router.push(link)}
+          />
+          <main className="flex-1 container mx-auto p-4">
+            <h1 className="text-2xl font-semibold mb-4">マイページ</h1>
+            <GuestRestrictedContent featureName="マイページ" />
+          </main>
+        </div>
+        <Footer
+          footerLinks={[
+            { label: "利用規約", href: "/terms" },
+            { label: "プライバシーポリシー", href: "/privacy" },
+          ]}
+          copyrightText="MyApp Inc."
+          onSelectLink={(href) => router.push(href)}
+        />
       </div>
     );
   }
@@ -155,15 +209,27 @@ const MyPage = () => {
   // エラー表示
   if (error) {
     return (
-      <div className="flex items-center justify-center h-screen">
-        <div className="text-center">
-          <p className="text-red-500 text-xl mb-4">エラーが発生しました: {error.message}</p>
-          <button 
-            onClick={() => window.location.reload()}
-            className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
-          >
-            再読み込み
-          </button>
+      <div className="min-h-screen flex flex-col">
+        <div className="flex flex-1">
+          <Sidebar
+            isCollapsible
+            menuItems={menuItems}
+            selectedItem="/investor/mypage"
+            onSelectMenuItem={(link) => router.push(link)}
+          />
+          <main className="flex-1 container mx-auto p-4">
+            <div className="flex items-center justify-center h-full">
+              <div className="text-center">
+                <p className="text-red-500 text-xl mb-4">エラーが発生しました: {error.message}</p>
+                <button 
+                  onClick={() => window.location.reload()}
+                  className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
+                >
+                  再読み込み
+                </button>
+              </div>
+            </div>
+          </main>
         </div>
       </div>
     );

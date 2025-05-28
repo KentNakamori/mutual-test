@@ -8,7 +8,6 @@ import ChatLogsSearchBar from '@/components/features/investor/chat/ChatLogsSearc
 import ChatLogsList from '@/components/features/investor/chat/ChatLogsList';
 import { ChatLog, FilterType } from '@/types';
 import { useUser } from "@auth0/nextjs-auth0";
-import { useGuest } from '@/contexts/GuestContext';
 import GuestRestrictedContent from '@/components/features/investor/common/GuestRestrictedContent';
 import { getInvestorChatLogs, deleteInvestorChat } from '@/lib/api';
 import { Home, Heart, Search, MessageSquare, User } from 'lucide-react';
@@ -23,13 +22,17 @@ const menuItems = [
 ];
 
 const ChatLogsPage: React.FC = () => {
-  const { user, isLoading: userLoading } = useUser();
-  const { isGuest } = useGuest();
+  const { user, error: userError, isLoading: userLoading } = useUser();
   const [chatLogs, setChatLogs] = useState<ChatLog[]>([]);
   const [searchKeyword, setSearchKeyword] = useState<string>('');
   const [filterOptions, setFilterOptions] = useState<FilterType>({});
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+  
+  // ゲスト判定
+  const isGuest = !user && !userLoading && !userError;
+  // 認証エラー判定
+  const isAuthError = !user && !userLoading && userError;
 
   // チャットログ取得関数
   const fetchChatLogs = useCallback(async (query?: {
@@ -37,7 +40,7 @@ const ChatLogsPage: React.FC = () => {
     page?: number;
     limit?: number;
   }) => {
-    if (isGuest || userLoading) return;
+    if (isGuest || userLoading || isAuthError) return;
     
     try {
       setLoading(true);
@@ -70,21 +73,21 @@ const ChatLogsPage: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [isGuest, userLoading]);
+  }, [isGuest, userLoading, isAuthError]);
 
   // 初期データ取得
   useEffect(() => {
-    if (!isGuest && !userLoading) {
+    if (!isGuest && !userLoading && !isAuthError) {
       fetchChatLogs();
     }
-  }, [fetchChatLogs, isGuest, userLoading]);
+  }, [fetchChatLogs, isGuest, userLoading, isAuthError]);
 
   // 検索処理
   const handleSearch = useCallback(async (keyword: string, filter: FilterType) => {
     setSearchKeyword(keyword);
     setFilterOptions(filter);
     
-    if (isGuest) return;
+    if (isGuest || isAuthError) return;
     
     // 検索条件に基づいてAPIを呼び出し
     const query: any = { page: 1, limit: 50 };
@@ -105,11 +108,11 @@ const ChatLogsPage: React.FC = () => {
         )
       );
     }
-  }, [isGuest, fetchChatLogs]);
+  }, [isGuest, isAuthError, fetchChatLogs]);
 
   // チャットログ削除処理
   const handleDeleteLog = useCallback(async (chatId: string) => {
-    if (isGuest) return;
+    if (isGuest || isAuthError) return;
     
     try {
       console.log('チャットログ削除開始:', chatId);
@@ -124,7 +127,27 @@ const ChatLogsPage: React.FC = () => {
       console.error('チャットログの削除中にエラーが発生しました:', error);
       setError('チャットログの削除に失敗しました。');
     }
-  }, [isGuest]);
+  }, [isGuest, isAuthError]);
+
+  // ローディング表示
+  if (userLoading) {
+    return (
+      <div className="min-h-screen flex flex-col">
+        <div className="flex flex-1">
+          <Sidebar
+            isCollapsible
+            menuItems={menuItems}
+            selectedItem="/investor/chat-logs"
+            onSelectMenuItem={(link) => (window.location.href = link)}
+          />
+          <main className="flex-1 p-6 flex items-center justify-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+            <p className="ml-4 text-gray-600">読み込み中...</p>
+          </main>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -138,9 +161,9 @@ const ChatLogsPage: React.FC = () => {
         <main className="flex-1 p-6">
           <h1 className="text-2xl font-semibold mb-4">チャットログ一覧</h1>
           
-          {isGuest ? (
+          { (isGuest || isAuthError) ? (
             <div className="mt-8">
-              <GuestRestrictedContent featureName="チャットログ" />
+              <GuestRestrictedContent featureName="チャット機能" />
             </div>
           ) : (
             <>
@@ -156,7 +179,7 @@ const ChatLogsPage: React.FC = () => {
                 loading={loading}
               />
               
-              {loading ? (
+              {loading && !error ? (
                 <div className="flex justify-center items-center py-8">
                   <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
                   <span className="ml-2">チャットログを読み込み中...</span>
