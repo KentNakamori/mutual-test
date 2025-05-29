@@ -231,6 +231,33 @@ export async function batchCreateCorporateQa(
 }
 
 /**
+ * AI回答生成API
+ * 
+ * 入力:
+ * - data.question: 質問文
+ * - data.fiscalPeriod: 対象決算期
+ * 
+ * 出力:
+ * - answer: 生成された回答
+ * - sources: 参照元情報の配列
+ */
+export async function generateCorporateQaAnswer(
+  data: {
+    question: string;
+    fiscalPeriod: string;
+  }
+): Promise<{ answer: string; sources: string[] }> {
+  return apiFetch<{ answer: string; sources: string[] }>(
+    ENDPOINTS.corporate.qa.generate,
+    "POST",
+    data,
+    undefined,
+    true,
+    true
+  );
+}
+
+/**
  * 下書き一覧取得API
  * 
  * 入力:

@@ -8,6 +8,7 @@ import Footer from "@/components/common/footer";
 import TopActionBar from "@/components/features/corporate/qa/TopActionBar";
 import QaListCards from "@/components/features/corporate/qa/QaListCards";
 import QaDetailModal from "@/components/ui/QaDetailModal";
+import QaCreateModal from "@/components/features/corporate/qa/QaCreateModal";
 import { QA } from "@/types";
 import { LayoutDashboard, HelpCircle, MessageSquare, Settings, FileText } from 'lucide-react';
 import { searchCorporateQa, createCorporateQa, updateCorporateQa, deleteCorporateQa } from "@/lib/api";
@@ -36,6 +37,7 @@ const QaPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [totalCount, setTotalCount] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [searchParams, setSearchParams] = useState<{
     keyword: string;
     genre: string[];
@@ -220,6 +222,22 @@ const QaPage: React.FC = () => {
     }
   };
 
+  const handleCreateNew = () => {
+    setIsCreateModalOpen(true);
+  };
+
+  const handleQaCreated = async (newQa: QA) => {
+    // 作成後、リストを再取得
+    try {
+      const response = await searchCorporateQa(searchParams);
+      setQas(response.results);
+      setTotalCount(response.totalCount);
+      setTotalPages(response.totalPages);
+    } catch (err) {
+      console.error("QAリストの更新に失敗しました:", err);
+    }
+  };
+
   return (
     <div className="min-h-screen flex flex-col">
       <div className="flex flex-1">
@@ -238,7 +256,7 @@ const QaPage: React.FC = () => {
               {error}
             </div>
           )}
-          <TopActionBar onSearch={handleSearch} />
+          <TopActionBar onSearch={handleSearch} onCreateNew={handleCreateNew} />
           {isLoading ? (
             <div className="flex justify-center items-center h-64">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
@@ -291,6 +309,13 @@ const QaPage: React.FC = () => {
             );
             setSelectedQa(null);
           }}
+        />
+      )}
+      {isCreateModalOpen && (
+        <QaCreateModal
+          isOpen={isCreateModalOpen}
+          onClose={() => setIsCreateModalOpen(false)}
+          onCreated={handleQaCreated}
         />
       )}
     </div>

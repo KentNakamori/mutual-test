@@ -21,6 +21,7 @@ export const ENDPOINTS = {
       delete: (id: string) => `/corporate/qa/${id}`,
       upload: '/corporate/qa/upload',
       batchCreate: '/corporate/qa/batchCreate',
+      generate: '/corporate/qa/generate',
     },
     // IR関連
     ir: {

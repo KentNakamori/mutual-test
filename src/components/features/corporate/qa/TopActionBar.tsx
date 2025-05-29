@@ -1,11 +1,17 @@
 // src/components/features/corporate/qa/TopActionBar.tsx
 import React from 'react';
 import SearchBar from '@/components/ui/SearchBar';
+import Button from '@/components/ui/Button';
 import { TopActionBarProps } from '@/types';
 import { GENRE_OPTIONS, QUESTION_ROUTE_OPTIONS } from '@/components/ui/tagConfig';
 import { FilterOption } from '@/types';
+import { Plus } from 'lucide-react';
 
-const TopActionBar: React.FC<TopActionBarProps> = ({ onSearch }) => {
+interface TopActionBarWithCreateProps extends TopActionBarProps {
+  onCreateNew?: () => void;
+}
+
+const TopActionBar: React.FC<TopActionBarWithCreateProps> = ({ onSearch, onCreateNew }) => {
   // 直近3年分の決算期を生成
   const generateFiscalPeriods = () => {
     const currentYear = new Date().getFullYear();
@@ -139,12 +145,23 @@ const TopActionBar: React.FC<TopActionBarProps> = ({ onSearch }) => {
 
   return (
     <div className="mb-4">
-      <SearchBar
-        placeholder="Q&Aを検索"
-        filterOptions={filterOptions}
-        sortOptions={sortOptions}
-        onSearch={handleSearch}
-      />
+      <div className="flex items-start gap-4">
+        <div className="flex-1">
+          <SearchBar
+            placeholder="Q&Aを検索"
+            filterOptions={filterOptions}
+            sortOptions={sortOptions}
+            onSearch={handleSearch}
+          />
+        </div>
+        {onCreateNew && (
+          <Button
+            label="新規作成"
+            onClick={onCreateNew}
+            variant="primary"
+          />
+        )}
+      </div>
     </div>
   );
 };
