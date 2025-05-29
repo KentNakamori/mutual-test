@@ -17,9 +17,10 @@ const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
   cancelLabel = "Cancel",
   onConfirm,
   onCancel,
+  showCloseButton = true,
 }) => {
   return (
-    <Dialog isOpen={isOpen} onClose={onCancel} title={title}>
+    <Dialog isOpen={isOpen} onClose={onCancel} title={title} showCloseButton={showCloseButton}>
       <p className="mb-4">{description}</p>
       <div className="flex justify-end space-x-4">
         <button onClick={onCancel} className="bg-gray-200 text-black py-2 px-4 rounded hover:bg-gray-300">
