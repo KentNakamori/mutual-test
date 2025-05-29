@@ -21,7 +21,7 @@ export const INFO_SOURCE_OPTIONS: TagOption[] = [
 ];
   
 // ジャンル→カテゴリ
-export const GENRE_OPTIONS: TagOption[] = [
+export const categories_OPTIONS: TagOption[] = [
   { label: '業績', color: 'bg-amber-100 text-amber-800' },
   { label: '事業戦略', color: 'bg-blue-100 text-blue-800' },
   { label: '事業内容', color: 'bg-cyan-100 text-cyan-800' },
@@ -39,7 +39,7 @@ export const GENRE_OPTIONS: TagOption[] = [
  * @returns Tailwind CSS の背景色クラス
  */
 export function getTagColor(label: string): string {
-  const allOptions = [...QUESTION_ROUTE_OPTIONS, ...INFO_SOURCE_OPTIONS, ...GENRE_OPTIONS];
+  const allOptions = [...QUESTION_ROUTE_OPTIONS, ...INFO_SOURCE_OPTIONS, ...categories_OPTIONS];
   const found = allOptions.find((option) => option.label === label);
   return found ? found.color : 'bg-gray-300';
 }

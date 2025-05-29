@@ -73,7 +73,7 @@ const QASearchPage: React.FC = () => {
           ? { dateFrom: filters.dateRange.from || '', dateTo: filters.dateRange.to || '' }
           : {}),
         ...(filters.question_route ? { question_route: filters.question_route } : {}),
-        ...(filters.genre && filters.genre.length > 0 ? { genre: filters.genre } : {}),
+        ...(filters.categories && filters.categories.length > 0 ? { categories: filters.categories } : {}),
         ...(filters.fiscalPeriod && filters.fiscalPeriod.length > 0 ? { fiscalPeriod: filters.fiscalPeriod } : {}),
         ...(filters.sort ? { sort: filters.sort } : {}),
         ...(filters.order ? { order: filters.order } : {}),

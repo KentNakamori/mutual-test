@@ -109,7 +109,7 @@ export interface QaListCardsWithFilterProps {
   onDelete: (qaId: string) => void;
   filters?: {
     question_route?: string;
-    genre?: string[];
+    categories?: string[];
     fiscalPeriod?: string[];
     sort?: 'createdAt' | 'likeCount';
     order?: 'asc' | 'desc';
@@ -121,7 +121,7 @@ export interface QaListCardsWithFilterProps {
   };
   onFilterChange?: (filters: {
     question_route?: string;
-    genre?: string[];
+    categories?: string[];
     fiscalPeriod?: string[];
     sort?: 'createdAt' | 'likeCount';
     order?: 'asc' | 'desc';

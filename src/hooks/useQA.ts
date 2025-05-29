@@ -8,7 +8,7 @@ import { useUser } from "@auth0/nextjs-auth0";
 export interface QASearchParams {
   keyword?: string;
   question_route?: string;
-  genre?: string[];
+  categories?: string[];
   fiscalPeriod?: string[];
   companyId?: string;
   companyName?: string;
@@ -21,7 +21,7 @@ export interface QASearchParams {
 export interface CompanyQASearchParams {
   keyword?: string;
   question_route?: string;
-  genre?: string[];
+  categories?: string[];
   fiscalPeriod?: string;
   is_faq?: boolean;
   sort?: 'createdAt' | 'likeCount';
@@ -40,7 +40,7 @@ export interface QAItem {
   likeCount: number;
   question_route?: string;
   source?: string[];
-  genre?: string[];
+  categories?: string[];
   fiscalPeriod?: string;
   createdAt: string;
   updatedAt: string;

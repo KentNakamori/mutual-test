@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useUser } from '@auth0/nextjs-auth0';
-import QASearchBar from './QASearchBar';
+import QASearchBar from '@/components/features/investor/qa/QASearchBar';
 import QAResultList from '@/components/features/investor/qa/QAResultList';
 import QADetailModal from '@/components/ui/QaDetailModal';
 import { QA, QATabViewProps } from '@/types';
@@ -69,7 +69,7 @@ const QATabView: React.FC<QATabViewProps> = ({ companyId, companyName }) => {
       
       // filtersの処理
       Object.entries(filters).forEach(([key, value]) => {
-        // 配列の場合（ genreなど）
+        // 配列の場合（ categoriesなど）
         if (Array.isArray(value)) {
           value.forEach((item) => {
             if (item) queryParams.append(key, item);

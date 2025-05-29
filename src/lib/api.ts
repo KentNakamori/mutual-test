@@ -222,7 +222,7 @@ export async function searchCorporateQa(
     keyword?: string;
     review_status?: 'DRAFT' | 'PENDING' | 'PUBLISHED';
     question_route?: string;
-    genre?: string[];
+    categories?: string[];
     fiscalPeriod?: string[];
     sort?: 'createdAt' | 'likeCount';
     order?: 'asc' | 'desc';
@@ -246,9 +246,9 @@ export async function searchCorporateQa(
     queryString.append('question_route', query.question_route);
   }
   
-  if (query.genre && Array.isArray(query.genre) && query.genre.length > 0) {
-    const validGenres = query.genre.filter(g => g && g.trim() !== '');
-    validGenres.forEach(g => queryString.append('genre', g));
+  if (query.categories && Array.isArray(query.categories) && query.categories.length > 0) {
+    const validcategoriess = query.categories.filter(g => g && g.trim() !== '');
+    validcategoriess.forEach(g => queryString.append('categories', g));
   }
   if (query.fiscalPeriod && Array.isArray(query.fiscalPeriod) && query.fiscalPeriod.length > 0) {
     const validPeriods = query.fiscalPeriod.filter(fp => fp && fp.trim() !== '');
@@ -287,7 +287,7 @@ export async function createCorporateQa(
     answer: string;
     question_route?: string;
     source?: string[];
-    genre?: string[];
+    categories?: string[];
     fiscalPeriod?: string;
     reviewStatus: QA['reviewStatus'];
   }
@@ -309,7 +309,7 @@ export async function updateCorporateQa(
     answer?: string;
     question_route?: string;
     source?: string[];
-    genre?: string[];
+    categories?: string[];
     fiscalPeriod?: string;
     reviewStatus?: QA['reviewStatus'];
   }
@@ -602,7 +602,7 @@ export async function searchInvestorQa(
   query: {
     keyword?: string;
     question_route?: string;
-    genre?: string[];
+    categories?: string[];
     fiscalPeriod?: string[];
     companyId?: string;
     companyName?: string;
@@ -630,9 +630,9 @@ export async function searchInvestorQa(
   }
   
   // ジャンルの処理（配列）
-  if (query.genre && Array.isArray(query.genre)) {
-    query.genre.forEach(g => {
-      if (g && g.trim()) queryString.append('genre', g);
+  if (query.categories && Array.isArray(query.categories)) {
+    query.categories.forEach(g => {
+      if (g && g.trim()) queryString.append('categories', g);
     });
   }
   
@@ -666,7 +666,7 @@ export async function searchInvestorCompanyQa(
   query: {
     keyword?: string;
     question_route?: string;
-    genre?: string[];
+    categories?: string[];
     fiscalPeriod?: string;
     is_faq?: boolean;
     sort?: 'createdAt' | 'likeCount';
@@ -692,9 +692,9 @@ export async function searchInvestorCompanyQa(
   }
   
   // ジャンルの処理（配列）
-  if (query.genre && Array.isArray(query.genre)) {
-    query.genre.forEach(g => {
-      if (g && g.trim()) queryString.append('genre', g);
+  if (query.categories && Array.isArray(query.categories)) {
+    query.categories.forEach(g => {
+      if (g && g.trim()) queryString.append('categories', g);
     });
   }
   
@@ -1147,7 +1147,7 @@ export async function getLatestQAs(
     likeCount: number;
     question_route?: string;
     source: string[];
-    genre: string[];
+    categories: string[];
     fiscalPeriod?: string;
     reviewStatus: 'DRAFT' | 'PENDING' | 'PUBLISHED';
     status: 'draft' | 'published' | 'archived';

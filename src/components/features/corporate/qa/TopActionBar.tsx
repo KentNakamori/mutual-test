@@ -3,7 +3,7 @@ import React from 'react';
 import SearchBar from '@/components/ui/SearchBar';
 import UploadButton from './UploadButton';
 import { TopActionBarProps } from '@/types';
-import { GENRE_OPTIONS, QUESTION_ROUTE_OPTIONS } from '@/components/ui/tagConfig';
+import { categories_OPTIONS, QUESTION_ROUTE_OPTIONS } from '@/components/ui/tagConfig';
 import { FilterOption } from '@/types';
 
 const TopActionBar: React.FC<TopActionBarProps> = ({ onSearch, onUploadClick }) => {
@@ -33,10 +33,10 @@ const TopActionBar: React.FC<TopActionBarProps> = ({ onSearch, onUploadClick }) 
       }))
     },
     {
-      id: 'genre',
-      label: 'ジャンル',
+      id: 'categories',
+      label: 'カテゴリー',
       type: 'select',
-      options: GENRE_OPTIONS.map(option => ({
+      options: categories_OPTIONS.map(option => ({
         value: option.label,
         label: option.label
       }))
@@ -61,15 +61,15 @@ const TopActionBar: React.FC<TopActionBarProps> = ({ onSearch, onUploadClick }) 
     // 1. フィルターの処理 - すべて明示的に処理する
     
     // ジャンルの処理 (配列または文字列を適切に処理)
-    let genreArray: string[] | undefined = undefined;
-    if (filters.genre) {
-      if (Array.isArray(filters.genre)) {
-        const validGenres = filters.genre.filter((g: string) => g && g.trim() !== '');
-        if (validGenres.length > 0) {
-          genreArray = validGenres;
+    let categoriesArray: string[] | undefined = undefined;
+    if (filters.categories) {
+      if (Array.isArray(filters.categories)) {
+        const validcategoriess = filters.categories.filter((g: string) => g && g.trim() !== '');
+        if (validcategoriess.length > 0) {
+          categoriesArray = validcategoriess;
         }
-      } else if (typeof filters.genre === 'string' && filters.genre.trim() !== '') {
-        genreArray = [filters.genre];
+      } else if (typeof filters.categories === 'string' && filters.categories.trim() !== '') {
+        categoriesArray = [filters.categories];
       }
     }
     
@@ -128,7 +128,7 @@ const TopActionBar: React.FC<TopActionBarProps> = ({ onSearch, onUploadClick }) 
     const searchParams = {
       query: keyword || '',
       question_route: questionRoute,
-      genre: genreArray,
+      categories: categoriesArray,
       fiscalPeriod: fiscalPeriodArray,
       sort: sortKey,
       order: sortOrder

@@ -36,7 +36,7 @@ export interface FilterType {
   sortKey?: string;
   sortDirection?: 'asc' | 'desc';
   question_route?: string;
-  genre?: string[];
+  categories?: string[];
   fiscalPeriod?: string[];
   sort?: 'createdAt' | 'likeCount';
   order?: 'asc' | 'desc';
@@ -74,7 +74,7 @@ export interface ApiResponse<T> {
 // 検索関連の型
 export interface SearchParams {
   keyword: string;
-  genre: string[];
+  categories: string[];
   source: string[];
   question_route?: string;
   fiscalPeriod?: string;

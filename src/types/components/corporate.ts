@@ -137,7 +137,7 @@ export interface UploadModalProps {
 export interface TopActionBarProps {
   onSearch: (params: { 
     query: string; 
-    genre?: string[]; 
+    categories?: string[]; 
     question_route?: string;
     fiscalPeriod?: string[];
     sort?: 'createdAt' | 'likeCount';

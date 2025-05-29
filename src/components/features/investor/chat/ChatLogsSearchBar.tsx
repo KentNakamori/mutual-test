@@ -23,7 +23,7 @@ const ChatLogsSearchBar: React.FC<ChatLogsSearchBarProps> = ({
 
   return (
     <div className="relative flex-grow max-w-md mb-6">
-      <form onSubmit={handleSubmit} className="flex items-center w-full">
+      <form onSubmit={handleSubmit} className="w-full">
         <div className="relative w-full">
           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
             <Search size={16} className="text-gray-400" />
@@ -32,7 +32,7 @@ const ChatLogsSearchBar: React.FC<ChatLogsSearchBarProps> = ({
             type="text"
             value={localKeyword}
             onChange={(e) => setLocalKeyword(e.target.value)}
-            placeholder="検索ワードを入力してください..."
+            placeholder="検索ワードを入力してください... "
             disabled={loading}
             className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-lg bg-white text-sm placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
           />
@@ -42,13 +42,6 @@ const ChatLogsSearchBar: React.FC<ChatLogsSearchBarProps> = ({
             </div>
           )}
         </div>
-        <button
-          type="submit"
-          disabled={loading}
-          className="ml-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-400 disabled:cursor-not-allowed"
-        >
-          {loading ? '検索中...' : '検索'}
-        </button>
       </form>
     </div>
   );

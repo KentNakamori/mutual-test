@@ -3,7 +3,7 @@ import Dialog from '@/components/ui/Dialog';
 import { QADetailModalProps, QA, TagOption } from '@/types';
 import {
   INFO_SOURCE_OPTIONS,
-  GENRE_OPTIONS,
+  categories_OPTIONS,
   QUESTION_ROUTE_OPTIONS,
   getTagColor,
 } from '@/components/ui/tagConfig';
@@ -26,7 +26,7 @@ const QaDetailModal: React.FC<QADetailModalProps> = ({
   const token = user?.sub ?? null; 
   const [editableQA, setEditableQA] = useState<QA>({ ...qa });
   const [showSourceList, setShowSourceList] = useState(false);
-  const [showGenreList, setShowGenreList] = useState(false);
+  const [showcategoriesList, setShowcategoriesList] = useState(false);
   const [showTagList, setShowTagList] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [hasChanges, setHasChanges] = useState(false);
@@ -82,7 +82,7 @@ const QaDetailModal: React.FC<QADetailModalProps> = ({
         answer: editableQA.answer,
         question_route: editableQA.question_route, // question_route を単一値として送信
         source: editableQA.source,
-        genre: editableQA.genre,
+        categories: editableQA.categories,
         fiscalPeriod: editableQA.fiscalPeriod,
         reviewStatus: reviewStatus, // reviewStatus をそのまま使用
       };
@@ -193,19 +193,19 @@ const QaDetailModal: React.FC<QADetailModalProps> = ({
   };
 
   // 操作（ジャンル）
-  const handleAddGenre = (option: TagOption) => {
-    if (!editableQA.genre.includes(option.label)) {
+  const handleAddcategories = (option: TagOption) => {
+    if (!editableQA.categories.includes(option.label)) {
       setEditableQA({
         ...editableQA,
-        genre: [...editableQA.genre, option.label],
+        categories: [...editableQA.categories, option.label],
       });
       setHasChanges(true);
     }
   };
-  const handleRemoveGenre = (label: string) => {
+  const handleRemovecategories = (label: string) => {
     setEditableQA({
       ...editableQA,
-      genre: editableQA.genre.filter((g) => g !== label),
+      categories: editableQA.categories.filter((g) => g !== label),
     });
     setHasChanges(true);
   };
@@ -229,8 +229,22 @@ const QaDetailModal: React.FC<QADetailModalProps> = ({
     ? `QA詳細 (${qa.companyId?.includes('comp') ? getCompanyName(qa.companyId) : qa.companyName || qa.companyId})`
     : 'QA詳細';
 
+  // 投資家向けの場合、カスタムタイトルヘッダーを作成
+  const customTitle = role === 'investor' ? (
+    <div className="flex justify-between items-center">
+      <span>{modalTitle}</span>
+      <button
+        onClick={onClose}
+        className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-colors duration-200"
+        aria-label="モーダルを閉じる"
+      >
+        <X size={20} />
+      </button>
+    </div>
+  ) : modalTitle;
+
   return (
-    <Dialog isOpen={isOpen} onClose={handleClose} title={modalTitle} className="max-w-6xl my-10" showCloseButton={false}>
+    <Dialog isOpen={isOpen} onClose={handleClose} title={customTitle} className="max-w-6xl my-10" showCloseButton={false}>
       <div className="overflow-y-auto" style={{ maxHeight: 'calc(90vh - 100px)' }}>
         {error && (
           <div className="mb-4 p-4 bg-red-100 text-red-700 rounded">
@@ -343,11 +357,11 @@ const QaDetailModal: React.FC<QADetailModalProps> = ({
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">カテゴリ</label>
                 <div className="flex flex-wrap gap-2 mb-2">
-                  {editableQA.genre.map((g) => (
+                  {editableQA.categories.map((g) => (
                     <div key={g} className={`inline-flex items-center ${getTagColor(g)} px-2 py-1 rounded-md text-xs`}>
                       {g}
                       <button
-                        onClick={() => handleRemoveGenre(g)}
+                        onClick={() => handleRemovecategories(g)}
                         className="ml-1 text-gray-600 hover:text-gray-800"
                       >
                         <X size={12} />
@@ -357,21 +371,21 @@ const QaDetailModal: React.FC<QADetailModalProps> = ({
                 </div>
                 <div className="relative">
                   <button
-                    onClick={() => setShowGenreList(!showGenreList)}
+                    onClick={() => setShowcategoriesList(!showcategoriesList)}
                     className="flex items-center text-sm px-2 py-1 rounded border bg-white hover:bg-gray-50"
                   >
                     <Plus size={14} className="mr-1" />
                     カテゴリを追加
                   </button>
-                  {showGenreList && (
+                  {showcategoriesList && (
                     <div className="absolute z-10 mt-1 w-64 bg-white rounded-md shadow-lg border py-1 max-h-48 overflow-y-auto">
-                      {GENRE_OPTIONS.filter(option => !editableQA.genre.includes(option.label))
+                      {categories_OPTIONS.filter(option => !editableQA.categories.includes(option.label))
                         .map((option) => (
                           <button
                             key={option.label}
                             onClick={() => {
-                              handleAddGenre(option);
-                              setShowGenreList(false);
+                              handleAddcategories(option);
+                              setShowcategoriesList(false);
                             }}
                             className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
                           >
@@ -410,18 +424,9 @@ const QaDetailModal: React.FC<QADetailModalProps> = ({
           </div>
         ) : (
           // 投資家向けUI（見やすく改善）
-          <div className="p-6 bg-white rounded-lg relative">
-            {/* 投資家向けモーダル用の閉じるボタン */}
-            <button
-              onClick={onClose}
-              className="absolute top-4 right-4 p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-colors duration-200"
-              aria-label="モーダルを閉じる"
-            >
-              <X size={20} />
-            </button>
-            
+          <div className="p-6 bg-white rounded-lg">
             {/* ヘッダー情報 */}
-            <div className="mb-6 pb-4 border-b border-gray-100 pr-12">
+            <div className="mb-6 pb-4 border-b border-gray-100">
               <h2 className="text-2xl font-bold text-gray-800 mb-3">{qa.title}</h2>
               <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600">
                 <div className="flex items-center">
@@ -490,13 +495,13 @@ const QaDetailModal: React.FC<QADetailModalProps> = ({
                   カテゴリ
                 </h4>
                 <div className="flex flex-wrap gap-2">
-                  {qa.genre && qa.genre.length > 0 ? (
-                    qa.genre.map((genre) => (
+                  {qa.categories && qa.categories.length > 0 ? (
+                    qa.categories.map((categories) => (
                       <span
-                        key={genre}
-                        className={`inline-flex items-center ${getTagColor(genre)} px-2 py-1 rounded-md text-xs`}
+                        key={categories}
+                        className={`inline-flex items-center ${getTagColor(categories)} px-2 py-1 rounded-md text-xs`}
                       >
-                        {genre}
+                        {categories}
                       </span>
                     ))
                   ) : (

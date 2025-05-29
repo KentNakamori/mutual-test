@@ -83,12 +83,12 @@ if (mode === 'preview') {
 
               {/* ジャンルの表示 */}
               <div className="flex flex-wrap gap-1.5">
-                {qa.genre && qa.genre.map((genre, index) => (
+                {qa.categories && qa.categories.map((categories, index) => (
                   <span 
-                    key={`genre-${index}`} 
-                    className={`px-2.5 py-1 rounded-full text-xs font-medium ${getTagColor(genre)}`}
+                    key={`categories-${index}`} 
+                    className={`px-2.5 py-1 rounded-full text-xs font-medium ${getTagColor(categories)}`}
                   >
-                    {genre}
+                    {categories}
                   </span>
                 ))}
               </div>
