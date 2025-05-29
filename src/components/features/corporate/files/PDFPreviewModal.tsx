@@ -41,6 +41,13 @@ export const PDFPreviewModal: React.FC<PDFPreviewModalProps> = ({
             </div>
             <div className="flex items-center gap-2">
               <button
+                onClick={handleDownload}
+                className="p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors"
+                title="ダウンロード"
+              >
+                <Download className="h-5 w-5" />
+              </button>
+              <button
                 onClick={handleOpenInNewTab}
                 className="p-2 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg transition-colors"
                 title="新しいタブで開く"

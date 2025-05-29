@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { FileCollection } from '@/types';
-import { Trash2, FileText, Calendar, Tag } from 'lucide-react';
+import { Trash2 } from 'lucide-react';
 
 interface FileListProps {
   files: FileCollection[];
@@ -39,7 +39,6 @@ export const FileList: React.FC<FileListProps> = ({ files, onDelete, onFileClick
   if (files.length === 0) {
     return (
       <div className="text-center py-12 bg-gray-50 rounded-lg">
-        <FileText className="mx-auto h-12 w-12 text-gray-400 mb-3" />
         <p className="text-gray-600">アップロードされたファイルはありません</p>
       </div>
     );
@@ -53,6 +52,7 @@ export const FileList: React.FC<FileListProps> = ({ files, onDelete, onFileClick
             <th className="text-left p-4 font-medium text-gray-700">ファイル名</th>
             <th className="text-left p-4 font-medium text-gray-700">資料種類</th>
             <th className="text-left p-4 font-medium text-gray-700">対象決算期</th>
+            <th className="text-left p-4 font-medium text-gray-700">ステータス</th>
             <th className="text-left p-4 font-medium text-gray-700">ファイルサイズ</th>
             <th className="text-left p-4 font-medium text-gray-700">アップロード日</th>
             <th className="text-center p-4 font-medium text-gray-700">操作</th>
@@ -62,31 +62,30 @@ export const FileList: React.FC<FileListProps> = ({ files, onDelete, onFileClick
           {files.map((file) => (
             <tr key={file.id} className="border-b hover:bg-gray-50 transition-colors">
               <td className="p-4">
-                <div className="flex items-center gap-2">
-                  <FileText className="h-5 w-5 text-gray-500" />
-                  <button
-                    onClick={() => onFileClick(file)}
-                    className="font-medium text-blue-600 hover:text-blue-800 hover:underline transition-colors text-left"
-                    disabled={!file.s3Url}
-                  >
-                    {file.fileName}
-                  </button>
-                  {!file.s3Url && (
-                    <span className="text-xs text-gray-500 ml-2">(処理中)</span>
-                  )}
-                </div>
+                <button
+                  onClick={() => onFileClick(file)}
+                  className="font-medium text-blue-600 hover:text-blue-800 hover:underline transition-colors text-left"
+                  disabled={!file.s3Url}
+                >
+                  {file.fileName}
+                </button>
               </td>
               <td className="p-4">
-                <div className="flex items-center gap-2">
-                  <Tag className="h-4 w-4 text-gray-500" />
-                  <span className="text-sm">{file.documentType}</span>
-                </div>
+                <span className="text-sm">{file.documentType}</span>
               </td>
               <td className="p-4">
-                <div className="flex items-center gap-2">
-                  <Calendar className="h-4 w-4 text-gray-500" />
-                  <span className="text-sm">{file.fiscalYear}</span>
-                </div>
+                <span className="text-sm">{file.fiscalPeriod}</span>
+              </td>
+              <td className="p-4">
+                {file.isProcessed !== false ? (
+                  <span className="text-sm text-green-700 bg-green-100 px-2 py-1 rounded-full">
+                    処理完了
+                  </span>
+                ) : (
+                  <span className="text-sm text-yellow-700 bg-yellow-100 px-2 py-1 rounded-full">
+                    {file.processMessage || '処理中'}
+                  </span>
+                )}
               </td>
               <td className="p-4 text-sm text-gray-600">
                 {formatFileSize(file.fileSize)}

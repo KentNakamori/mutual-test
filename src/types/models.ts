@@ -295,11 +295,13 @@ export interface FileCollection {
   fileSize: number;
   fileType: string;
   documentType: string;
-  fiscalYear: string;  // バックエンドに合わせて変更
-  uploadDate: DateString;  // バックエンドに合わせて変更
+  fiscalPeriod: string;  // バックエンドの実際のフィールド名に修正
+  uploadDate: DateString;
   isProcessed?: boolean;
+  processMessage?: string;  // 処理状況のメッセージ
   s3Key?: string | null;
   s3Url?: string | null;
+  s3UrlGeneratedAt?: DateString;  // S3 URL生成日時
   chunksCount?: number;
 }
 

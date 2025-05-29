@@ -460,7 +460,7 @@ export async function getCorporateFiles(): Promise<FileManagementResponse> {
  * 
  * 入力:
  * - file: アップロードするPDFファイル
- * - fiscalYear: 対象決算期
+ * - fiscalPeriod: 対象決算期
  * - documentType: 資料種類
  * 
  * 出力:
@@ -468,13 +468,21 @@ export async function getCorporateFiles(): Promise<FileManagementResponse> {
  */
 export async function uploadCorporateFile(
   file: File,
-  fiscalYear: string,
+  fiscalPeriod: string,
   documentType: string
 ): Promise<FileCollection> {
+  // バリデーション
+  if (!fiscalPeriod || fiscalPeriod.trim() === '') {
+    throw new Error('fiscalPeriod is required');
+  }
+  if (!documentType || documentType.trim() === '') {
+    throw new Error('documentType is required');
+  }
+
   const formData = new FormData();
   formData.append("file", file);
-  formData.append("fiscalYear", fiscalYear);
-  formData.append("documentType", documentType);
+  formData.append("fiscalPeriod", fiscalPeriod.trim());
+  formData.append("documentType", documentType.trim());
   
   return apiFetch<FileCollection>(
     ENDPOINTS.corporate.files.upload,

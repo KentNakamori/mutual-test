@@ -21,7 +21,7 @@ export const FileManagement: React.FC = () => {
   const [isPDFPreviewOpen, setIsPDFPreviewOpen] = useState(false);
   const [selectedFile, setSelectedFile] = useState<FileCollection | null>(null);
   const [selectedDocumentType, setSelectedDocumentType] = useState<string>('');
-  const [selectedFiscalYear, setSelectedFiscalYear] = useState<string>('');
+  const [selectedFiscalPeriod, setSelectedFiscalPeriod] = useState<string>('');
 
   // ファイル一覧を取得
   const fetchFiles = async () => {
@@ -41,9 +41,9 @@ export const FileManagement: React.FC = () => {
   }, []);
 
   // ファイルアップロード
-  const handleUpload = async (file: File, fiscalYear: string, documentType: string) => {
+  const handleUpload = async (file: File, fiscalPeriod: string, documentType: string) => {
     try {
-      await uploadCorporateFile(file, fiscalYear, documentType);
+      await uploadCorporateFile(file, fiscalPeriod, documentType);
       await fetchFiles();
       setIsUploadModalOpen(false);
     } catch (error) {
@@ -92,16 +92,16 @@ export const FileManagement: React.FC = () => {
       const matchesDocumentType = !selectedDocumentType || file.documentType === selectedDocumentType;
       
       // 年度のみが選択されている場合
-      if (selectedFiscalYear && !selectedFiscalYear.includes('-Q')) {
-        const fileYear = file.fiscalYear.split('-Q')[0];
-        return matchesDocumentType && fileYear === selectedFiscalYear;
+      if (selectedFiscalPeriod && !selectedFiscalPeriod.includes('-Q')) {
+        const fileYear = file.fiscalPeriod.split('-Q')[0];
+        return matchesDocumentType && fileYear === selectedFiscalPeriod;
       }
       
       // 年度と四半期が選択されている場合
-      const matchesFiscalYear = !selectedFiscalYear || file.fiscalYear === selectedFiscalYear;
-      return matchesDocumentType && matchesFiscalYear;
+      const matchesFiscalPeriod = !selectedFiscalPeriod || file.fiscalPeriod === selectedFiscalPeriod;
+      return matchesDocumentType && matchesFiscalPeriod;
     });
-  }, [fileData, selectedDocumentType, selectedFiscalYear]);
+  }, [fileData, selectedDocumentType, selectedFiscalPeriod]);
 
   return (
     <div className="space-y-6">
@@ -142,11 +142,11 @@ export const FileManagement: React.FC = () => {
             <div className="flex items-center gap-1">
               <input
                 type="number"
-                value={selectedFiscalYear.split('-Q')[0] || ''}
+                value={selectedFiscalPeriod.split('-Q')[0] || ''}
                 onChange={(e) => {
                   const year = e.target.value;
-                  const quarter = selectedFiscalYear.split('-Q')[1] || '';
-                  setSelectedFiscalYear(quarter ? `${year}-Q${quarter}` : year);
+                  const quarter = selectedFiscalPeriod.split('-Q')[1] || '';
+                  setSelectedFiscalPeriod(quarter ? `${year}-Q${quarter}` : year);
                 }}
                 placeholder="年度"
                 className="w-20 px-2 py-1 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
@@ -159,11 +159,11 @@ export const FileManagement: React.FC = () => {
               <span className="text-gray-600">Q</span>
               <input
                 type="number"
-                value={selectedFiscalYear.split('-Q')[1] || ''}
+                value={selectedFiscalPeriod.split('-Q')[1] || ''}
                 onChange={(e) => {
-                  const year = selectedFiscalYear.split('-Q')[0] || '';
+                  const year = selectedFiscalPeriod.split('-Q')[0] || '';
                   const quarter = e.target.value;
-                  setSelectedFiscalYear(year ? `${year}-Q${quarter}` : `Q${quarter}`);
+                  setSelectedFiscalPeriod(year ? `${year}-Q${quarter}` : `Q${quarter}`);
                 }}
                 placeholder="Q"
                 className="w-16 px-2 py-1 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"

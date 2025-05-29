@@ -6,12 +6,12 @@ import Button from '@/components/ui/Button';
 import Select from '@/components/ui/Select';
 import FiscalPeriodSelect from '@/components/ui/FiscalPeriodSelect';
 import { INFO_SOURCE_OPTIONS } from '@/components/ui/tagConfig';
-import { Upload, X, FileText } from 'lucide-react';
+import { Upload, X, FileText, AlertCircle } from 'lucide-react';
 
 interface FileUploadModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onUpload: (file: File, fiscalYear: string, documentType: string) => Promise<void>;
+  onUpload: (file: File, fiscalPeriod: string, documentType: string) => Promise<void>;
 }
 
 export const FileUploadModal: React.FC<FileUploadModalProps> = ({
@@ -20,25 +20,29 @@ export const FileUploadModal: React.FC<FileUploadModalProps> = ({
   onUpload,
 }) => {
   const [file, setFile] = useState<File | null>(null);
-  const [fiscalYear, setFiscalYear] = useState<string>('');
+  const [fiscalPeriod, setFiscalPeriod] = useState<string>('');
   const [documentType, setDocumentType] = useState<string>('');
   const [isDragging, setIsDragging] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
+  const [error, setError] = useState<string>('');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // 直近3年分の決算期を生成
-  const generateFiscalPeriods = () => {
-    const currentYear = new Date().getFullYear();
-    const periods = [];
-    for (let year = currentYear; year >= currentYear - 2; year--) {
-      for (let quarter = 1; quarter <= 4; quarter++) {
-        periods.push({
-          value: `${year}-Q${quarter}`,
-          label: `${year}-Q${quarter}`
-        });
-      }
+  // ファイルサイズ制限（200MB）
+  const MAX_FILE_SIZE = 200 * 1024 * 1024; // 200MB in bytes
+
+  const validateFile = (selectedFile: File): string | null => {
+    // PDFファイル形式チェック
+    if (selectedFile.type !== 'application/pdf') {
+      return 'PDFファイルのみアップロード可能です。対応形式: .pdf';
     }
-    return periods;
+    
+    // ファイルサイズチェック（200MB制限）
+    if (selectedFile.size > MAX_FILE_SIZE) {
+      const sizeMB = Math.round((selectedFile.size / (1024 * 1024)) * 100) / 100;
+      return `ファイルサイズが制限を超えています。現在: ${sizeMB}MB、制限: 200MB以下`;
+    }
+    
+    return null;
   };
 
   const handleDragOver = useCallback((e: React.DragEvent) => {
@@ -54,42 +58,71 @@ export const FileUploadModal: React.FC<FileUploadModalProps> = ({
   const handleDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault();
     setIsDragging(false);
+    setError('');
 
     const droppedFiles = Array.from(e.dataTransfer.files);
-    const pdfFile = droppedFiles.find(f => f.type === 'application/pdf');
+    const pdfFile = droppedFiles[0];
     
     if (pdfFile) {
+      const validationError = validateFile(pdfFile);
+      if (validationError) {
+        setError(validationError);
+        return;
+      }
       setFile(pdfFile);
-    } else {
-      alert('PDFファイルのみアップロード可能です');
     }
   }, []);
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = e.target.files?.[0];
+    setError('');
+    
     if (selectedFile) {
-      if (selectedFile.type === 'application/pdf') {
-        setFile(selectedFile);
-      } else {
-        alert('PDFファイルのみアップロード可能です');
+      const validationError = validateFile(selectedFile);
+      if (validationError) {
+        setError(validationError);
         e.target.value = ''; // inputをリセット
+        return;
       }
+      setFile(selectedFile);
     }
   };
 
+  const formatFileSize = (bytes: number): string => {
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    if (bytes === 0) return '0 Bytes';
+    const i = Math.floor(Math.log(bytes) / Math.log(1024));
+    return Math.round((bytes / Math.pow(1024, i)) * 100) / 100 + ' ' + sizes[i];
+  };
+
   const handleUpload = async () => {
-    if (!file || !fiscalYear || !documentType) {
-      alert('すべての項目を入力してください');
+    // 必須項目のバリデーション
+    if (!file) {
+      setError('ファイルを選択してください');
+      return;
+    }
+    if (!fiscalPeriod || fiscalPeriod.trim() === '' || fiscalPeriod === '選択してください') {
+      setError('対象決算期を選択してください');
+      return;
+    }
+    if (!documentType || documentType.trim() === '' || documentType === '選択してください') {
+      setError('資料種類を選択してください');
       return;
     }
 
     setIsUploading(true);
+    setError('');
+    
     try {
-      await onUpload(file, fiscalYear, documentType);
+      await onUpload(file, fiscalPeriod.trim(), documentType.trim());
       handleClose();
     } catch (error) {
       console.error('アップロードエラー:', error);
-      alert('アップロードに失敗しました');
+      if (error instanceof Error) {
+        setError(`アップロードに失敗しました: ${error.message}`);
+      } else {
+        setError('アップロードに失敗しました');
+      }
     } finally {
       setIsUploading(false);
     }
@@ -97,8 +130,9 @@ export const FileUploadModal: React.FC<FileUploadModalProps> = ({
 
   const handleClose = () => {
     setFile(null);
-    setFiscalYear('');
+    setFiscalPeriod('');
     setDocumentType('');
+    setError('');
     onClose();
   };
 
@@ -107,12 +141,6 @@ export const FileUploadModal: React.FC<FileUploadModalProps> = ({
     label: option.label,
     value: option.label
   }));
-
-  // 決算期のオプションを生成（空の選択肢を含む）
-  const fiscalYearOptions = [
-    { label: '選択してください', value: '' },
-    ...generateFiscalPeriods()
-  ];
 
   // 資料種類のオプションを生成（空の選択肢を含む）
   const documentOptions = [
@@ -133,6 +161,14 @@ export const FileUploadModal: React.FC<FileUploadModalProps> = ({
               <X className="h-5 w-5" />
             </button>
           </div>
+
+          {/* エラーメッセージ */}
+          {error && (
+            <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-lg flex items-center gap-2">
+              <AlertCircle className="h-4 w-4 text-red-500" />
+              <span className="text-sm text-red-700">{error}</span>
+            </div>
+          )}
 
           {/* ファイルドロップエリア */}
           <div
@@ -155,9 +191,14 @@ export const FileUploadModal: React.FC<FileUploadModalProps> = ({
             />
             <div className="text-center cursor-pointer">
               {file ? (
-                <div className="flex items-center justify-center gap-2">
-                  <FileText className="h-8 w-8 text-primary" />
-                  <span className="text-sm font-medium">{file.name}</span>
+                <div className="space-y-2">
+                  <div className="flex items-center justify-center gap-2">
+                    <FileText className="h-8 w-8 text-primary" />
+                    <span className="text-sm font-medium">{file.name}</span>
+                  </div>
+                  <p className="text-xs text-gray-500">
+                    ファイルサイズ: {formatFileSize(file.size)}
+                  </p>
                 </div>
               ) : (
                 <>
@@ -168,6 +209,9 @@ export const FileUploadModal: React.FC<FileUploadModalProps> = ({
                   <p className="text-xs text-gray-500 mt-1">
                     またはクリックしてファイルを選択
                   </p>
+                  <p className="text-xs text-gray-400 mt-2">
+                    ※ 200MB以下のPDFファイルのみ対応
+                  </p>
                 </>
               )}
             </div>
@@ -176,20 +220,24 @@ export const FileUploadModal: React.FC<FileUploadModalProps> = ({
           {/* 対象決算期 */}
           <div className="mb-4">
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              対象決算期
+              対象決算期 <span className="text-red-500">*</span>
             </label>
             <FiscalPeriodSelect
-              value={fiscalYear}
-              onChange={setFiscalYear}
-              includeEmpty={true}
+              value={fiscalPeriod}
+              onChange={setFiscalPeriod}
               className="w-full"
             />
+            {!fiscalPeriod && (
+              <p className="text-xs text-gray-500 mt-1">
+                例: 2024年第3四半期の場合は「2024年度」と「Q3」を入力
+              </p>
+            )}
           </div>
 
           {/* 資料種類 */}
           <div className="mb-6">
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              資料種類
+              資料種類 <span className="text-red-500">*</span>
             </label>
             <Select
               options={documentOptions}
@@ -209,7 +257,7 @@ export const FileUploadModal: React.FC<FileUploadModalProps> = ({
             />
             <Button
               onClick={handleUpload}
-              disabled={!file || !fiscalYear || !documentType || isUploading}
+              disabled={!file || !fiscalPeriod || !documentType || isUploading}
               label={isUploading ? 'アップロード中...' : 'アップロード'}
             />
           </div>

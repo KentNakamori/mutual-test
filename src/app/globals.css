@@ -3,6 +3,9 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Prismjs syntax highlighting styles */
+@import 'prismjs/themes/prism-tomorrow.css';
+
 /* 2) カスタムプロパティ（CSS変数）を定義 */
 @layer base {
   :root {
@@ -71,5 +74,50 @@ body {
   }
   body {
     @apply bg-background text-foreground;
+  }
+}
+
+/* Markdownレンダリング用のカスタムスタイル */
+@layer components {
+  .prose {
+    /* コードブロックのスタイル */
+    & pre {
+      @apply overflow-x-auto;
+      max-width: 100%;
+    }
+    
+    /* インラインコードのスタイル */
+    & code {
+      @apply font-mono text-sm;
+    }
+    
+    /* テーブルの改善 */
+    & table {
+      @apply w-full border-collapse;
+    }
+    
+    /* 段落の間隔調整 */
+    & p {
+      @apply mb-3;
+    }
+    
+    /* 見出しのスタイル */
+    & h1, & h2, & h3, & h4, & h5, & h6 {
+      @apply font-semibold mb-3 mt-4;
+    }
+    
+    & h1 { @apply text-xl; }
+    & h2 { @apply text-lg; }
+    & h3 { @apply text-base; }
+    
+    /* リストの改善 */
+    & ul, & ol {
+      @apply mb-3;
+    }
+    
+    /* 引用の改善 */
+    & blockquote {
+      @apply border-l-4 border-blue-500 pl-4 italic bg-blue-50 py-2 my-3;
+    }
   }
 }
