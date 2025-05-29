@@ -2,7 +2,7 @@
 import React from 'react';
 import { QA, QACardProps } from '@/types';
 import { getTagColor } from '@/components/ui/tagConfig';
-import { Calendar, Users, FileText, HelpCircle, CheckCircle, BookOpen, ThumbsUp } from 'lucide-react';
+import { Calendar, Users, FileText, HelpCircle, CheckCircle, BookOpen, ThumbsUp, MapPin } from 'lucide-react';
 import { useUser } from '@auth0/nextjs-auth0';
 import { useRouter } from 'next/navigation';
 
@@ -90,8 +90,9 @@ if (mode === 'preview') {
               {qa.question_route && (
                 <div className="flex flex-wrap gap-1">
                   <span 
-                    className={`px-2 py-1 rounded-full text-xs font-medium ${getTagColor(qa.question_route)}`}
+                    className={`px-2 py-1 rounded-full text-xs font-medium flex items-center ${getTagColor(qa.question_route)}`}
                   >
+                    <MapPin size={12} className="mr-1" />
                     {qa.question_route}
                   </span>
                 </div>

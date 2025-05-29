@@ -240,20 +240,20 @@ const QaDetailModal: React.FC<QADetailModalProps> = ({
 
   return (
     <>
-      <Dialog 
-        isOpen={isOpen} 
-        onClose={handleClose} 
-        title={modalTitle} 
-        className="max-w-6xl my-10" 
-        showCloseButton={false}
-      >
-        <div className="overflow-y-auto" style={{ maxHeight: 'calc(90vh - 100px)' }}>
-          {error && (
-            <div className="mb-4 p-4 bg-red-100 text-red-700 rounded">
-              {error}
-            </div>
-          )}
-          {role === 'corporate' ? (
+      {role === 'corporate' ? (
+        <Dialog 
+          isOpen={isOpen} 
+          onClose={handleClose} 
+          title={modalTitle} 
+          className="max-w-6xl my-10" 
+          showCloseButton={false}
+        >
+          <div className="overflow-y-auto" style={{ maxHeight: 'calc(90vh - 100px)' }}>
+            {error && (
+              <div className="mb-4 p-4 bg-red-100 text-red-700 rounded">
+                {error}
+              </div>
+            )}
             <div className="grid grid-cols-5 gap-6 p-6">
               {/* 左側：メタデータ編集 */}
               <div className="col-span-2 space-y-5">
@@ -428,11 +428,44 @@ const QaDetailModal: React.FC<QADetailModalProps> = ({
                 </div>
               </div>
             </div>
-          ) : (
-            // 投資家向けUI（見やすく改善）
-
-            <div className="p-6 bg-white rounded-lg relative">
-              {/* 投資家向けモーダル用の閉じるボタン */}
+            <div className="flex justify-end space-x-2 px-4 py-3 bg-white">
+              <button 
+                onClick={handleClose} 
+                className="py-1 px-3 border rounded hover:bg-gray-100"
+                disabled={isSaving}
+              >
+                キャンセル
+              </button>
+              <button 
+                onClick={handleDelete} 
+                className="py-1 px-3 bg-red-500 text-white rounded hover:bg-red-600"
+                disabled={isSaving}
+              >
+                削除
+              </button>
+              <button 
+                onClick={handleSave} 
+                className={`py-1 px-3 bg-blue-600 text-white rounded hover:bg-blue-700 ${isSaving ? 'opacity-50 cursor-not-allowed' : ''}`}
+                disabled={isSaving}
+              >
+                {isSaving ? '保存中...' : '保存'}
+              </button>
+            </div>
+          </div>
+        </Dialog>
+      ) : (
+        // 投資家向けUI（外枠なし）
+        isOpen && (
+          <div 
+            className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+            onClick={(e) => {
+              if (e.target === e.currentTarget) {
+                onClose();
+              }
+            }}
+          >
+            <div className="bg-white p-6 max-w-4xl w-full mx-4 max-h-[90vh] overflow-y-auto relative">
+              {/* 閉じるボタン */}
               <button
                 onClick={onClose}
                 className="absolute top-4 right-4 p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-colors duration-200"
@@ -545,35 +578,9 @@ const QaDetailModal: React.FC<QADetailModalProps> = ({
                 </button>
               </div>
             </div>
-          )}
-
-          {role === 'corporate' && (
-            <div className="flex justify-end space-x-2 px-4 py-3 bg-white">
-              <button 
-                onClick={handleClose} 
-                className="py-1 px-3 border rounded hover:bg-gray-100"
-                disabled={isSaving}
-              >
-                キャンセル
-              </button>
-              <button 
-                onClick={handleDelete} 
-                className="py-1 px-3 bg-red-500 text-white rounded hover:bg-red-600"
-                disabled={isSaving}
-              >
-                削除
-              </button>
-              <button 
-                onClick={handleSave} 
-                className={`py-1 px-3 bg-blue-600 text-white rounded hover:bg-blue-700 ${isSaving ? 'opacity-50 cursor-not-allowed' : ''}`}
-                disabled={isSaving}
-              >
-                {isSaving ? '保存中...' : '保存'}
-              </button>
-            </div>
-          )}
-        </div>
-      </Dialog>
+          </div>
+        )
+      )}
 
       {/* 確認ダイアログ */}
       {showConfirmDialog && (
