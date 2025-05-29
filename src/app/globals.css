@@ -79,45 +79,167 @@ body {
 
 /* Markdownレンダリング用のカスタムスタイル */
 @layer components {
+  /* QACardでのMarkdown省略表示用 */
+  .markdown-card-preview {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  
   .prose {
     /* コードブロックのスタイル */
     & pre {
-      @apply overflow-x-auto;
+      @apply overflow-x-auto bg-gray-900 text-gray-100 p-4 rounded-lg;
       max-width: 100%;
     }
     
     /* インラインコードのスタイル */
-    & code {
+    & code:not(pre code) {
+      @apply font-mono text-sm bg-gray-100 px-2 py-1 rounded text-pink-600;
+    }
+    
+    & pre code {
       @apply font-mono text-sm;
     }
     
     /* テーブルの改善 */
     & table {
-      @apply w-full border-collapse;
+      @apply w-full border-collapse border border-gray-200 rounded-lg overflow-hidden;
+    }
+    
+    & thead {
+      @apply bg-gray-50;
+    }
+    
+    & th {
+      @apply border border-gray-200 px-4 py-2 text-left font-semibold;
+    }
+    
+    & td {
+      @apply border border-gray-200 px-4 py-2;
     }
     
     /* 段落の間隔調整 */
     & p {
-      @apply mb-3;
+      @apply mb-4 leading-relaxed;
     }
     
     /* 見出しのスタイル */
     & h1, & h2, & h3, & h4, & h5, & h6 {
-      @apply font-semibold mb-3 mt-4;
+      @apply font-bold mb-4 mt-6 text-gray-900;
     }
     
-    & h1 { @apply text-xl; }
-    & h2 { @apply text-lg; }
-    & h3 { @apply text-base; }
+    & h1 { @apply text-2xl border-b border-gray-200 pb-2; }
+    & h2 { @apply text-xl; }
+    & h3 { @apply text-lg; }
+    & h4 { @apply text-base; }
+    & h5 { @apply text-sm; }
+    & h6 { @apply text-sm; }
     
     /* リストの改善 */
     & ul, & ol {
-      @apply mb-3;
+      @apply mb-4 pl-6;
+    }
+    
+    & li {
+      @apply mb-2;
+    }
+    
+    & ul li {
+      @apply list-disc;
+    }
+    
+    & ol li {
+      @apply list-decimal;
     }
     
     /* 引用の改善 */
     & blockquote {
-      @apply border-l-4 border-blue-500 pl-4 italic bg-blue-50 py-2 my-3;
+      @apply border-l-4 border-blue-500 pl-6 py-2 my-4 bg-blue-50 italic text-gray-700 rounded-r-lg;
+    }
+    
+    /* 水平線 */
+    & hr {
+      @apply border-0 border-t border-gray-200 my-6;
+    }
+    
+    /* リンクのスタイル */
+    & a {
+      @apply text-blue-600 hover:text-blue-800 underline;
+    }
+    
+    /* 強調テキスト */
+    & strong {
+      @apply font-bold text-gray-900;
+    }
+    
+    & em {
+      @apply italic;
+    }
+    
+    /* 大きいproseサイズ用の追加スタイル */
+    &.prose-lg {
+      & p {
+        @apply mb-5 leading-relaxed text-lg;
+      }
+      
+      & h1 { @apply text-3xl mb-5 mt-8; }
+      & h2 { @apply text-2xl mb-4 mt-7; }
+      & h3 { @apply text-xl mb-4 mt-6; }
+      & h4 { @apply text-lg mb-3 mt-5; }
+      
+      & ul, & ol {
+        @apply mb-5 pl-8 text-lg;
+      }
+      
+      & li {
+        @apply mb-2;
+      }
+      
+      & blockquote {
+        @apply pl-8 py-4 my-6 text-lg;
+      }
+      
+      & code:not(pre code) {
+        @apply text-base px-2 py-1;
+      }
+      
+      & pre {
+        @apply p-6 text-base;
+      }
+    }
+    
+    /* QACard用の小さいproseスタイル */
+    &.prose-xs {
+      & p {
+        @apply mb-1 text-xs;
+      }
+      
+      & h1, & h2, & h3, & h4, & h5, & h6 {
+        @apply text-xs font-medium mb-1 mt-1;
+      }
+      
+      & ul, & ol {
+        @apply mb-1 text-xs pl-4;
+      }
+      
+      & li {
+        @apply text-xs mb-1;
+      }
+      
+      & blockquote {
+        @apply text-xs py-1 my-1 pl-3;
+      }
+      
+      & code {
+        @apply text-xs px-1;
+      }
+      
+      & pre {
+        @apply p-2 text-xs;
+      }
     }
   }
 }
