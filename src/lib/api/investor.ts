@@ -677,15 +677,16 @@ export async function trackInvestorAction(
   return apiFetch<any>(ENDPOINTS.investor.track, "POST", data, token);
 }
 
+
 /**
- * 最新QA一覧取得API
+ * 企業ごとの最新QA取得API
  * 
  * 入力:
  * - token: 認証トークン（オプション）
  * - limit: 取得件数（デフォルト: 10）
  * 
  * 出力:
- * - results: QA一覧
+ * - results: 企業ごとの最新QA一覧
  *   - qaId: QA ID
  *   - title: タイトル
  *   - question: 質問
@@ -704,7 +705,7 @@ export async function trackInvestorAction(
  * - totalCount: 総件数
  * - totalPages: 総ページ数
  */
-export async function getLatestQAs(
+export async function getLatestQAsByCompany(
   token?: string,
   limit: number = 10
 ): Promise<{
@@ -728,12 +729,12 @@ export async function getLatestQAs(
   totalCount: number;
   totalPages: number;
 }> {
-  const query = {
-    sort: 'createdAt' as const,
-    order: 'desc' as const,
-    limit,
-    page: 1
-  };
+  const queryString = new URLSearchParams();
+  if (limit) queryString.append('limit', limit.toString());
   
-  return searchInvestorQa(query, token);
+  const endpoint = queryString.toString() 
+    ? `${ENDPOINTS.investor.qa.latestByCompany}?${queryString.toString()}`
+    : ENDPOINTS.investor.qa.latestByCompany;
+    
+  return apiFetch<any>(endpoint, "GET", undefined, token, true);
 } 

@@ -116,6 +116,14 @@ const SearchBar: React.FC<EnhancedSearchBarProps> = ({
     onSearch(keyword, cleanFilters);
   };
 
+  const handleResetFilters = () => {
+    setSelectedFilters({});
+    setActiveFilters({});
+    setKeyword('');
+    setSelectedSort('');
+    onSearch('', {});
+  };
+
   return (
     <div className={`flex flex-col w-full ${className}`}>
       <div className="flex items-center">
@@ -270,7 +278,14 @@ const SearchBar: React.FC<EnhancedSearchBarProps> = ({
                       </div>
                     )}
                     
-                    <div className="flex justify-end mt-4">
+                    <div className="flex justify-end space-x-2 mt-4">
+                      <button
+                        type="button"
+                        onClick={handleResetFilters}
+                        className="px-3 py-1.5 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200 text-sm"
+                      >
+                        リセット
+                      </button>
                       <button
                         type="button"
                         onClick={handleApplyFilters}

@@ -4,6 +4,7 @@ import { Heart, Filter, Search, Grid, List, ChevronDown, ExternalLink } from 'lu
 import { Industry, INDUSTRY_OPTIONS, getIndustryLabel } from '@/types/industry';
 import GuestRestrictedContent from '@/components/features/investor/common/GuestRestrictedContent';
 import { useUser } from '@auth0/nextjs-auth0';
+import { getFullImageUrl } from '@/lib/utils/imageUtils';//画像のURLを取得する関数仮
 
 // APIレスポンスの型定義
 interface CompanyItem {
@@ -76,7 +77,7 @@ const CompanyListing: React.FC<CompanyListingProps> = ({ isFollowedOnly = false 
         
         // フォロー済みフィルターを適用
         const filteredData = isFollowedOnly 
-          ? companiesList.filter(company => company.isFollowed === true)
+          ? companiesList.filter((company: CompanyItem) => company.isFollowed === true)
           : companiesList;
         
         setCompanies(filteredData);
@@ -467,88 +468,66 @@ const CompanyGridCard = ({ company, isGuest, onFollowToggle }: CompanyCardProps)
       onClick={handleCardClick} 
       className="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-200 hover:shadow-md transition-all h-full cursor-pointer"
     >
-      <div className="p-5 flex flex-col h-full">
-        <div className="flex items-center mb-4">
+      <div className="p-5 flex h-full">
+        {/* ロゴ部分 - 縦幅いっぱい */}
+        <div className="flex-shrink-0 mr-4">
           {company.logoUrl ? (
-            <img src={company.logoUrl} alt={`${company.companyName} logo`} className="w-12 h-12 rounded-md object-contain bg-gray-100 mr-4" />
+            <img src={getFullImageUrl(company.logoUrl)} alt={`${company.companyName} logo`} className="w-28 h-full rounded-md object-cover bg-gray-100" />
           ) : (
-            <div className="w-12 h-12 rounded-md bg-gray-100 flex items-center justify-center text-xl font-bold text-gray-500 mr-4">
+            <div className="w-28 h-full rounded-md bg-gray-100 flex items-center justify-center text-2xl font-bold text-gray-500">
               {company.companyName.charAt(0)}
             </div>
           )}
-          <div className="flex-1">
-            <h3 className="font-medium text-gray-800">{company.companyName}</h3>
-            <p className="text-sm text-gray-500">{getIndustryLabel(company.industry)}</p>
+        </div>
+        
+        {/* 右側のコンテンツ */}
+        <div className="flex-1 flex flex-col justify-between min-w-0">
+          {/* 上部：企業名と証券コード */}
+          <div className="mb-3">
+            <h3 className="font-medium text-gray-800 truncate">{company.companyName}</h3>
             {company.securitiesCode && (
-              <p className="text-xs text-gray-400">証券コード: {company.securitiesCode}</p>
+              <p className="text-xs text-gray-400 mt-1">証券コード: {company.securitiesCode}</p>
+            )}
+          </div>
+          
+          {/* 下部：タグとフォローボタン */}
+          <div className="flex items-end justify-between gap-2">
+            <div className="flex flex-wrap gap-1 flex-1">
+              <span className="inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-medium bg-blue-50 text-blue-700 border border-blue-100">
+                {getIndustryLabel(company.industry)}
+              </span>
+              {company.majorStockExchange && (
+                <span className="inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-medium bg-green-50 text-green-700 border border-green-100">
+                  {company.majorStockExchange}
+                </span>
+              )}
+            </div>
+            
+            {isGuest ? (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  window.location.assign('/investor/login');
+                }}
+                className="px-2 py-1 rounded-md text-xs font-medium bg-gray-200 text-gray-700 hover:bg-gray-300 flex-shrink-0"
+              >
+                ログイン必要
+              </button>
+            ) : (
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onFollowToggle(company.companyId, company.isFollowed);
+                }}
+                className={`px-2 py-1 rounded-md text-xs font-medium transition-colors flex-shrink-0 ${
+                  company.isFollowed ? 'bg-gray-100 text-gray-700 hover:bg-gray-200' : 'bg-blue-600 text-white hover:bg-blue-700'
+                }`}
+              >
+                {company.isFollowed ? 'フォロー中' : 'フォロー'}
+              </button>
             )}
           </div>
         </div>
-        
-        <div className="mb-3 flex flex-wrap gap-1">
-          <span className="inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-medium bg-blue-50 text-blue-700 border border-blue-100">
-            {getIndustryLabel(company.industry)}
-          </span>
-          {company.majorStockExchange && (
-            <span className="inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-medium bg-green-50 text-green-700 border border-green-100">
-              {company.majorStockExchange}
-            </span>
-          )}
-        </div>
-        
-        {company.businessDescription && (
-          <div className="mt-1">
-            <p 
-              className="text-xs text-gray-600 overflow-hidden" 
-              style={{
-                display: '-webkit-box',
-                WebkitLineClamp: 1,
-                WebkitBoxOrient: 'vertical'
-              } as React.CSSProperties}
-            >
-              {company.businessDescription}
-            </p>
-          </div>
-        )}
-        
-        {company.websiteUrl && (
-          <div className="mb-3">
-            <a 
-              href={company.websiteUrl} 
-              target="_blank" 
-              rel="noopener noreferrer"
-              onClick={(e) => e.stopPropagation()}
-              className="text-xs text-blue-600 hover:text-blue-800 flex items-center"
-            >
-              <ExternalLink size={12} className="mr-1" />
-              公式サイト
-            </a>
-          </div>
-        )}
-        
-        {isGuest ? (
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              window.location.assign('/investor/login');
-            }}
-            className="w-full py-1 px-2 rounded-md text-sm font-medium bg-gray-200 text-gray-700 hover:bg-gray-300"
-          >
-            フォローするにはログインが必要です
-          </button>
-        ) : (
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              onFollowToggle(company.companyId, company.isFollowed);
-            }}
-            className={`w-full py-1 px-2 rounded-md text-sm font-medium transition-colors ${
-              company.isFollowed ? 'bg-gray-100 text-gray-700 hover:bg-gray-200' : 'bg-blue-600 text-white hover:bg-blue-700'
-            }`}
-          >
-            {company.isFollowed ? 'フォロー中' : 'フォローする'}
-          </button>
-        )}
       </div>
     </div>
   );
@@ -566,9 +545,9 @@ const CompanyListCard = ({ company, isGuest, onFollowToggle }: CompanyCardProps)
     >
       <div className="p-4 flex items-start h-full">
         {company.logoUrl ? (
-          <img src={company.logoUrl} alt={`${company.companyName} logo`} className="w-12 h-12 rounded-md object-contain bg-gray-100 mr-4" />
+          <img src={getFullImageUrl(company.logoUrl)} alt={`${company.companyName} logo`} className="w-16 h-10 rounded-md object-contain bg-gray-100 mr-4" />
         ) : (
-          <div className="w-12 h-12 rounded-md bg-gray-100 flex items-center justify-center text-xl font-bold text-gray-500 mr-4">
+          <div className="w-16 h-10 rounded-md bg-gray-100 flex items-center justify-center text-xl font-bold text-gray-500 mr-4">
             {company.companyName.charAt(0)}
           </div>
         )}
@@ -577,51 +556,19 @@ const CompanyListCard = ({ company, isGuest, onFollowToggle }: CompanyCardProps)
           <div className="flex flex-wrap justify-between items-start">
             <div className="flex-1 min-w-0 mr-4">
               <h3 className="font-medium text-gray-800">{company.companyName}</h3>
-              <div className="flex items-center text-sm text-gray-500 mt-1">
-                <span className="text-gray-500">{getIndustryLabel(company.industry)}</span>
+              <div className="flex items-center gap-2 mt-1 flex-wrap">
                 {company.securitiesCode && (
-                  <>
-                    <span className="mx-2">•</span>
-                    <span className="text-xs">証券コード: {company.securitiesCode}</span>
-                  </>
+                  <span className="text-xs text-gray-500">証券コード: {company.securitiesCode}</span>
+                )}
+                <span className="inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-medium bg-blue-50 text-blue-700 border border-blue-100">
+                  {getIndustryLabel(company.industry)}
+                </span>
+                {company.majorStockExchange && (
+                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-medium bg-green-50 text-green-700 border border-green-100">
+                    {company.majorStockExchange}
+                  </span>
                 )}
               </div>
-              {company.businessDescription && (
-                <div className="mt-1">
-                  <p 
-                    className="text-xs text-gray-600 overflow-hidden" 
-                    style={{
-                      display: '-webkit-box',
-                      WebkitLineClamp: 1,
-                      WebkitBoxOrient: 'vertical'
-                    } as React.CSSProperties}
-                  >
-                    {company.businessDescription}
-                  </p>
-                </div>
-              )}
-              {company.websiteUrl && (
-                <a 
-                  href={company.websiteUrl} 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  onClick={(e) => e.stopPropagation()}
-                  className="text-xs text-blue-600 hover:text-blue-800 flex items-center mt-1"
-                >
-                  <ExternalLink size={12} className="mr-1" />
-                  公式サイト
-                </a>
-              )}
-            </div>
-            <div className="flex flex-col items-end gap-1">
-              <span className="inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-medium bg-blue-50 text-blue-700 border border-blue-100">
-                {getIndustryLabel(company.industry)}
-              </span>
-              {company.majorStockExchange && (
-                <span className="inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-medium bg-green-50 text-green-700 border border-green-100">
-                  {company.majorStockExchange}
-                </span>
-              )}
             </div>
           </div>
         </div>

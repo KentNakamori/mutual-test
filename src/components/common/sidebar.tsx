@@ -59,9 +59,9 @@ const Sidebar: React.FC<ExtendedSidebarProps> = ({
   };
 
   const handleLogin = () => {
-    // 現在のURLをreturnToパラメータとして渡す
-    const returnTo = typeof window !== 'undefined' ? window.location.pathname : '/';
-    router.push(`/api/auth/login?returnTo=${encodeURIComponent(returnTo)}`);
+    // 現在のURLをreturnToパラメータとして渡してAuth0のログイン画面に遷移
+    const returnTo = typeof window !== 'undefined' ? window.location.pathname : '/investor/companies';
+    router.push(`/api/auth/investor-login?returnTo=${encodeURIComponent(returnTo)}`);
   };
 
   return (

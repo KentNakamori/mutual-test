@@ -32,17 +32,10 @@ const CompanyPage: React.FC = () => {
   const [companyData, setCompanyData] = useState<Company | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<Error | null>(null);
-  const [activeTab, setActiveTab] = useState<"chat" | "qa">("chat");
+  const [activeTab, setActiveTab] = useState<"chat" | "qa">("qa");
 
   // ゲスト判定
   const isGuest = !user && !userLoading && !userError;
-
-  // ゲストユーザーの場合はデフォルトタブをQ&Aに設定
-  useEffect(() => {
-    if (isGuest && activeTab === "chat") {
-      setActiveTab("qa");
-    }
-  }, [isGuest]);
 
   useEffect(() => {
     // 認証状態がロード中の場合は処理しない

@@ -2,6 +2,7 @@
 import React from 'react';
 import { Company, CompanyHeaderProps } from '../../../../types';
 import { getIndustryLabel } from '@/types/industry';
+import { getFullImageUrl } from '@/lib/utils/imageUtils';
 
 const CompanyHeader: React.FC<CompanyHeaderProps> = ({ company }) => {
   const handleBackClick = () => {
@@ -15,18 +16,18 @@ const CompanyHeader: React.FC<CompanyHeaderProps> = ({ company }) => {
         <div className="flex items-center space-x-3">
           {company.logoUrl ? (
             <img
-              src={company.logoUrl}
+              src={getFullImageUrl(company.logoUrl)}
               alt={`${company.companyName} のロゴ`}
-              className="h-12 w-12 rounded-full object-cover"
+              className="h-12 w-16 rounded-md object-cover"
             />
           ) : (
-            <div className="h-12 w-12 rounded-full bg-gray-300 flex items-center justify-center">
+            <div className="h-12 w-16 rounded-md bg-gray-300 flex items-center justify-center">
               <span className="font-semibold text-white">
                 {company.companyName.charAt(0)}
               </span>
             </div>
           )}
-          <h1 className="font-semibold">{company.companyName}</h1>
+          <h1 className="text-2xl font-semibold">{company.companyName}</h1>
         </div>
         {/* 下部：企業情報 */}
         <div className="flex flex-wrap items-center gap-2 mt-2">
