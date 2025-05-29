@@ -299,6 +299,7 @@ export interface FileCollection {
   uploadDate: DateString;  // バックエンドに合わせて変更
   isProcessed?: boolean;
   s3Key?: string | null;
+  s3Url?: string | null;
   chunksCount?: number;
 }
 

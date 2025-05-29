@@ -7,10 +7,11 @@ import { Trash2, FileText, Calendar, Tag } from 'lucide-react';
 interface FileListProps {
   files: FileCollection[];
   onDelete: (fileId: string) => void;
+  onFileClick: (file: FileCollection) => void;
   isLoading?: boolean;
 }
 
-export const FileList: React.FC<FileListProps> = ({ files, onDelete, isLoading }) => {
+export const FileList: React.FC<FileListProps> = ({ files, onDelete, onFileClick, isLoading }) => {
   const formatFileSize = (bytes: number): string => {
     const sizes = ['Bytes', 'KB', 'MB', 'GB'];
     if (bytes === 0) return '0 Bytes';
@@ -63,7 +64,16 @@ export const FileList: React.FC<FileListProps> = ({ files, onDelete, isLoading }
               <td className="p-4">
                 <div className="flex items-center gap-2">
                   <FileText className="h-5 w-5 text-gray-500" />
-                  <span className="font-medium">{file.fileName}</span>
+                  <button
+                    onClick={() => onFileClick(file)}
+                    className="font-medium text-blue-600 hover:text-blue-800 hover:underline transition-colors text-left"
+                    disabled={!file.s3Url}
+                  >
+                    {file.fileName}
+                  </button>
+                  {!file.s3Url && (
+                    <span className="text-xs text-gray-500 ml-2">(処理中)</span>
+                  )}
                 </div>
               </td>
               <td className="p-4">

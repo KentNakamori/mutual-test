@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { FileList } from './FileList';
 import { FileUploadModal } from './FileUploadModal';
+import { PDFPreviewModal } from './PDFPreviewModal';
 import { Plus } from 'lucide-react';
 import {
   getCorporateFiles,
@@ -17,6 +18,8 @@ export const FileManagement: React.FC = () => {
   const [fileData, setFileData] = useState<FileManagementResponse | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
+  const [isPDFPreviewOpen, setIsPDFPreviewOpen] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<FileCollection | null>(null);
   const [selectedDocumentType, setSelectedDocumentType] = useState<string>('');
   const [selectedFiscalYear, setSelectedFiscalYear] = useState<string>('');
 
@@ -61,6 +64,14 @@ export const FileManagement: React.FC = () => {
     } catch (error) {
       console.error('削除エラー:', error);
       alert('ファイルの削除に失敗しました');
+    }
+  };
+
+  // ファイルクリック（PDFプレビュー表示）
+  const handleFileClick = (file: FileCollection) => {
+    if (file.s3Url) {
+      setSelectedFile(file);
+      setIsPDFPreviewOpen(true);
     }
   };
 
@@ -171,6 +182,7 @@ export const FileManagement: React.FC = () => {
           <FileList 
             files={filteredFiles} 
             onDelete={handleDelete}
+            onFileClick={handleFileClick}
             isLoading={isLoading}
           />
         </div>
@@ -182,6 +194,19 @@ export const FileManagement: React.FC = () => {
         onClose={() => setIsUploadModalOpen(false)}
         onUpload={handleUpload}
       />
+
+      {/* PDFプレビューモーダル */}
+      {selectedFile && (
+        <PDFPreviewModal
+          isOpen={isPDFPreviewOpen}
+          onClose={() => {
+            setIsPDFPreviewOpen(false);
+            setSelectedFile(null);
+          }}
+          fileName={selectedFile.fileName}
+          pdfUrl={selectedFile.s3Url!}
+        />
+      )}
     </div>
   );
 }; 
