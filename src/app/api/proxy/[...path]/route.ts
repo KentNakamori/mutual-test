@@ -15,13 +15,14 @@ const GUEST_ACCESSIBLE_ENDPOINTS = [
     'investor/companies',      // 企業一覧
     'investor/company',        // 企業詳細
     'investor/qa/search',      // Q&A検索
+    'investor/qa/latest-by-company', // 最新Q&A
 ];
 
 async function handler(
     req: Request,
-    { params }: { params: { path: string[] } } // params は Promise ではない
+    { params }: { params: Promise<{ path: string[] }> } // paramsはPromiseに変更
 ) {
-    const { path } = params; // await 不要
+    const { path } = await params; // awaitを追加
     const targetPath = path.join('/');
     const search = req.url.split('?')[1] ?? '';
     // API_BASE_URL は process.env.API_BASE_URL または適切なものを使用

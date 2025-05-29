@@ -76,6 +76,7 @@ export const ENDPOINTS = {
       companies: '/investor/qa/companies',
       like: (id: string) => `/investor/qa/${id}/like`,
       comment: '/investor/qa/comment',
+      latestByCompany: '/investor/qa/latest-by-company',
     },
     // チャット関連
     chat: {

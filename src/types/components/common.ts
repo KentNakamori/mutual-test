@@ -275,7 +275,7 @@ export interface PaginationProps {
 export interface FilterOption {
   id: string;
   label: string;
-  type: 'select' | 'text' | 'date' | 'checkbox' | 'fiscalPeriod';
+  type: 'select' | 'text' | 'date' | 'checkbox' | 'fiscalPeriod' | 'multiSelect';
   options?: { value: string; label: string }[];
 }
 

@@ -136,7 +136,7 @@ export interface SearchBarProps {
   filterOptions?: {
     id: string;
     label: string;
-    type: 'select' | 'text' | 'date' | 'checkbox' | 'fiscalPeriod';
+    type: 'select' | 'text' | 'date' | 'checkbox' | 'fiscalPeriod' | 'multiSelect';
     options?: { value: string; label: string }[];
   }[];
   sortOptions?: {

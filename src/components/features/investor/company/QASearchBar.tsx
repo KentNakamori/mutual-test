@@ -68,10 +68,17 @@ const QASearchBar: React.FC<QASearchBarProps> = ({
       }
     }
     
-    // 決算期の処理
-    let fiscalPeriod: string | undefined = undefined;
-    if (filters.fiscalPeriod && filters.fiscalPeriod.trim() !== '') {
-      fiscalPeriod = filters.fiscalPeriod;
+    // 決算期の処理 (配列として処理)
+    let fiscalPeriodArray: string[] | undefined = undefined;
+    if (filters.fiscalPeriod) {
+      if (Array.isArray(filters.fiscalPeriod)) {
+        const validPeriods = filters.fiscalPeriod.filter((p: string) => p && p.trim() !== '');
+        if (validPeriods.length > 0) {
+          fiscalPeriodArray = validPeriods;
+        }
+      } else if (typeof filters.fiscalPeriod === 'string' && filters.fiscalPeriod.trim() !== '') {
+        fiscalPeriodArray = [filters.fiscalPeriod];
+      }
     }
     
     // question_routeの処理
@@ -110,7 +117,7 @@ const QASearchBar: React.FC<QASearchBarProps> = ({
       keyword: keyword || '',
       question_route: questionRoute,
       genre: genreArray,
-      fiscalPeriod: fiscalPeriod,
+      fiscalPeriod: fiscalPeriodArray,
       sort: sortKey,
       order: sortOrder
     };

@@ -133,9 +133,10 @@ const QASearchPage: React.FC = () => {
 
   // いいね操作
   const handleLike = useCallback(async (qaId: string) => {
-    // ゲストユーザーの場合はログイン画面にリダイレクト
+    // ゲストユーザーの場合はAuth0のログイン画面にリダイレクト
     if (!user) {
-      router.push('/investor/login');
+      const returnTo = typeof window !== 'undefined' ? window.location.pathname : '/investor/qa';
+      router.push(`/api/auth/investor-login?returnTo=${encodeURIComponent(returnTo)}`);
       return;
     }
 
