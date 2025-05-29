@@ -5,7 +5,7 @@ import ChatLogItem from './ChatLogItem';
 
 /**
  * ChatLogsList コンポーネント
- * ・取得したチャットログ一覧をカード形式で表示します。
+ * ・取得したチャットログ一覧をリスト形式で表示します。
  */
 const ChatLogsList: React.FC<ChatLogsListProps> = ({ logs, onDeleteLog }) => {
   if (logs.length === 0) {
@@ -13,8 +13,8 @@ const ChatLogsList: React.FC<ChatLogsListProps> = ({ logs, onDeleteLog }) => {
   }
 
   return (
-    <div className="space-y-4">
-      {logs.map((log) => (
+    <div className="bg-white rounded-lg shadow-sm border border-gray-200 overflow-hidden">
+      {logs.map((log, index) => (
         <ChatLogItem
           key={log.chatId}
           log={log}

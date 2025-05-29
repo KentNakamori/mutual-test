@@ -60,6 +60,7 @@ const ChatLogsPage: React.FC = () => {
         chatId: log.chatId,
         companyId: log.companyId,
         companyName: log.companyName,
+        logoUrl: log.logoUrl,
         lastMessageSnippet: log.lastMessageSnippet || log.title || '新規チャット',
         updatedAt: log.updatedAt,
         totalMessages: log.totalMessages

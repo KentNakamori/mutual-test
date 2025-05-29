@@ -1,9 +1,10 @@
 // src/components/features/investor/chat/ChatLogItem.tsx
 import React, { useState } from 'react';
 import { ChatLog, ChatLogItemProps } from '@/types';
-import Button from '@/components/ui/Button';
 import ConfirmDeleteDialog from './ConfirmDeleteDialog';
 import { useRouter } from 'next/navigation';
+import { Trash2 } from 'lucide-react';
+import { getFullImageUrl } from '@/lib/utils/imageUtils';
 
 const ChatLogItem: React.FC<ChatLogItemProps> = ({ log, onDelete }) => {
   const [isConfirmOpen, setIsConfirmOpen] = useState<boolean>(false);
@@ -30,37 +31,71 @@ const ChatLogItem: React.FC<ChatLogItemProps> = ({ log, onDelete }) => {
     router.push(url);
   };
 
-  // 日付表示（例："YYYY/MM/DD HH:mm"）
-  const formattedDate = new Date(log.updatedAt).toLocaleString('ja-JP');
+  // 日付表示（例："MM/DD HH:mm"）
+  const formatDate = (dateStr: string) => {
+    const date = new Date(dateStr);
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const hours = String(date.getHours()).padStart(2, '0');
+    const minutes = String(date.getMinutes()).padStart(2, '0');
+    return `${month}/${day} ${hours}:${minutes}`;
+  };
 
   return (
-    <div className="bg-white shadow rounded p-4 flex justify-between items-center hover:bg-gray-50 transition-colors duration-200">
-      <div
-        className="flex-1 cursor-pointer"
-        onClick={handleChatClick}
-      >
-        <h2 className="text-lg font-semibold text-blue-600 hover:text-blue-800">
-          {log.companyName}
-        </h2>
-        <p className="text-sm text-gray-600 mt-1">{log.lastMessageSnippet}</p>
-        <div className="flex items-center justify-between mt-2">
-          <p className="text-xs text-gray-500">{formattedDate}</p>
-          {log.totalMessages && (
-            <span className="text-xs text-gray-500 bg-gray-100 px-2 py-1 rounded">
-              {log.totalMessages}件のメッセージ
-            </span>
-          )}
+    <div className="border-b border-gray-200 hover:bg-gray-50 transition-colors duration-200">
+      <div className="p-4">
+        <div className="flex items-center gap-4">
+          {/* 左側：企業ロゴ */}
+          <div 
+            className="flex-shrink-0 cursor-pointer"
+            onClick={handleChatClick}
+          >
+            {log.logoUrl ? (
+              <img
+                src={getFullImageUrl(log.logoUrl)}
+                alt={`${log.companyName}のロゴ`}
+                className="w-12 h-9 rounded-md object-cover"
+              />
+            ) : (
+              <div className="w-12 h-9 rounded-md bg-gray-300 flex items-center justify-center">
+                <span className="text-gray-600 text-xs font-medium">
+                  {log.companyName.charAt(0)}
+                </span>
+              </div>
+            )}
+          </div>
+
+          {/* 中央：企業名と会話内容 */}
+          <div 
+            className="flex-1 min-w-0 cursor-pointer"
+            onClick={handleChatClick}
+          >
+            <h2 className="text-base font-semibold text-blue-600 hover:text-blue-800 truncate">
+              {log.companyName}
+            </h2>
+            <p className="text-sm text-gray-600 mt-1 truncate">
+              {log.lastMessageSnippet}
+            </p>
+          </div>
+
+          {/* 右側：日時と削除ボタン */}
+          <div className="flex items-center gap-4 flex-shrink-0">
+            <p className="text-xs text-gray-500 whitespace-nowrap">
+              {formatDate(log.updatedAt)}
+            </p>
+            {onDelete && (
+              <button
+                onClick={handleDeleteClick}
+                className="p-2 text-gray-400 hover:text-red-500 hover:bg-red-50 rounded-full transition-colors duration-200"
+                aria-label="チャットログを削除"
+              >
+                <Trash2 size={16} />
+              </button>
+            )}
+          </div>
         </div>
       </div>
-      <div className="flex space-x-2 ml-4">
-        {onDelete && (
-          <Button 
-            label="削除" 
-            onClick={handleDeleteClick} 
-            variant="destructive"
-          />
-        )}
-      </div>
+      
       <ConfirmDeleteDialog
         isOpen={isConfirmOpen}
         onConfirm={handleConfirmDelete}
