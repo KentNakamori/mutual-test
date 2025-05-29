@@ -287,6 +287,7 @@ const QaDetailModal: React.FC<QADetailModalProps> = ({
 
   return (
     <>
+
       <Dialog 
         isOpen={isOpen} 
         onClose={handleClose} 

@@ -61,6 +61,7 @@ const QACard: React.FC<QACardProps> = ({
       className="bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow duration-300 overflow-hidden cursor-pointer border border-gray-100"
       onClick={() => onSelect && onSelect(qa.qaId)}
     >
+
       <div className="p-4">
         {/* ヘッダー部分 - タイトルと基本情報 */}
         <div className="mb-2 border-b border-gray-200 pb-2">
@@ -86,6 +87,7 @@ const QACard: React.FC<QACardProps> = ({
             </div>
           </div>
         </div>
+
 
         {/* メイン内容部分 */}
         <div className="flex gap-6">
@@ -114,6 +116,7 @@ const QACard: React.FC<QACardProps> = ({
                 <ReactMarkdown>
                   {qa.answer}
                 </ReactMarkdown>
+
               </div>
             </div>
           </div>
@@ -183,6 +186,7 @@ const QACard: React.FC<QACardProps> = ({
                   title="いいねするにはログインが必要です"
                 >
                   <div className="p-2 rounded-full bg-gray-100 hover:bg-gray-200 transition-colors duration-200">
+
                     <ThumbsUp size={16} className="mr-0.5" />
                   </div>
                   <span className="ml-2 text-sm font-medium">{qa.likeCount || 0}</span>

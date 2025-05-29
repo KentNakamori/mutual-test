@@ -50,7 +50,7 @@ const ChatTabView: React.FC<ChatTabViewProps> = ({ companyId }) => {
   const [loading, setLoading] = useState<boolean>(false);
   const [isInitialized, setIsInitialized] = useState<boolean>(false);
   const [inputValue, setInputValue] = useState<string>('');
-  
+
   // メッセージIDの重複を防ぐためのカウンター
   const messageCounterRef = useRef<number>(0);
 
@@ -146,7 +146,7 @@ const ChatTabView: React.FC<ChatTabViewProps> = ({ companyId }) => {
         lastMessageTimestamp: new Date().toISOString()
       };
       
-      setChatSessions(prev => [newSession, ...prev]);
+    setChatSessions(prev => [newSession, ...prev]);
       setSelectedSessionId(response.chatId);
       setMessages([]);
     } catch (error) {
@@ -296,7 +296,7 @@ const ChatTabView: React.FC<ChatTabViewProps> = ({ companyId }) => {
               newMessages[targetIndex] = {
                 ...newMessages[targetIndex],
                 text: `エラーが発生しました: ${error}`,
-                timestamp: new Date().toISOString(),
+          timestamp: new Date().toISOString(),
               };
             }
             

@@ -178,6 +178,7 @@ export interface ChatLog {
   chatId: ChatId;
   companyId: CompanyId;
   companyName: string;
+  logoUrl?: string;
   lastMessageSnippet: string;
   updatedAt: DateString;
   totalMessages?: number;
