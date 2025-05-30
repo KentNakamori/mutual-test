@@ -1,13 +1,11 @@
 // src/components/features/corporate/qa/UploadButton.tsx
 import React from 'react';
 import Button from '@/components/ui/Button';
+import { UploadButtonProps} from '@/types';
 
-export interface UploadButtonProps {
-  onClick: () => void;
-}
 
 const UploadButton: React.FC<UploadButtonProps> = ({ onClick }) => {
-  return <Button label="資料をアップロード" onClick={onClick} variant="primary" />;
+  return <Button label="資料をアップロード" onClick={onClick} variant="gradient" />;
 };
 
 export default UploadButton;

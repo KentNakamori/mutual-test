@@ -1,123 +1,289 @@
 // src/app/corporate/qa/page.tsx
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
-
-// 共通コンポーネントのインポート
 import Sidebar from "@/components/common/sidebar";
-import Footer from "@/components/common/Footer";
-
-// Q&A ページ固有コンポーネントのインポート
+import Footer from "@/components/common/footer";
 import TopActionBar from "@/components/features/corporate/qa/TopActionBar";
-import QaListTable from "@/components/features/corporate/qa/QaListTable";
-import QaEditModal from "@/components/features/corporate/qa/QaEditModal";
-import UploadModal from "@/components/features/corporate/qa/UploadModal";
-
-// 型定義（QA型は既存のものを利用）
+import QaListCards from "@/components/features/corporate/qa/QaListCards";
+import QaDetailModal from "@/components/ui/QaDetailModal";
+import QaCreateModal from "@/components/features/corporate/qa/QaCreateModal";
 import { QA } from "@/types";
+import { LayoutDashboard, HelpCircle, MessageSquare, Settings, FileText } from 'lucide-react';
+import { searchCorporateQa, createCorporateQa, updateCorporateQa, deleteCorporateQa } from "@/lib/api";
+import { useUser } from "@auth0/nextjs-auth0";
 
-// モックデータ（バックエンド未接続時用）
-const mockQas: QA[] = [
-  {
-    qaId: "1",
-    question: "この製品はどのように動作しますか？",
-    answer: "製品は最新のテクノロジーを活用して動作します。詳しい仕組みは…",
-    companyId: "comp1",
-    likeCount: 10,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-    isPublished: true,
-  },
-  {
-    qaId: "2",
-    question: "保証期間はどのくらいですか？",
-    answer: "保証期間は1年間です。ご不明点があればお問い合わせください。",
-    companyId: "comp1",
-    likeCount: 5,
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-    isPublished: true,
-  },
-];
 
-// サイドバーのメニュー定義（corporate/dashboard/page.tsx と同じ実装）
 const sidebarMenuItems = [
-  { label: "Dashboard", link: "/corporate/dashboard" },
-  { label: "Q&A管理", link: "/corporate/qa" },
-  { label: "IRチャット", link: "/corporate/irchat" },
-  { label: '設定', link: '/corporate/settings' },
+  { label: "ダッシュボード", link: "/corporate/dashboard", icon: <LayoutDashboard size={20} />},
+  { label: "Q&A管理", link: "/corporate/qa", icon: <HelpCircle size={20} /> },
+  { label: "IRチャット", link: "/corporate/irchat" , icon: <MessageSquare size={20} />},
+  { label: "ファイル管理", link: "/corporate/files", icon: <FileText size={20} /> },
+  { label: "設定", link: "/corporate/settings", icon: <Settings size={20} />  },
 ];
 
 const QaPage: React.FC = () => {
   const router = useRouter();
-
-  // Q&A 一覧の状態管理
-  const [qas, setQas] = useState<QA[]>(mockQas);
+  /*auth0*/
+  const { user, isLoading: userLoading, error: userError } = useUser();
+  const isAuthenticated = !!user;            // ← 旧 useAuth の isAuthenticated 相当
+  const token = user?.sub ?? null;
+  
+  
+  const [qas, setQas] = useState<QA[]>([]);
   const [selectedQa, setSelectedQa] = useState<QA | null>(null);
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [totalCount, setTotalCount] = useState(0);
+  const [totalPages, setTotalPages] = useState(0);
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [searchParams, setSearchParams] = useState<{
+    keyword: string;
+    genre: string[];
+    source: string[];
+    question_route?: string;
+    fiscalPeriod?: string[];
+    sort: 'createdAt' | 'likeCount';
+    order: 'asc' | 'desc';
+    page: number;
+    limit: number;
+    review_status?: 'DRAFT' | 'PENDING' | 'PUBLISHED';
+  }>({
+    keyword: '',
+    genre: [],
+    source: [],
+    question_route: '',
+    sort: 'createdAt',
+    order: 'desc',
+    page: 1,
+    limit: 10
+  });
 
-  // 検索フォームからのコールバック
-  const handleSearch = (params: { query: string; theme?: string }) => {
-    const filtered = mockQas.filter((qa) =>
-      qa.question.toLowerCase().includes(params.query.toLowerCase())
-    );
-    setQas(filtered);
-  };
+  useEffect(() => {
+    const fetchQAs = async () => {
+      if (!isAuthenticated) return;
+      
+      try {
+        setIsLoading(true);
+        
+        const apiParams = {
+          keyword: searchParams.keyword || undefined,
+          genre: searchParams.genre?.length > 0 ? searchParams.genre : undefined,
+          fiscalPeriod: searchParams.fiscalPeriod && searchParams.fiscalPeriod.length > 0 
+            ? searchParams.fiscalPeriod 
+            : undefined,
+          question_route: searchParams.question_route || undefined,
+          sort: searchParams.sort || 'createdAt',
+          order: searchParams.order || 'desc',
+          page: searchParams.page || 1,
+          limit: searchParams.limit || 10,
+          review_status: searchParams.review_status
+        };
+        
+        console.log('=== APIリクエスト直前のパラメータ（完全版） ===');
+        console.log('検索パラメータ:', {
+          ...apiParams,
+          genre: Array.isArray(apiParams.genre) ? apiParams.genre : undefined,
+          fiscalPeriod: Array.isArray(apiParams.fiscalPeriod) ? apiParams.fiscalPeriod : undefined
+        });
+        console.log('=== APIリクエスト直前のパラメータ ===');
+        
+        const response = await searchCorporateQa(apiParams);
+        console.log("取得したQAデータ:", response);
+        setQas(response.results);
+        setTotalCount(response.totalCount);
+        setTotalPages(response.totalPages);
+      } catch (err) {
+        console.error("QAデータの取得に失敗しました:", err);
+        setError("QAデータの取得に失敗しました");
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
-  // 編集モーダルの制御
-  const handleOpenEditModal = (qaId: string) => {
+    fetchQAs();
+  }, [
+    isAuthenticated,
+    searchParams.keyword, 
+    searchParams.genre, 
+    searchParams.question_route, 
+    searchParams.fiscalPeriod, 
+    searchParams.sort, 
+    searchParams.order, 
+    searchParams.page, 
+    searchParams.limit,
+    searchParams.review_status
+  ]);
+
+  const handleSearch = useCallback((params: { 
+    query: string; 
+    genre?: string[]; 
+    question_route?: string;
+    fiscalPeriod?: string[];
+    sort?: 'createdAt' | 'likeCount';
+    order?: 'asc' | 'desc';
+    reviewStatus?: 'DRAFT' | 'PENDING' | 'PUBLISHED';
+  }) => {
+    console.log("検索パラメータを受信:", params);
+    
+    setSearchParams(prev => ({
+      ...prev,
+      keyword: params.query || '',
+      genre: params.genre || [],
+      question_route: params.question_route || '',
+      fiscalPeriod: params.fiscalPeriod || undefined,
+      sort: params.sort || 'createdAt',
+      order: params.order || 'desc',
+      page: 1, // 検索時は1ページ目に戻る
+      review_status: params.reviewStatus
+    }));
+  }, []);
+
+  const handleFilterChange = useCallback((newFilters: {
+    question_route?: string;
+    genre?: string[];
+    fiscalPeriod?: string[];
+    sort?: 'createdAt' | 'likeCount';
+    order?: 'asc' | 'desc';
+    reviewStatus?: 'DRAFT' | 'PENDING' | 'PUBLISHED';
+    page?: number;
+    limit?: number;
+  }) => {
+    console.log("フィルター変更:", newFilters);
+    
+    setSearchParams(prev => {
+      // 新しいフィルター設定
+      const updated = {
+        ...prev,
+        question_route: newFilters.question_route || '',
+        genre: newFilters.genre || [],
+        fiscalPeriod: newFilters.fiscalPeriod || undefined,
+        page: newFilters.page || 1,
+        limit: newFilters.limit || prev.limit,
+        review_status: newFilters.reviewStatus || undefined
+      };
+      
+      // sortとorderを個別に処理
+      if (newFilters.sort && ['createdAt', 'likeCount'].includes(newFilters.sort)) {
+        updated.sort = newFilters.sort as 'createdAt' | 'likeCount';
+      }
+      
+      if (newFilters.order && ['asc', 'desc'].includes(newFilters.order)) {
+        updated.order = newFilters.order as 'asc' | 'desc';
+      }
+      
+      return updated;
+    });
+  }, []);
+
+  const handleStatusChange = useCallback((status: 'DRAFT' | 'PENDING' | 'PUBLISHED' | 'all') => {
+    setSearchParams(prev => ({
+      ...prev,
+      review_status: status === 'all' ? undefined : status,
+      page: 1
+    }));
+  }, []);
+
+  const handleSortChange = useCallback((sort: string, order: 'asc' | 'desc') => {
+    setSearchParams(prev => ({
+      ...prev,
+      sort: sort as 'createdAt' | 'likeCount',
+      order: order,
+      page: 1 // ソート変更時は1ページ目に戻る
+    }));
+  }, []);
+
+  const handleFiscalPeriodChange = useCallback((period: string) => {
+    setSearchParams(prev => ({
+      ...prev,
+      fiscalPeriod: period ? [period] : undefined, // 必ず配列として渡す
+      page: 1
+    }));
+  }, []);
+
+  // QAカードクリック時のハンドラ
+  const handleSelectQA = (qaId: string) => {
     const qa = qas.find((item) => item.qaId === qaId) || null;
     setSelectedQa(qa);
-    setIsEditModalOpen(true);
   };
 
-  const handleCloseEditModal = () => {
-    setSelectedQa(null);
-    setIsEditModalOpen(false);
+  const handleDeleteQa = async (qaId: string) => {
+    if (!isAuthenticated) return;
+
+    try {
+      await deleteCorporateQa(qaId);
+      const response = await searchCorporateQa(searchParams);
+      setQas(response.results);
+      setSelectedQa(null);
+    } catch (err) {
+      console.error("QAの削除に失敗しました:", err);
+      setError("QAの削除に失敗しました");
+    }
   };
 
-  const handleSaveEdit = (updatedQa: QA) => {
-    setQas((prev) => prev.map((q) => (q.qaId === updatedQa.qaId ? updatedQa : q)));
-    handleCloseEditModal();
+  const handleCreateNew = () => {
+    setIsCreateModalOpen(true);
   };
 
-  const handleDeleteQa = (qaId: string) => {
-    setQas((prev) => prev.filter((q) => q.qaId !== qaId));
-  };
-
-  // アップロードモーダルの制御
-  const handleOpenUploadModal = () => setIsUploadModalOpen(true);
-  const handleCloseUploadModal = () => setIsUploadModalOpen(false);
-
-  const handleConfirmUpload = (newQas: QA[]) => {
-    setQas((prev) => [...newQas, ...prev]);
-    handleCloseUploadModal();
+  const handleQaCreated = async (newQa: QA) => {
+    // 作成後、リストを再取得
+    try {
+      const response = await searchCorporateQa(searchParams);
+      setQas(response.results);
+      setTotalCount(response.totalCount);
+      setTotalPages(response.totalPages);
+    } catch (err) {
+      console.error("QAリストの更新に失敗しました:", err);
+    }
   };
 
   return (
     <div className="min-h-screen flex flex-col">
-      {/* サイドバーとメインコンテンツの横並びレイアウト */}
       <div className="flex flex-1">
-        {/* サイドバー */}
         <Sidebar
           menuItems={sidebarMenuItems}
           isCollapsible
-          selectedItem="/qa"
-          onSelectMenuItem={(link) => router.push(link)}
+          selectedItem="/corporate/qa"
+          onSelectMenuItem={(link: string) => router.push(link)}
         />
-        {/* メインコンテンツ */}
         <main className="flex-1 p-6 bg-gray-50">
-          {/* ページタイトル */}
           <div className="mb-6">
-            <h1 className="text-2xl font-bold">QA データベース・資料登録</h1>
+            <h1 className="text-2xl font-bold">QA データベース</h1>
           </div>
-          <TopActionBar onSearch={handleSearch} onUploadClick={handleOpenUploadModal} />
-          <QaListTable qaItems={qas} onEdit={handleOpenEditModal} onDelete={handleDeleteQa} />
+          {error && (
+            <div className="mb-4 p-4 bg-red-100 text-red-700 rounded">
+              {error}
+            </div>
+          )}
+          <TopActionBar onSearch={handleSearch} onCreateNew={handleCreateNew} />
+          {isLoading ? (
+            <div className="flex justify-center items-center h-64">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
+            </div>
+          ) : (
+            <QaListCards
+              qaItems={qas}
+              onSelect={handleSelectQA}
+              onEdit={handleSelectQA}
+              onDelete={handleDeleteQa}
+              filters={{
+                question_route: searchParams.question_route,
+                genre: searchParams.genre,
+                fiscalPeriod: searchParams.fiscalPeriod,
+                sort: searchParams.sort,
+                order: searchParams.order,
+                reviewStatus: searchParams.review_status,
+                page: searchParams.page,
+                limit: searchParams.limit,
+                totalCount: totalCount,
+                totalPages: totalPages
+              }}
+              onFilterChange={handleFilterChange}
+            />
+          )}
         </main>
       </div>
-      {/* フッター */}
       <Footer
         footerLinks={[
           { label: "利用規約", href: "/terms" },
@@ -126,13 +292,31 @@ const QaPage: React.FC = () => {
         copyrightText="MyApp Inc."
         onSelectLink={(href) => router.push(href)}
       />
-      {/* 編集モーダル */}
-      {isEditModalOpen && selectedQa && (
-        <QaEditModal qaItem={selectedQa} onClose={handleCloseEditModal} onSave={handleSaveEdit} />
+      {selectedQa && (
+        <QaDetailModal
+          qa={selectedQa}
+          isOpen={true}
+          role="corporate"
+          onClose={() => setSelectedQa(null)}
+          onLike={(id: string) => {
+            console.log("いいね", id);
+          }}
+          onDelete={(id: string) => handleDeleteQa(id)}
+          onSaveEdit={(updatedQa: QA) => {
+            console.log("QA更新:", updatedQa);
+            setQas((prev) =>
+              prev.map((q) => (q.qaId === updatedQa.qaId ? updatedQa : q))
+            );
+            setSelectedQa(null);
+          }}
+        />
       )}
-      {/* アップロードモーダル */}
-      {isUploadModalOpen && (
-        <UploadModal onClose={handleCloseUploadModal} onConfirm={handleConfirmUpload} />
+      {isCreateModalOpen && (
+        <QaCreateModal
+          isOpen={isCreateModalOpen}
+          onClose={() => setIsCreateModalOpen(false)}
+          onCreated={handleQaCreated}
+        />
       )}
     </div>
   );

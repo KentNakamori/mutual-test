@@ -1,15 +1,7 @@
 //src\components\features\investor\company\FAQPanel.tsx
 
 import React from 'react';
-
-export interface FaqItem {
-  id: string;
-  question: string;
-}
-
-interface FAQPanelProps {
-  onSelectFAQ: (faqText: string) => void;
-}
+import { FaqItem, FAQPanelProps } from '../../../../types';
 
 // モックのFAQデータ
 const mockFaqs: FaqItem[] = [

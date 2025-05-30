@@ -3,10 +3,9 @@
 import React, { useState } from 'react';
 import Button from '@/components/ui/Button';
 import Textarea from '@/components/ui/Textarea';
+import { ChatInputBoxProps } from '../../../../types';
 
-interface ChatInputBoxProps {
-  onSendMessage: (message: string) => void;
-}
+
 
 /**
  * ChatInputBox コンポーネント

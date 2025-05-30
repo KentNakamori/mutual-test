@@ -1,31 +1,52 @@
-// hooks/useUserProfile.ts
-import { useQuery, useQueryClient } from 'react-query';
-import { getUser } from '../libs/api';
-import { GetUserResponse } from '../types';
-import { useAuth } from './useAuth';
+// src/hooks/useUserProfile.ts
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useUser } from '@auth0/nextjs-auth0';
+import { getInvestorUser, updateInvestorUser } from '@/lib/api';
+
+export interface InvestorProfile {
+  userId: string;
+  displayName: string;
+  email: string;
+  investorType: string;
+  investmentExperience: string;
+  companyName?: string;
+  assetManagementScale?: string;
+  bio?: string;
+}
+
+export interface ProfileUpdateData {
+  displayName?: string;
+  investorType?: string;
+  investmentExperience?: string;
+  companyName?: string;
+  assetManagementScale?: string;
+  bio?: string;
+}
 
 export const useUserProfile = () => {
-  const { token } = useAuth();
-  const queryClient = useQueryClient();
+  const { user, isLoading: userLoading } = useUser();
+  const qc = useQueryClient();
 
-  const {
-    data: userProfile,
-    isLoading,
+  /* --- 取得クエリ（v5 はオブジェクト構文のみ） --- */
+  const { data, isLoading, error, refetch } = useQuery<InvestorProfile>({
+    queryKey: ['investorProfile'],
+    enabled: !!user,                     // user が取れてから実行
+    staleTime: 300_000,
+    queryFn: () => getInvestorUser(user!.sub),
+  });
+
+   /* --- 更新ミューテーション --- */
+   const mutation = useMutation({
+    mutationFn: (d: ProfileUpdateData) => updateInvestorUser(user!.sub, d),
+    onSuccess: (updated) => qc.setQueryData(['investorProfile'], updated.updatedProfile),
+  });
+
+  return {
+    userProfile: data,
+    isLoading: isLoading || userLoading,
     error,
     refetch,
-  } = useQuery<GetUserResponse>(
-    ['userProfile'],
-    () => {
-      if (!token) {
-        return Promise.reject(new Error('認証トークンがありません'));
-      }
-      return getUser(token);
-    },
-    {
-      enabled: !!token, // tokenが存在する場合のみクエリ実行
-      staleTime: 5 * 60 * 1000, // 5分間キャッシュ
-    }
-  );
-
-  return { userProfile, isLoading, error, refetch, queryClient };
+    updateProfile: mutation.mutateAsync,
+    isUpdating: mutation.isPending,
+  };
 };

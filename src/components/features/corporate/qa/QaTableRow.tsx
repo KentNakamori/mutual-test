@@ -1,13 +1,8 @@
 // src/components/features/corporate/qa/QaTableRow.tsx
 import React from 'react';
-import { QA } from '@/types';
+import { QA, QaTableRowProps} from '@/types';
 import Button from '@/components/ui/Button';
 
-export interface QaTableRowProps {
-  qaItem: QA;
-  onEdit: (qaId: string) => void;
-  onDelete: (qaId: string) => void;
-}
 
 const QaTableRow: React.FC<QaTableRowProps> = ({ qaItem, onEdit, onDelete }) => {
   return (

@@ -1,4 +1,6 @@
 // contexts/AppConfigContext.tsx
+// アプリケーションの設定を管理するコンテキスト
+
 import React, { createContext, useReducer, ReactNode, useContext } from 'react';
 
 export interface AppConfigState {

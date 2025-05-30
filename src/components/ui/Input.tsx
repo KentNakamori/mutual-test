@@ -1,19 +1,14 @@
 // components/ui/Input.tsx
-import React from 'react';
+import React, { ChangeEvent, InputHTMLAttributes } from 'react';
+import { InputProps as BaseInputProps } from '@/types';
 
-export interface InputProps {
-  /** 入力値 */
-  value: string;
-  /** 入力値変更時のハンドラ */
+// HTMLInputElementの全属性を継承して型を拡張
+interface InputProps extends Omit<BaseInputProps, 'onChange'>, 
+  Omit<InputHTMLAttributes<HTMLInputElement>, 'onChange' | 'type' | 'value' | 'className'> {
   onChange: (value: string) => void;
-  /** プレースホルダー */
-  placeholder?: string;
-  /** 入力タイプ（例: text, email, password） */
+  className?: string;
+  value: string;
   type?: string;
-  /** 無効状態 */
-  disabled?: boolean;
-  /** エラー状態（エラースタイル適用） */
-  errorState?: boolean;
 }
 
 /**
@@ -27,6 +22,8 @@ const Input: React.FC<InputProps> = ({
   type = 'text',
   disabled = false,
   errorState = false,
+  className = '',
+  ...rest
 }) => {
   const baseClasses =
     "w-full px-3 py-2 border rounded focus:outline-none focus:ring-2 focus:ring-offset-2 transition-colors duration-200";
@@ -34,14 +31,20 @@ const Input: React.FC<InputProps> = ({
     ? "border-red-600 focus:ring-red-600"
     : "border-gray-300 focus:ring-black";
 
+  // イベントから値を取り出して親コンポーネントに渡す
+  const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
+    onChange(e.target.value);
+  };
+
   return (
     <input
       type={type}
       value={value}
-      onChange={(e) => onChange(e.target.value)}
+      onChange={handleChange}
       placeholder={placeholder}
       disabled={disabled}
-      className={`${baseClasses} ${errorClasses} ${disabled ? 'bg-gray-100 cursor-not-allowed' : ''}`}
+      className={`${baseClasses} ${errorClasses} ${disabled ? 'bg-gray-100 cursor-not-allowed' : ''} ${className}`}
+      {...rest}
     />
   );
 };

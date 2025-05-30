@@ -1,20 +1,8 @@
 // components/ui/Tabs.tsx
 import React, { useState } from 'react';
+import{ Tab, TabsProps } from '@/types';
 
-export interface Tab {
-  id: string;
-  label: string;
-  content: React.ReactNode;
-}
 
-export interface TabsProps {
-  /** タブのリスト */
-  tabs: Tab[];
-  /** 選択中のタブのID（任意） */
-  activeTab?: string;
-  /** タブ変更時のハンドラ */
-  onChangeTab?: (tabId: string) => void;
-}
 
 /**
  * Tabs コンポーネント

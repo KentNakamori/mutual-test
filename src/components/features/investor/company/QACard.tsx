@@ -3,11 +3,8 @@
 import React from 'react';
 import Card from '@/components/ui/Card';
 import { QAItem } from './QATabView';
+import { QACardProps } from '../../../../types';
 
-interface QACardProps {
-  qa: QAItem;
-  onClick: () => void;
-}
 
 /**
  * QACard コンポーネント

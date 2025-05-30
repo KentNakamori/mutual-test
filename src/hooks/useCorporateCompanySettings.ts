@@ -1,47 +1,30 @@
-// src/hooks/useCorporateCompanySettings.ts
-import { useQuery } from 'react-query';
-import { getCorporateCompanySettings } from '../libs/api';
+import { useQuery } from '@tanstack/react-query';
+import { getCorporateCompanySettings } from '../lib/api';
 import { CompanyInfo } from '../types';
-import { useAuth } from './useAuth';
+import { useUser } from "@auth0/nextjs-auth0";
 
-// モックデータ：バックエンドが接続されていない場合でもUI確認用に利用
-const mockCompanyInfo: CompanyInfo = {
-  companyName: "株式会社モック",
-  address: "東京都新宿区西新宿1-1-1",
-  email: "contact@mock.co.jp",
-  tel: "03-1234-5678",
-};
+export const useCorporateCompanySettings = () => {
+  const { user, isLoading: isUserLoading, error: userError } = useUser();
 
-export const useCorporateCompanySettings = (token: string | null) => {
-  const { isAuthenticated } = useAuth();
-
-  const queryFn = async (): Promise<CompanyInfo> => {
-    if (!token) {
-      // トークンがない場合、モックデータを返す（500ms後に解決）
-      return new Promise((resolve) => setTimeout(() => resolve(mockCompanyInfo), 500));
-    }
-    // トークンが存在する場合は実際のAPI呼び出しを試みる
-    try {
-      return await getCorporateCompanySettings(token);
-    } catch (err) {
-      // API呼び出しエラー時は、モックデータを返す
-      return mockCompanyInfo;
-    }
-  };
-
-  const { data, error, isLoading, refetch } = useQuery<CompanyInfo>(
-    ['corporateCompanySettings'],
-    queryFn,
-    {
-      enabled: true, // 常に実行（モックデータが利用されるため）
-      staleTime: 5 * 60 * 1000, // 5分間キャッシュ
-    }
-  );
+  const { data, error, isLoading, refetch } = useQuery({
+    queryKey: ['corporateCompanySettings'],
+    queryFn: async () => {
+      // ユーザーが認証されていない場合はエラーを投げる
+      if (!user) {
+        throw new Error('認証が必要です');
+      }
+      // プロキシがJWTを自動的に付与するため、トークンの受け渡しは不要
+      return await getCorporateCompanySettings();
+    },
+    enabled: !isUserLoading && !!user,
+    staleTime: 5 * 60 * 1000, // 5分間キャッシュ
+    retry: 1, // エラー時のリトライ回数を1回に制限
+  });
 
   return {
     companyInfo: data,
-    error,
-    isLoading,
+    error: error || userError, // 認証エラーとAPIエラーを統合
+    isLoading: isLoading || isUserLoading, // ユーザー情報の読み込み状態も含める
     refetch,
   };
 };

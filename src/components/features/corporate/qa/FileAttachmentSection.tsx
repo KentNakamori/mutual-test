@@ -1,13 +1,9 @@
 // src/components/features/corporate/qa/FileAttachmentSection.tsx
 import React from 'react';
 import Button from '@/components/ui/Button';
-import { FileReference } from '@/types';
+import { FileReference, FileAttachmentSectionProps} from '@/types';
 
-export interface FileAttachmentSectionProps {
-  attachedFiles: FileReference[];
-  onAddFile: (file: File) => void;
-  onRemoveFile: (fileId: string) => void;
-}
+
 
 const FileAttachmentSection: React.FC<FileAttachmentSectionProps> = ({
   attachedFiles,

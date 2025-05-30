@@ -1,17 +1,13 @@
 // components/ui/Button.tsx
-import React from 'react';
+import React, { ButtonHTMLAttributes } from 'react';
+import { ButtonProps as BaseButtonProps } from '@/types';
 
-export interface ButtonProps {
-  /** ボタンに表示するテキスト */
-  label: string;
-  /** クリック時のハンドラ */
+// 型を拡張
+interface ButtonProps extends Omit<BaseButtonProps, 'onClick'>,
+  Omit<ButtonHTMLAttributes<HTMLButtonElement>, 'onClick' | 'type' | 'className'> {
   onClick?: (e: React.MouseEvent<HTMLButtonElement>) => void;
-  /** 無効状態フラグ */
-  disabled?: boolean;
-  /** ボタンのバリアント（primary: 黒背景＋白文字、destructive: 赤系など） */
-  variant?: 'primary' | 'destructive' | 'outline' | 'link';
-  /** ボタンの種類 */
-  type?: "button" | "submit" | "reset";
+  className?: string;
+  isLoading?: boolean;
 }
 
 const Button: React.FC<ButtonProps> = ({
@@ -20,9 +16,12 @@ const Button: React.FC<ButtonProps> = ({
   disabled = false,
   variant = 'primary',
   type = "button",
+  className = "",
+  isLoading = false,
+  ...rest
 }) => {
   const baseClasses =
-    "py-2 px-4 rounded focus:outline-none focus:ring-2 focus:ring-offset-2 transition-colors duration-200";
+    "py-2 px-4 rounded-xl whitespace-nowrap focus:outline-none focus:ring-2 focus:ring-offset-2 transition-colors duration-200";
   let variantClasses = "";
 
   switch (variant) {
@@ -38,6 +37,9 @@ const Button: React.FC<ButtonProps> = ({
     case 'link':
       variantClasses = "text-blue-600 hover:underline";
       break;
+   case 'gradient':
+      variantClasses = "bg-gradient-to-r from-[#1CB5E0] to-[#9967EE] text-white hover:opacity-90";
+       break;
     default:
       variantClasses = "bg-black text-white hover:bg-gray-800";
   }
@@ -46,10 +48,11 @@ const Button: React.FC<ButtonProps> = ({
     <button
       type={type}
       onClick={onClick}
-      disabled={disabled}
-      className={`${baseClasses} ${variantClasses} ${disabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+      disabled={disabled || isLoading}
+      className={`${baseClasses} ${variantClasses} ${disabled || isLoading ? 'opacity-50 cursor-not-allowed' : ''} ${className}`}
+      {...rest}
     >
-      {label}
+      {isLoading ? 'Loading...' : label}
     </button>
   );
 };

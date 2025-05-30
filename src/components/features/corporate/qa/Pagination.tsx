@@ -1,12 +1,8 @@
 // src/components/features/corporate/qa/Pagination.tsx
 import React from 'react';
 import Button from '@/components/ui/Button';
+import { PaginationProps} from '@/types';
 
-export interface PaginationProps {
-  currentPage: number;
-  totalPages: number;
-  onChangePage: (page: number) => void;
-}
 
 const Pagination: React.FC<PaginationProps> = ({ currentPage, totalPages, onChangePage }) => {
   return (

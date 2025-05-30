@@ -1,43 +1,126 @@
-// config/api.ts
+// src/config/api.ts
 
-// API のベース URL は環境変数などで管理
-export const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000/api";
-
-// エンドポイントの定義（動的パラメータが必要な場合は、関数内で組み立てます）
 export const ENDPOINTS = {
-  // 共通認証・ユーザー管理
-  login: "/auth/login",
-  refresh: "/auth/refresh",
-  passwordReset: "/auth/password/reset",
-  register: "/auth/register",
-  getMe: "/users/me",
-  updateMe: "/users/me",
-  search: "/search",
-  logout: "/auth/logout",
-
-  // 企業向け API
-  corporateLogin: "/corporate/auth/login",
-  corporateLogout: "/corporate/auth/logout",
-  corporateDashboard: "/corporate/dashboard",
-  corporateQaSearch: "/corporate/qa/search",
-  // 以下、動的パラメータを付与するためのベース URL
-  corporateQa: "/corporate/qa", // PUT /:id, DELETE /:id
-  corporateQaUpload: "/corporate/qa/upload",
-  corporateQaBatchCreate: "/corporate/qa/batchCreate",
-  corporateDrafts: "/corporate/irchat/drafts", // GET 一覧, GET /:draftId 詳細
-  corporateIrChat: "/corporate/irchat",
-  corporateMailDraft: "/corporate/maildraft",
-  corporateCompanySettings: "/corporate/settings/company",
-  corporateAccountSettings: "/corporate/settings/account",
-
-  // 投資家向け API
-  investorLogin: "/investor/auth/login",
-  investorLogout: "/investor/auth/logout",
-  investorGuest: "/investor/auth/guest",
-  investorCompanies: "/investor/companies", // GET 一覧, GET /:companyId 詳細
-  investorCompanyQa: "/investor/companies", // GET /:companyId/qa
-  investorQaSearch: "/investor/qa/search",
-  investorQa: "/investor/qa", // POST /:qaId/like, POST /:qaId/bookmark
-  investorChatLogs: "/investor/chat/logs", // GET 一覧, DELETE /:chatId, PATCH /:chatId/archive
-  investorUser: "/investor/users/me", // GET, PATCH, PATCH /password, PATCH /notification, DELETE
+  // 企業向けAPI
+  corporate: {
+    // 認証関連
+    auth: {
+      login: '/corporate/auth/login',
+      logout: '/corporate/auth/logout',
+      passwordReset: '/corporate/auth/password/reset',
+      passwordResetConfirm: '/corporate/auth/password/reset/confirm',
+      me: '/corporate/auth/me',
+    },
+    // ダッシュボード (プレフィックスなし)
+    dashboard: '/corporate/dashboard',
+    // Q&A関連
+    qa: {
+      search: '/corporate/qa/search',
+      create: '/corporate/qa',
+      update: (id: string) => `/corporate/qa/${id}`,
+      delete: (id: string) => `/corporate/qa/${id}`,
+      upload: '/corporate/qa/upload',
+      batchCreate: '/corporate/qa/batchCreate',
+      generate: '/corporate/qa/generate',
+    },
+    // IR関連
+    ir: {
+      history: '/corporate/irchat/history',
+      detail: (id: string) => `/corporate/irchat/${id}`,
+      newChat: '/corporate/irchat/new',
+      sendMessage: (id: string) => `/corporate/irchat/${id}/message`,
+      drafts: '/corporate/irchat/drafts',
+      chat: '/corporate/irchat',
+      mailDraft: '/corporate/maildraft',
+    },
+    // 設定
+    settings: {
+      company: '/corporate/settings/company',
+      account: '/corporate/settings/account',
+    },
+    // 文書解析
+    documents: {
+      upload: '/corporate/documents/upload',
+      analysis: '/corporate/documents/analysis',
+    },
+    // ファイル管理
+    files: {
+      list: '/corporate/files',
+      upload: '/corporate/files/upload',
+      delete: (id: string) => `/corporate/files/${id}`,
+    },
+  },
+  
+  // 投資家向けAPI
+  investor: {
+    // 認証関連
+    auth: {
+      login: '/investor/auth/login',
+      logout: '/investor/auth/logout',
+      register: '/investor/auth/register',
+      refresh: '/investor/auth/refresh',
+      me: '/investor/auth/me',
+      guest: '/investor/auth/guest',
+    },
+    // 企業関連
+    companies: {
+      list: '/investor/companies',
+      detail: (id: string) => `/investor/companies/${id}`,
+      qa: (id: string) => `/investor/companies/${id}/faq`,
+      names: '/investor/companies/names',
+      follow: (id: string) => `/investor/companies/${id}/follow`,
+    },
+    // Q&A関連
+    qa: {
+      search: '/investor/qa/search',
+      searchByCompany: (companyId: string) => `/investor/qa/search/company/${companyId}`,
+      companies: '/investor/qa/companies',
+      like: (id: string) => `/investor/qa/${id}/like`,
+      comment: '/investor/qa/comment',
+      latestByCompany: '/investor/qa/latest-by-company',
+    },
+    // チャット関連
+    chat: {
+      history: '/investor/chat/logs',
+      message: (chatId: string) => `/investor/chat/${chatId}/message`,
+      new: (companyId: string) => `/investor/chat/${companyId}`,
+      newWithMessage: (companyId: string) => `/investor/chat/${companyId}/with-message`,
+      detail: (chatId: string) => `/investor/chat/${chatId}`,
+      delete: (chatId: string) => `/investor/chat/${chatId}`,
+    },
+    // プロファイル関連
+    profile: {
+      get: '/investor/users/me',
+      update: '/investor/users/me',
+    },
+    // 設定関連
+    settings: {
+      account: '/investor/settings/account',
+    },
+    // トラッキング
+    track: '/investor/track',
+  },
+  
+  // 管理者向けAPI
+  admin: {
+    company: {
+      register: '/admin/company/register',
+      list: '/admin/companies',
+      detail: (id: string) => `/admin/companies/${id}`,
+      approve: (id: string) => `/admin/companies/${id}/approve`,
+    },
+    corporate: {
+      registerUser: '/admin/corporate/register',
+      list: '/admin/corporate/users',
+      detail: (userId: string) => `/admin/corporate/users/${userId}`,
+      updateStatus: (userId: string) => `/admin/corporate/users/${userId}/status`,
+    },
+  },
+  // 共通
+  common: {
+      tokenInfo: '/auth/token',
+      listShows: '/api/shows',
+      authTest: '/auth/test',
+      showsTest: '/shows/test'
+  }
 };

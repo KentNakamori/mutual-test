@@ -3,11 +3,9 @@
 import React from 'react';
 import { QAItem } from './QATabView';
 import QACard from './QACard';
+import { QAListProps } from '../../../../types';
 
-interface QAListProps {
-  items: QAItem[];
-  onSelectQA: (qa: QAItem) => void;
-}
+
 
 /**
  * QAList コンポーネント

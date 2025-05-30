@@ -1,128 +1,70 @@
-//src\app\investor\companies\page.tsx
+// src/app/investor/companies/page.tsx
 "use client";
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
+import { useRouter } from 'next/navigation';
+import { useUser } from '@auth0/nextjs-auth0';
 import Sidebar from '@/components/common/sidebar';
-import Footer from '@/components/common/Footer';
-import CompanySearchBar from '@/components/features/investor/companies/CompanySearchBar';
-import CompanyList from '@/components/features/investor/companies/CompanyList';
-import { Company } from '@/types';
+import Footer from '@/components/common/footer';
+import NewQAList from '@/components/features/investor/companies/NewQAList';
+import CompanyListing from '@/components/features/investor/companies/CompanyListing';
+import QaDetailModal from '@/components/ui/QaDetailModal';
+import { QA } from '@/types';
+import { Home, Heart, Search, MessageSquare, User } from 'lucide-react';
 
-// ── モックデータ ─────────────────────────────────────────────
-const mockCompanies: Company[] = [
-  {
-    companyId: '1',
-    companyName: 'テック・イノベーターズ株式会社',
-    industry: 'テクノロジー',
-    logoUrl: '/assets/logos/tech_innovators.png',
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-    adminUserIds: ['user1'],
-  },
-  {
-    companyId: '2',
-    companyName: 'グリーンエナジー株式会社',
-    industry: 'エネルギー',
-    logoUrl: '/assets/logos/green_energy.png',
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-    adminUserIds: ['user2'],
-  },
-  {
-    companyId: '3',
-    companyName: 'ヘルスプラス合同会社',
-    industry: 'ヘルスケア',
-    logoUrl: '/assets/logos/health_plus.png',
-    createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
-    adminUserIds: ['user3'],
-  },
-];
-
-// サイドバーのメニュー項目
 const menuItems = [
-  { label: 'マイページ', link: '/investor/mypage' },
-  { label: 'Q&A', link: '/investor/qa' },
-  { label: 'チャットログ', link: '/investor/chat-logs' },
-  { label: '企業一覧', link: '/investor/companies' },
+  { label: 'トップページ', link: '/investor/companies', icon: <Home size={20} /> },
+  { label: "フォロー済み企業", link: "/investor/companies/followed", icon: <Heart size={20} /> },
+  { label: 'Q&A検索', link: '/investor/qa', icon: <Search size={20} /> },
+  { label: 'チャットログ', link: '/investor/chat-logs', icon: <MessageSquare size={20} /> },
+  { label: 'マイページ', link: '/investor/mypage', icon: <User size={20} /> },
 ];
 
 const CompaniesPage: React.FC = () => {
-  const [companies, setCompanies] = useState<Company[]>([]);
-  const [isLoading, setIsLoading] = useState<boolean>(false);
-  const [error, setError] = useState<string | null>(null);
-  const [searchQuery, setSearchQuery] = useState<{ keyword: string; industry?: string }>({
-    keyword: '',
-    industry: '',
-  });
-
-  // モックのAPI呼び出し（検索条件に応じてモックデータをフィルタリング）
-  const fetchCompanies = async (query: { keyword: string; industry?: string }): Promise<Company[]> => {
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        const filtered = mockCompanies.filter((company) => {
-          const matchesKeyword = query.keyword
-            ? company.companyName.toLowerCase().includes(query.keyword.toLowerCase())
-            : true;
-          const matchesIndustry = query.industry
-            ? company.industry.toLowerCase() === query.industry.toLowerCase()
-            : true;
-          return matchesKeyword && matchesIndustry;
-        });
-        resolve(filtered);
-      }, 500);
-    });
-  };
-
-  // CompanySearchBar からの検索条件変更ハンドラ
-  const handleSearchChange = async (newQuery: { keyword: string; industry?: string }) => {
-    setSearchQuery(newQuery);
-    setIsLoading(true);
-    setError(null);
-    try {
-      const data = await fetchCompanies(newQuery);
-      setCompanies(data);
-    } catch (err: any) {
-      setError(err.message || '企業データの取得に失敗しました');
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  // 初回レンダリング時にデータ取得
-  useEffect(() => {
-    handleSearchChange(searchQuery);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  // CompanyCard からのフォロー操作ハンドラ
-  const handleFollowToggle = (companyId: string, nextState: boolean) => {
-    console.log(`企業 ${companyId} のフォロー状態が ${nextState ? 'フォロー中' : 'フォロー解除'} に変更されました`);
-  };
+  const router = useRouter();
+  
+  // Auth0のuseUserフックを使用して認証状態を取得
+  const { user, isLoading: userLoading, error: userError } = useUser();
+  
+  // QA詳細モーダル表示用の状態
+  const [selectedQA, setSelectedQA] = useState<QA | null>(null);
+  
+  // ローディング表示
+  if (userLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-xl">読み込み中...</div>
+      </div>
+    );
+  }
+  
+  // 認証エラーチェックを削除 - ゲストユーザーも閲覧可能
 
   return (
     <div className="min-h-screen flex flex-col">
-      {/* ヘッダー削除 → サイドバーに置き換え */}
       <div className="flex flex-1">
         <Sidebar
           isCollapsible
           menuItems={menuItems}
           selectedItem="/investor/companies"
-          onSelectMenuItem={(link) => (window.location.href = link)}
+          onSelectMenuItem={(link) => router.push(link)}
         />
-        <main className="flex-1 container mx-auto p-4">
-          <CompanySearchBar initialQuery={searchQuery} onSearchChange={handleSearchChange} />
-          {isLoading ? (
-            <div className="text-center py-8">企業データを読み込み中…</div>
-          ) : error ? (
-            <div className="text-center py-8 text-red-600">
-              {error}
-              <button onClick={() => handleSearchChange(searchQuery)} className="ml-4 underline">
-                再試行
-              </button>
-            </div>
-          ) : (
-            <CompanyList companies={companies} onFollowToggle={handleFollowToggle} />
+        <main className="flex-1 container mx-auto p-4 bg-gray-50">
+          {/* 新着QAリスト：クリックすると QA 詳細モーダルが表示される */}
+          <NewQAList
+            onRowClick={(qa) => setSelectedQA(qa)}
+          />
+          <h1 className="text-2xl font-semibold mb-2">企業一覧</h1>
+          <CompanyListing />
+          {/* QA詳細モーダルの表示 */}
+          {selectedQA && (
+            <QaDetailModal
+              qa={selectedQA}
+              role="investor"
+              isOpen={true}
+              onClose={() => setSelectedQA(null)}
+              onLike={(id: string) => console.log("いいね:", id)}
+            />
           )}
         </main>
       </div>
@@ -132,6 +74,7 @@ const CompaniesPage: React.FC = () => {
           { label: 'プライバシーポリシー', href: '/privacy' },
         ]}
         copyrightText="MyApp株式会社"
+        onSelectLink={(href) => router.push(href)}
       />
     </div>
   );

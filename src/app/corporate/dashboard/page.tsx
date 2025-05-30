@@ -1,150 +1,119 @@
-// src/app/corporate/dashboard/page.tsxあああああああああああ
-"use client";
+'use client';                                                     // ① クライアント側で実行
 
-import React, { useState } from "react";
-import { useQuery } from "react-query";
-import { useRouter } from "next/navigation";
+import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { useUser } from '@auth0/nextjs-auth0';             // ② 公式クライアントフック
+import {
+  LayoutDashboard,
+  HelpCircle,
+  MessageSquare,
+  Settings,
+  FileText,
+} from 'lucide-react';
 
-// 共通コンポーネントのインポート
-import Sidebar from "@/components/common/sidebar";
-import Footer from "@/components/common/Footer";
+import {
+  DashboardData,
+  Filter,
+} from '@/types';
+import { getCorporateDashboard } from '@/lib/api';
 
-// ダッシュボード固有コンポーネントのインポート
-import DashboardStats from "@/components/features/corporate/dashboard/DashboardStats";
-import FilterBar from "@/components/features/corporate/dashboard/FilterBar";
-import DashboardGraphs from "@/components/features/corporate/dashboard/DashboardGraphs";
-import DashboardQnAList from "@/components/features/corporate/dashboard/DashboardQnAList";
+// 共通 UI
+import Sidebar from '@/components/common/sidebar';
+import Footer from '@/components/common/footer';
 
-// API 呼び出しと認証用カスタムフックのインポート
-import { getCorporateDashboard } from "@/libs/api";
-import { useAuth } from "@/hooks/useAuth";
-
-// --- 型定義 ---
-interface QAItem {
-  id: string;
-  title: string;
-  createdAt: string;あああああああああああ
-  views: number;
-}
-
-export interface GraphDataItem {
-  date: string;
-  access: number;
-  chatCount: number;
-}
-
-interface DashboardData {
-  stats: {
-    label: string;
-    value: number;
-    unit?: string;
-  }[];
-  graphData: GraphDataItem[];
-  qas: {
-    published: QAItem[];
-    drafts: QAItem[];
-    hot: QAItem[];
-  };
-}
+// ダッシュボード専用 UI
+import DashboardStats from '@/components/features/corporate/dashboard/DashboardStats';
+import FilterBar from '@/components/features/corporate/dashboard/FilterBar';
+import DashboardGraphs from '@/components/features/corporate/dashboard/DashboardGraphs';
+import DashboardQnAList from '@/components/features/corporate/dashboard/DashboardQnAList';
 
 const DashboardPage: React.FC = () => {
-  const { token } = useAuth();
   const router = useRouter();
 
-  const [filter, setFilter] = useState<{ period: string; type: string }>({
-    period: "monthly",
-    type: "all",
-  });
+  /** ③ useUser() で認証状態を取得 */
+  const { user, isLoading: userLoading, error: userError } = useUser();
 
-  const { data, isLoading, error } = useQuery<DashboardData, Error>(
-    ["dashboardData", filter],
-    () => {
-      if (!token) return Promise.reject(new Error("認証トークンがありません"));
-      return getCorporateDashboard(token, filter);
-    },
-    {
-      enabled: !!token,
-      staleTime: 5 * 60 * 1000, // 5分間キャッシュ
-    }
-  );
+  const [dashLoading, setDashLoading] = useState(true);
+  const [dashError, setDashError]     = useState<string | null>(null);
+  const [dashboardData, setDashboardData] = useState<DashboardData | null>(null);
 
-  const handleFilterChange = (newFilter: { period: string; type: string }) => {
-    setFilter(newFilter);
-  };
+  const [filter, setFilter] = useState<Filter>({ period: 'monthly' });
 
-  const handleQACardClick = (qaId: string) => {
-    router.push(`/corporate/qa/${qaId}`);
-  };
+  /** ④ ダッシュボードデータ取得 */
+  useEffect(() => {
+    const fetchData = async () => {
+      if (!user) return;                          // ① ログイン確認だけ
+      try {
+        setDashLoading(true);
+        // ② user.sub と token を渡さない
+        const data = await getCorporateDashboard({ period: filter.period });
+        setDashboardData(data);
+        setDashError(null);
+      } catch (e) {
+        console.error(e);
+        setDashError('ダッシュボードデータの取得に失敗しました');
+      } finally {
+        setDashLoading(false);
+      }
+    };
 
-  // バックエンド接続がない場合用のモックデータ
-  const dashboardData: DashboardData = data || {
-    stats: [
-      { label: "アクセス数", value: 1200, unit: "回" },
-      { label: "チャット質問数", value: 350, unit: "件" },
-      { label: "公開Q&A数", value: 50, unit: "件" },
-    ],
-    graphData: [
-      { date: "2025-02-01", access: 100, chatCount: 20 },
-      { date: "2025-02-02", access: 150, chatCount: 30 },
-      { date: "2025-02-03", access: 200, chatCount: 40 },
-    ],
-    qas: {
-      published: [
-        { id: "qa1", title: "Q&A 1", createdAt: "2025-02-10", views: 100 },
-        { id: "qa2", title: "Q&A 2", createdAt: "2025-02-12", views: 150 },
-      ],
-      drafts: [
-        { id: "qa3", title: "Draft Q&A", createdAt: "2025-02-15", views: 0 }
-      ],
-      hot: [
-        { id: "qa2", title: "Q&A 2", createdAt: "2025-02-12", views: 150 }
-      ],
-    },
-  };
+    if (!userLoading && !userError) fetchData();
+  }, [user, userLoading, userError, filter.period]);
 
+  /** ⑥ ローディング or エラー表示 */
+  if (userLoading || dashLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-xl">読み込み中...</div>
+      </div>
+    );
+  }
+  if (userError || !user) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-xl text-red-500">ログイン情報を取得できません</div>
+      </div>
+    );
+  }
+  if (dashError || !dashboardData) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-xl text-red-500">{dashError || 'データの取得に失敗しました'}</div>
+      </div>
+    );
+  }
+
+  /** ⑦ 画面描画 */
   return (
     <div className="min-h-screen flex flex-col">
       <div className="flex flex-1">
-        {/* サイドバー */}
         <Sidebar
           menuItems={[
-            { label: "Dashboard", link: "/corporate/dashboard" },
-            { label: "Q&A管理", link: "/corporate/qa" },
-            { label: "IRチャット", link: "/corporate/irchat" },
-            { label: "設定", link: "/corporate/settings" },
+            { label: 'ダッシュボード', link: '/corporate/dashboard', icon: <LayoutDashboard size={20} /> },
+            { label: 'Q&A管理',       link: '/corporate/qa',        icon: <HelpCircle size={20} /> },
+            { label: 'IRチャット',    link: '/corporate/irchat',    icon: <MessageSquare size={20} /> },
+            { label: 'ファイル管理',  link: '/corporate/files',     icon: <FileText size={20} /> },
+            { label: '設定',          link: '/corporate/settings',  icon: <Settings size={20} /> },
           ]}
           isCollapsible
           selectedItem="/corporate/dashboard"
           onSelectMenuItem={(link) => router.push(link)}
         />
-        {/* メインコンテンツ */}
         <main className="flex-1 p-6 bg-gray-50">
-          {/* タイトルと上部余白 */}
-          <div className="mb-8">
-            <h1 className="text-3xl font-bold">ダッシュボード</h1>
-          </div>
-          <FilterBar initialFilter={filter} onFilterChange={handleFilterChange} />
-          <DashboardStats statsData={dashboardData.stats} />
-          <DashboardGraphs graphData={dashboardData.graphData} />
+          <h1 className="mb-8 text-3xl font-bold">ダッシュボード</h1>
+          <FilterBar initialFilter={filter} onFilterChange={setFilter} />
+          <DashboardStats  statsData={dashboardData.stats[filter.period]} />
+          <DashboardGraphs graphData={dashboardData.graphData[filter.period]} />
           <DashboardQnAList
             publishedQAs={dashboardData.qas.published}
-            draftQAs={dashboardData.qas.drafts}
-            hotQAs={dashboardData.qas.hot}
-            onSelectQA={handleQACardClick}
+            onSelectQA={(qaId) => router.push(`/corporate/qa/${qaId}`)}
           />
-          {isLoading && <p>Loading...</p>}
-          {error && (
-            <p className="text-red-600">
-              Error: {error instanceof Error ? error.message : "Unknown error"}
-            </p>
-          )}
         </main>
       </div>
-      {/* フッター */}
       <Footer
         footerLinks={[
-          { label: "利用規約", href: "/terms" },
-          { label: "プライバシーポリシー", href: "/privacy" },
+          { label: '利用規約',          href: '/terms' },
+          { label: 'プライバシーポリシー', href: '/privacy' },
         ]}
         copyrightText="MyApp Inc."
         onSelectLink={(href) => router.push(href)}

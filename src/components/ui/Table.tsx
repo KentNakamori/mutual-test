@@ -1,12 +1,8 @@
 // components/ui/Table.tsx
 import React from 'react';
+import{ Column } from '@/types';
 
-export interface Column {
-  key: string;
-  label: string;
-  /** ソート可能かどうか（任意） */
-  sortable?: boolean;
-}
+
 
 export interface TableProps<T> {
   /** テーブルのカラム定義 */

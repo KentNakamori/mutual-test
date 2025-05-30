@@ -1,16 +1,7 @@
 // src/components/features/corporate/dashboard/DashboardStats.tsx
 import React from "react";
 import Card from "@/components/ui/Card";
-
-interface Stat {
-  label: string;
-  value: number;
-  unit?: string;
-}
-
-interface DashboardStatsProps {
-  statsData: Stat[];
-}
+import { Stat, DashboardStatsProps } from "@/types";
 
 /**
  * DashboardStats コンポーネント
@@ -18,13 +9,13 @@ interface DashboardStatsProps {
  */
 const DashboardStats: React.FC<DashboardStatsProps> = ({ statsData }) => {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+    <div className="grid grid-cols-2 gap-4 mb-6">
       {statsData.map((stat, index) => (
-        <Card key={index} className="text-center">
-          <h3 className="text-lg font-semibold">{stat.label}</h3>
-          <p className="text-2xl font-bold">
+        <Card key={index} className="flex items-center justify-between p-4">
+          <h3 className="text-base font-semibold">{stat.label}</h3>
+          <span className="text-xl font-bold">
             {stat.value} {stat.unit}
-          </p>
+          </span>
         </Card>
       ))}
     </div>

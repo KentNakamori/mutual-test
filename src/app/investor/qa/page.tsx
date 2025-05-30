@@ -1,143 +1,282 @@
-//src\app\investor\qa\page.tsx
 "use client";
 
-import React, { useState, useCallback } from 'react';
-import { useQuery } from 'react-query';
+import React, { useState, useCallback, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import Sidebar from '@/components/common/sidebar';
-import Footer from '@/components/common/Footer';
+import Footer from '@/components/common/footer';
 import QASearchBar from '@/components/features/investor/qa/QASearchBar';
 import QAResultList from '@/components/features/investor/qa/QAResultList';
-import QADetailModal from '@/components/features/investor/qa/QADetailModal';
+import Pagination from '@/components/features/corporate/qa/Pagination';
 import { QA, FilterType } from '@/types';
-import { useAuth } from '@/hooks/useAuth';
-import { searchInvestorQa } from '@/libs/api';
+import { useUser } from "@auth0/nextjs-auth0";
+import { searchInvestorQa } from '@/lib/api';
+import QaDetailModal from '@/components/ui/QaDetailModal';
+import { useQALike } from '@/hooks/useQA';
+import { Home, Heart, Search, MessageSquare, User } from 'lucide-react';
+
+// 企業ID -> 企業名 を取得するマッピング用
+function getCompanyName(companyId: string): string {
+  const map: Record<string, string> = {
+    comp1: 'テック・イノベーター株式会社',
+    comp2: 'グリーンエナジー株式会社',
+  };
+  return map[companyId] || companyId;
+}
 
 const QASearchPage: React.FC = () => {
-  // サイドバーのメニュー項目
+  const router = useRouter();
   const menuItems = [
-    { label: 'マイページ', link: '/investor/mypage' },
-    { label: 'Q&A', link: '/investor/qa' },
-    { label: 'チャットログ', link: '/investor/chat-logs' },
-    { label: '企業一覧', link: '/investor/companies' },
+    { label: 'トップページ', link: '/investor/companies', icon: <Home size={20} /> },
+    { label: "フォロー済み企業", link: "/investor/companies/followed", icon: <Heart size={20} /> },
+    { label: 'Q&A検索', link: '/investor/qa', icon: <Search size={20} /> },
+    { label: 'チャットログ', link: '/investor/chat-logs', icon: <MessageSquare size={20} /> },
+    { label: 'マイページ', link: '/investor/mypage', icon: <User size={20} /> },
   ];
+
+  // Auth0 SDK v4 の認証状態
+  const { user, error: userError, isLoading: userLoading } = useUser();
+  
+  // いいね機能のフック
+  const { toggleLike, isLoading: likeLoading, error: likeError } = useQALike();
 
   const [searchKeyword, setSearchKeyword] = useState<string>('');
   const [filters, setFilters] = useState<FilterType>({});
   const [selectedQA, setSelectedQA] = useState<QA | null>(null);
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [qaItems, setQaItems] = useState<QA[]>([]);
+  const [totalCount, setTotalCount] = useState<number>(0);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [error, setError] = useState<Error | null>(null);
+  
+  const itemsPerPage = 10;
 
-  const { token } = useAuth();
+  // 簡易な日付フォーマット関数
+  const formatDate = (dateStr: string) => {
+    const d = new Date(dateStr);
+    const y = d.getFullYear();
+    const m = String(d.getMonth() + 1).padStart(2, '0');
+    const day = String(d.getDate()).padStart(2, '0');
+    return `${y}/${m}/${day}`;
+  };
 
-  // バックエンド未接続時用のモックデータ
-  const mockQAData: QA[] = [
-    {
-      qaId: '1',
-      question: '会社のミッションは何ですか？',
-      answer: '当社のミッションは、革新を通じて最高のサービスを提供することです。',
-      companyId: 'comp1',
-      likeCount: 10,
-      createdAt: '2023-01-01T00:00:00Z',
-      updatedAt: '2023-01-01T00:00:00Z',
-      isPublished: true,
-    },
-    {
-      qaId: '2',
-      question: 'カスタマーサポートはどのように対応していますか？',
-      answer: '電話やメールなど、24時間365日対応のサポート体制を整えています。',
-      companyId: 'comp2',
-      likeCount: 5,
-      createdAt: '2023-02-01T00:00:00Z',
-      updatedAt: '2023-02-01T00:00:00Z',
-      isPublished: true,
-    }
-  ];
-
-  const { data, refetch, isLoading, error } = useQuery<{ results: QA[]; totalCount: number }>(
-    ['investorQaSearch', searchKeyword, filters],
-    () => {
-      const query: Record<string, string> = {
+  // データ取得関数
+  const fetchQaData = useCallback(async () => {
+    if (userLoading) return;
+    
+    setIsLoading(true);
+    
+    try {
+      const query: Record<string, any> = {
         keyword: searchKeyword,
         ...(filters.likeMin !== undefined ? { likeMin: filters.likeMin.toString() } : {}),
         ...(filters.dateRange
           ? { dateFrom: filters.dateRange.from || '', dateTo: filters.dateRange.to || '' }
           : {}),
+        ...(filters.question_route ? { question_route: filters.question_route } : {}),
+        ...(filters.genre && filters.genre.length > 0 ? { genre: filters.genre } : {}),
+        ...(filters.fiscalPeriod && filters.fiscalPeriod.length > 0 ? { fiscalPeriod: filters.fiscalPeriod } : {}),
+        ...(filters.sort ? { sort: filters.sort } : {}),
+        ...(filters.order ? { order: filters.order } : {}),
+        // 後方互換性のため、古いフィルター形式もサポート
         ...(filters.sortKey ? { sortKey: filters.sortKey } : {}),
         ...(filters.sortDirection ? { sortDirection: filters.sortDirection } : {}),
+        page: currentPage,
+        limit: itemsPerPage
       };
-      return token
-        ? searchInvestorQa(token, query)
-        : Promise.resolve({ results: mockQAData, totalCount: mockQAData.length });
-    },
-    {
-      enabled: !!token,
+      
+      // Auth0 SDK v4 対応: token は渡さず、プロキシ経由で JWT を送信
+      const response = await searchInvestorQa(query, undefined);
+      setQaItems(response.results);
+      setTotalCount(response.totalCount);
+      setError(null);
+    } catch (err) {
+      console.error('QAデータ取得エラー:', err);
+      setError(err instanceof Error ? err : new Error('QAデータの取得に失敗しました'));
+      setQaItems([]);
+      setTotalCount(0);
+    } finally {
+      setIsLoading(false);
     }
-  );
+  }, [searchKeyword, filters, currentPage, itemsPerPage, userLoading]);
 
-  const qaItems: QA[] = data?.results || mockQAData;
+  // 初回データ取得と条件変更時のデータ再取得
+  useEffect(() => {
+    // ゲストユーザーでもデータを取得
+    if (!userLoading) {
+      fetchQaData();
+    }
+  }, [fetchQaData, userLoading]);
 
+  // ページネーション計算
+  const totalPages = Math.ceil(totalCount / itemsPerPage);
+  
+  // 検索送信時のハンドラ
   const handleSearchSubmit = useCallback(
     (keyword: string, newFilters: FilterType) => {
       setSearchKeyword(keyword);
       setFilters(newFilters);
-      refetch();
+      // ページを初期状態に戻す
+      setCurrentPage(1);
     },
-    [refetch]
+    []
   );
 
+  // アイテムをクリックしたら選択状態にしてモーダルを開く
   const handleItemClick = useCallback((qa: QA) => {
     setSelectedQA(qa);
   }, []);
 
+  // モーダルを閉じる
   const handleCloseModal = useCallback(() => {
     setSelectedQA(null);
   }, []);
 
-  const handleLike = useCallback((qaId: string) => {
-    console.log('いいね：', qaId);
-  }, []);
+  // いいね操作
+  const handleLike = useCallback(async (qaId: string) => {
+    // ゲストユーザーの場合はAuth0のログイン画面にリダイレクト
+    if (!user) {
+      const returnTo = typeof window !== 'undefined' ? window.location.pathname : '/investor/qa';
+      router.push(`/api/auth/investor-login?returnTo=${encodeURIComponent(returnTo)}`);
+      return;
+    }
 
-  const handleBookmark = useCallback((qaId: string) => {
-    console.log('ブックマーク：', qaId);
-  }, []);
+    try {
+      console.log('いいね操作開始:', qaId);
+      
+      // 現在のQAアイテムを取得してisLikedの状態を確認
+      const currentQA = qaItems.find(qa => qa.qaId === qaId);
+      if (!currentQA) {
+        console.error('QAアイテムが見つかりません:', qaId);
+        return;
+      }
+      
+      // いいね状態をトグル
+      const result = await toggleLike(qaId, currentQA.isLiked || false);
+      console.log('いいね操作結果:', result);
+      
+      // ローカル状態を更新
+      setQaItems(prevItems =>
+        prevItems.map(qa =>
+          qa.qaId === qaId
+            ? {
+                ...qa,
+                likeCount: result.likeCount,
+                isLiked: result.isLiked
+              }
+            : qa
+        )
+      );
+      
+      // 選択されたQAも更新
+      if (selectedQA && selectedQA.qaId === qaId) {
+        setSelectedQA({
+          ...selectedQA,
+          likeCount: result.likeCount,
+          isLiked: result.isLiked
+        });
+      }
+      
+    } catch (error) {
+      console.error('いいね操作エラー:', error);
+      setError(error instanceof Error ? error : new Error('いいね操作に失敗しました'));
+    }
+  }, [qaItems, selectedQA, toggleLike, user, router]);
 
   return (
     <div className="min-h-screen flex flex-col">
-      {/* ヘッダー削除 → サイドバーに置き換え */}
       <div className="flex flex-1">
         <Sidebar
           isCollapsible
           menuItems={menuItems}
           selectedItem="/investor/qa"
-          onSelectMenuItem={(link) => (window.location.href = link)}
+          onSelectMenuItem={(link) => router.push(link)}
         />
         <main className="flex-1 container mx-auto p-4">
-          <QASearchBar onSearchSubmit={handleSearchSubmit} />
-          {isLoading && <p>読み込み中…</p>}
-          {error && <p>エラーが発生しました: {(error as Error).message}</p>}
-          <QAResultList 
-            items={qaItems} 
-            onItemClick={handleItemClick} 
-            onLike={handleLike} 
-            onBookmark={handleBookmark} 
+          {/* ページ上部の表題 */}
+          <h1 className="text-2xl font-semibold mb-4">Q&A検索</h1>
+
+          <QASearchBar 
+            onSearchSubmit={handleSearchSubmit}
+            onSortChange={(sortValue: string) => {
+              // sortValue は "createdAt_desc" などの形式で渡される
+              const [sortKey, sortDirection] = sortValue.split('_');
+              // filters を更新して新しい検索を実行する
+              const updatedFilters = { 
+                ...filters, 
+                sort: sortKey as 'createdAt' | 'likeCount',
+                order: sortDirection as 'asc' | 'desc',
+                // 後方互換性のため、古いフィルター形式も設定
+                sortKey, 
+                sortDirection: sortDirection as 'asc' | 'desc' 
+              };
+              setFilters(updatedFilters);
+              setCurrentPage(1);
+            }}
+            initialKeyword={searchKeyword}
+            initialFilters={filters}
           />
+
+          {isLoading && <p className="text-center py-4">読み込み中…</p>}
+          {error && (
+            <div className="bg-red-50 border border-red-200 p-4 rounded-lg text-red-700 mb-4">
+              <p>エラーが発生しました: {error.message}</p>
+              <button 
+                onClick={() => fetchQaData()} 
+                className="mt-2 px-4 py-1 bg-red-100 text-red-800 rounded-md text-sm hover:bg-red-200"
+              >
+                再試行
+              </button>
+            </div>
+          )}
+          
+          {likeError && (
+            <div className="bg-yellow-50 border border-yellow-200 p-4 rounded-lg text-yellow-700 mb-4">
+              <p>いいね操作でエラーが発生しました</p>
+            </div>
+          )}
+
+          {/* QAResultList：1列表示（縦方向にリストアップ） */}
+          {!isLoading && !error && (
+            <QAResultList
+              qas={qaItems}
+              onItemClick={handleItemClick}
+              onLike={handleLike}
+              getCompanyName={getCompanyName}
+              formatDate={formatDate}
+            />
+          )}
+
+          {/* Pagination コンポーネント */}
+          {totalPages > 1 && !isLoading && !error && (
+            <Pagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onChangePage={setCurrentPage}
+            />
+          )}
+
+          {/* selectedQA が存在する場合にモーダルを表示 */}
           {selectedQA && (
-            <QADetailModal 
-              qa={selectedQA} 
-              onClose={handleCloseModal} 
-              onLike={handleLike} 
-              onBookmark={handleBookmark} 
+            <QaDetailModal
+              qa={selectedQA}
+              role="investor"
+              isOpen={true}
+              onClose={handleCloseModal}
+              onLike={handleLike}
             />
           )}
         </main>
       </div>
-      <Footer 
+      <Footer
         footerLinks={[
           { label: '利用規約', href: '/terms' },
-          { label: 'お問い合わせ', href: '/contact' }
+          { label: 'お問い合わせ', href: '/contact' },
         ]}
         copyrightText="株式会社サンプル"
+        onSelectLink={(href) => router.push(href)}
       />
     </div>
   );
 };
-
+  
 export default QASearchPage;
