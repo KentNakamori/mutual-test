@@ -2,7 +2,7 @@
 "use client";
 
 import React, { useEffect, useState } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { useUser } from "@auth0/nextjs-auth0";
 import Sidebar from '@/components/common/sidebar';
 import CompanyHeader from '@/components/features/investor/company/CompanyHeader';
@@ -24,7 +24,12 @@ const menuItems = [
 const CompanyPage: React.FC = () => {
   const params = useParams();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { companyId } = params;
+  
+  // URLパラメータからtabとchatIdを取得
+  const tabParam = searchParams.get('tab');
+  const chatIdParam = searchParams.get('chatId');
   
   // Auth0 SDK v4の認証状態
   const { user, error: userError, isLoading: userLoading } = useUser();
@@ -32,10 +37,19 @@ const CompanyPage: React.FC = () => {
   const [companyData, setCompanyData] = useState<Company | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<Error | null>(null);
-  const [activeTab, setActiveTab] = useState<"chat" | "qa">("qa");
+  // URLパラメータに基づいて初期タブを設定
+  const [activeTab, setActiveTab] = useState<"chat" | "qa">(
+    tabParam === "chat" ? "chat" : "qa"
+  );
 
   // ゲスト判定
   const isGuest = !user && !userLoading && !userError;
+
+  // URLパラメータの変更を監視してタブを更新
+  useEffect(() => {
+    const newTab = tabParam === "chat" ? "chat" : "qa";
+    setActiveTab(newTab);
+  }, [tabParam]);
 
   useEffect(() => {
     // 認証状態がロード中の場合は処理しない
@@ -76,6 +90,18 @@ const CompanyPage: React.FC = () => {
 
   const handleTabChange = (tab: "chat" | "qa") => {
     setActiveTab(tab);
+    // URLパラメータを更新
+    const newSearchParams = new URLSearchParams(searchParams.toString());
+    newSearchParams.set('tab', tab);
+    
+    // chatIdパラメータがある場合は保持、ない場合は削除
+    if (tab === "chat" && chatIdParam) {
+      newSearchParams.set('chatId', chatIdParam);
+    } else if (tab === "qa") {
+      newSearchParams.delete('chatId');
+    }
+    
+    router.replace(`/investor/company/${companyId}?${newSearchParams.toString()}`);
   };
 
   // ローディング表示
