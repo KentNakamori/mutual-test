@@ -86,6 +86,25 @@ const ChatTabView: React.FC<ChatTabViewProps> = ({ companyId }) => {
           setSelectedSessionId(targetChatId);
         } else if (convertedSessions.length > 0 && !selectedSessionId) {
           setSelectedSessionId(convertedSessions[0].sessionId);
+        } else if (convertedSessions.length === 0) {
+          // チャットセッションが存在しない場合、自動で新規チャットを作成
+          console.log('チャットセッションが存在しないため、自動で新規チャットを作成します');
+          try {
+            const newChatResponse = await startNewInvestorChat(companyId);
+            console.log('自動新規チャット作成レスポンス:', newChatResponse);
+            
+            const newSession: ChatSession = {
+              sessionId: newChatResponse.chatId,
+              lastMessageSnippet: '新規チャット',
+              lastMessageTimestamp: new Date().toISOString()
+            };
+            
+            setChatSessions([newSession]);
+            setSelectedSessionId(newChatResponse.chatId);
+            setMessages([]);
+          } catch (error) {
+            console.error('自動新規チャットの作成中にエラーが発生しました:', error);
+          }
         }
         setIsInitialized(true);
       } catch (error) {
@@ -204,25 +223,41 @@ const ChatTabView: React.FC<ChatTabViewProps> = ({ companyId }) => {
     try {
       let currentSessionId = selectedSessionId;
       
-      // セッションが選択されていない場合はエラー
+      // セッションが選択されていない場合は自動で新規チャットを作成
       if (!currentSessionId) {
-        console.error('チャットセッションが選択されていません。新規チャットを作成してください。');
-        setMessages(prev => {
-          const newMessages = [...prev];
-          const targetIndex = newMessages.findIndex(msg => msg.messageId === aiMessageId);
+        console.log('セッションが選択されていないため、自動で新規チャットを作成します');
+        try {
+          const newChatResponse = await startNewInvestorChat(companyId);
+          console.log('自動新規チャット作成レスポンス:', newChatResponse);
           
-          if (targetIndex !== -1) {
-            newMessages[targetIndex] = {
-              ...newMessages[targetIndex],
-              text: 'チャットセッションが選択されていません。新規チャットを作成してください。',
-              timestamp: new Date().toISOString(),
-            };
-          }
+          const newSession: ChatSession = {
+            sessionId: newChatResponse.chatId,
+            lastMessageSnippet: '新規チャット',
+            lastMessageTimestamp: new Date().toISOString()
+          };
           
-          return newMessages;
-        });
-        setLoading(false);
-        return;
+          setChatSessions(prev => [newSession, ...prev]);
+          setSelectedSessionId(newChatResponse.chatId);
+          currentSessionId = newChatResponse.chatId;
+        } catch (error) {
+          console.error('自動新規チャットの作成中にエラーが発生しました:', error);
+          setMessages(prev => {
+            const newMessages = [...prev];
+            const targetIndex = newMessages.findIndex(msg => msg.messageId === aiMessageId);
+            
+            if (targetIndex !== -1) {
+              newMessages[targetIndex] = {
+                ...newMessages[targetIndex],
+                text: 'チャットセッションの作成中にエラーが発生しました。',
+                timestamp: new Date().toISOString(),
+              };
+            }
+            
+            return newMessages;
+          });
+          setLoading(false);
+          return;
+        }
       }
       
       console.log('メッセージ送信開始:', currentSessionId);
