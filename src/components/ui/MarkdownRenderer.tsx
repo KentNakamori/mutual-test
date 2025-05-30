@@ -4,6 +4,7 @@ import React, { useEffect } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import rehypeHighlight from 'rehype-highlight';
+import { loadPrismComponents } from '@/lib/prism';
 
 interface MarkdownRendererProps {
   content: string;
@@ -12,18 +13,9 @@ interface MarkdownRendererProps {
 
 const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content, className = '' }) => {
   useEffect(() => {
-    // Prismjsを動的にロード
-    import('prismjs').then((Prism) => {
-      import('prismjs/components/prism-javascript');
-      import('prismjs/components/prism-typescript');
-      import('prismjs/components/prism-jsx');
-      import('prismjs/components/prism-tsx');
-      import('prismjs/components/prism-python');
-      import('prismjs/components/prism-java');
-      import('prismjs/components/prism-css');
-      import('prismjs/components/prism-json');
-      import('prismjs/components/prism-bash');
-      import('prismjs/components/prism-sql');
+    // PrismJSコンポーネントを読み込み
+    loadPrismComponents().catch(error => {
+      console.warn('PrismJSの初期化に失敗しました:', error);
     });
   }, []);
 
@@ -34,11 +26,14 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content, className 
         rehypePlugins={[rehypeHighlight]}
         components={{
           // コードブロックのカスタマイズ
-          code: ({ node, inline, className, children, ...props }) => {
+          code: ({ node, className, children, ...props }: any) => {
             const match = /language-(\w+)/.exec(className || '');
             const language = match ? match[1] : '';
             
-            if (inline) {
+            // inlineかどうかを判定（親要素がpreでない場合はインライン）
+            const isInline = !props.className?.includes('language-');
+            
+            if (isInline) {
               return (
                 <code 
                   className="bg-gray-100 px-1 py-0.5 rounded text-sm font-mono" 
