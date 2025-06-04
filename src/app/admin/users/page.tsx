@@ -1,107 +1,153 @@
-'use client';
+"use client";
 
-import { useForm } from 'react-hook-form';
-import { z } from 'zod';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { useCompanies } from '@/hooks/useCompanies';   // ← 追加
-import { fetcher } from '@/lib/fetcher';
+import React, { useState, useEffect } from "react";
 
-const schema = z.object({
-  companyId: z.coerce.number({ required_error: '企業を選択してください' }),
-  email: z.string().email(),
-  fullName: z.string().min(1, '氏名を入力してください'),
-});
-type Form = z.infer<typeof schema>;
+interface Company {
+  companyId: string;
+  companyName: string;
+}
 
 export default function UserInvitePage() {
-  /* 会社一覧を取得（共通フック経由） */
-  const { companies, isLoading, isError } = useCompanies();
+  const [companies, setCompanies] = useState<Company[]>([]);
+  const [selectedCompanyId, setSelectedCompanyId] = useState<string>("");
+  const [email, setEmail] = useState<string>("");
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [flash, setFlash] = useState<string | null>(null);
 
-  const {
-    register,
-    handleSubmit,
-    formState: { errors, isSubmitting },
-    reset,
-  } = useForm<Form>({ resolver: zodResolver(schema) });
+  // 企業一覧を取得
+  useEffect(() => {
+    const fetchCompanies = async () => {
+      try {
+        const response = await fetch("/api/admin/users");
+        if (!response.ok) throw new Error("企業一覧の取得に失敗しました");
+        const data = await response.json();
+        setCompanies(data);
+      } catch (error) {
+        console.error("企業一覧取得エラー:", error);
+        setFlash("❌ 企業一覧の取得に失敗しました");
+      }
+    };
 
-  const onSubmit = async (data: Form) => {
-    await fetcher('/api/user-create', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data),
-    });
-    alert('招待メールを送信しました');
-    reset();
+    fetchCompanies();
+  }, []);
+
+  // ユーザー登録
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setFlash(null);
+
+    if (!selectedCompanyId) {
+      setFlash("❌ 企業を選択してください");
+      return;
+    }
+
+    if (!email) {
+      setFlash("❌ メールアドレスを入力してください");
+      return;
+    }
+
+    setIsLoading(true);
+
+    try {
+      const response = await fetch("/api/admin/users", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          companyId: selectedCompanyId,
+          email: email,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json().catch(() => ({}));
+        const errorMessage = errorData.error || errorData.message || "ユーザー登録に失敗しました";
+        throw new Error(errorMessage);
+      }
+
+      const result = await response.json();
+      setFlash(`✅ ${result.message || 'ユーザーアカウントを作成し、招待メールを送信しました。ユーザーはメール内のリンクからパスワードを設定できます。'}`);
+      setEmail("");
+      setSelectedCompanyId("");
+    } catch (error) {
+      console.error("ユーザー登録エラー:", error);
+      const errorMessage = error instanceof Error ? error.message : "ユーザー登録に失敗しました";
+      setFlash(`❌ ${errorMessage}`);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  /* ロード・エラー表示 */
-  if (isError)   return <p>会社一覧の取得に失敗しました</p>;
-  if (isLoading) return <p>会社一覧を読み込み中...</p>;
-
   return (
-    <div className="max-w-lg mx-auto space-y-6">
-      <h1 className="text-2xl font-bold">企業ユーザー招待</h1>
+    <div className="min-h-screen bg-gray-50">
+      <div className="max-w-4xl mx-auto p-6">
+        <div className="bg-white shadow-lg rounded-lg p-8">
+          <h1 className="text-3xl font-bold text-gray-800 mb-2 text-center">
+            企業ユーザー登録
+          </h1>
+          <p className="text-gray-600 text-center mb-8">
+            企業を選択してユーザーアカウントを作成し、招待メールを送信します
+          </p>
 
-      <form
-        onSubmit={handleSubmit(onSubmit)}
-        className="space-y-4 border p-6 rounded-xl shadow"
-      >
-        {/* 企業プルダウン */}
-        <div>
-          <label className="block mb-1 font-medium">企業</label>
-          <select
-            {...register('companyId')}
-            className="w-full border rounded p-2"
-            defaultValue=""
-          >
-            <option value="" disabled>
-              -- 企業を選択 --
-            </option>
-            {companies.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.name}
-              </option>
-            ))}
-          </select>
-          {errors.companyId && (
-            <p className="text-red-600 text-sm">{errors.companyId.message}</p>
+          <form onSubmit={handleSubmit} className="space-y-6 max-w-2xl mx-auto">
+            {/* 企業選択 */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                企業選択 *
+              </label>
+              <select
+                value={selectedCompanyId}
+                onChange={(e) => setSelectedCompanyId(e.target.value)}
+                className="mt-1 block w-full border border-gray-300 rounded p-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                required
+              >
+                <option value="">-- 企業を選択してください --</option>
+                {companies.map((company) => (
+                  <option key={company.companyId} value={company.companyId}>
+                    {company.companyName}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* メールアドレス */}
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                メールアドレス *
+              </label>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                className="mt-1 block w-full border border-gray-300 rounded p-3 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                placeholder="user@example.com"
+                required
+              />
+            </div>
+
+            {/* 送信ボタン */}
+            <div className="flex justify-center pt-6">
+              <button
+                type="submit"
+                disabled={isLoading}
+                className="bg-black text-white px-8 py-3 rounded transition-colors duration-200 hover:bg-gray-800 disabled:bg-gray-400 disabled:cursor-not-allowed"
+              >
+                {isLoading ? "アカウント作成中..." : "ユーザー登録"}
+              </button>
+            </div>
+          </form>
+
+          {/* フラッシュメッセージ */}
+          {flash && (
+            <div className={`mt-6 p-4 rounded text-center max-w-2xl mx-auto ${
+              flash.includes('✅') 
+                ? 'bg-green-100 text-green-700 border border-green-300' 
+                : 'bg-red-100 text-red-700 border border-red-300'
+            }`}>
+              {flash}
+            </div>
           )}
         </div>
-
-        {/* 氏名 */}
-        <div>
-          <label className="block mb-1 font-medium">氏名</label>
-          <input
-            type="text"
-            {...register('fullName')}
-            className="w-full border rounded p-2"
-          />
-          {errors.fullName && (
-            <p className="text-red-600 text-sm">{errors.fullName.message}</p>
-          )}
-        </div>
-
-        {/* メールアドレス */}
-        <div>
-          <label className="block mb-1 font-medium">メールアドレス</label>
-          <input
-            type="email"
-            {...register('email')}
-            className="w-full border rounded p-2"
-          />
-          {errors.email && (
-            <p className="text-red-600 text-sm">{errors.email.message}</p>
-          )}
-        </div>
-
-        <button
-          type="submit"
-          className="px-6 py-2 bg-blue-600 text-white rounded disabled:opacity-50"
-          disabled={isSubmitting}
-        >
-          招待メールを送信
-        </button>
-      </form>
+      </div>
     </div>
   );
 }
