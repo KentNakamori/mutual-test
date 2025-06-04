@@ -28,7 +28,13 @@ const MessageList: React.FC<MessageListProps> = ({ messages }) => {
         totalMessages: messageIds.length,
         uniqueMessages: uniqueIds.size,
         messageIds,
-        duplicates: messageIds.filter((id, index) => messageIds.indexOf(id) !== index)
+        duplicates: messageIds.filter((id, index) => messageIds.indexOf(id) !== index),
+        messages: messages.map(msg => ({ messageId: msg.messageId, role: msg.role, textLength: msg.text.length }))
+      });
+    } else if (process.env.NODE_ENV === 'development' && messages.length > 0) {
+      console.log('✅ メッセージID重複チェック通過:', {
+        messageCount: messages.length,
+        latestIds: messageIds.slice(-2)
       });
     }
   }, [messages]);

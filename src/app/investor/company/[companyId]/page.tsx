@@ -2,7 +2,7 @@
 "use client";
 
 import React, { useEffect, useState } from 'react';
-import { useParams, useRouter } from 'next/navigation';
+import { useParams, useRouter, usePathname } from 'next/navigation';
 import { useUser } from "@auth0/nextjs-auth0";
 import Sidebar from '@/components/common/sidebar';
 import CompanyHeader from '@/components/features/investor/company/CompanyHeader';
@@ -24,6 +24,7 @@ const menuItems = [
 const CompanyPage: React.FC = () => {
   const params = useParams();
   const router = useRouter();
+  const pathname = usePathname();
   const { companyId } = params;
   
   // Auth0 SDK v4の認証状態
@@ -46,6 +47,7 @@ const CompanyPage: React.FC = () => {
       try {
         // プロキシ経由でAPIリクエストを行う
         // token=undefinedにすることでプロキシ経由でJWTを送信
+        // バックエンドで自動的にアクセストラッキングが行われる
         const response = await getInvestorCompanyDetail(companyId as string, undefined);
         
         // APIレスポンスをCompany型に変換
@@ -61,6 +63,9 @@ const CompanyPage: React.FC = () => {
         
         setCompanyData(company);
         setError(null);
+        
+        // トラッキングは不要 - バックエンドで自動的に記録される
+        console.log('ℹ️ 企業データ取得完了 - アクセストラッキングはバックエンドで自動実行されました');
       } catch (err) {
         console.error('企業データ取得エラー:', err);
         setError(err instanceof Error ? err : new Error('企業データの取得に失敗しました'));
@@ -72,7 +77,7 @@ const CompanyPage: React.FC = () => {
     if (companyId) {
       fetchCompanyData();
     }
-  }, [companyId, userLoading]);
+  }, [companyId, userLoading]); // pathnameを依存配列から削除
 
   const handleTabChange = (tab: "chat" | "qa") => {
     setActiveTab(tab);

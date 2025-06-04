@@ -288,15 +288,18 @@ export interface SortOption {
 }
 
 /**
- * チャット入力ボックス（チャット用）
+ * チャット入力ボックス（チャット入力用）
  * - メッセージ入力
- * - メッセージ送信
+ * - メッセージ送信処理
  */
 export interface ChatInputBoxProps {
   onSendMessage: (message: string) => void;
   loading?: boolean;
   inputValue?: string;
   onInputChange?: (value: string) => void;
+  disabled?: boolean;
+  placeholder?: string;
+  isSessionSelected?: boolean;
 }
 
 /**
@@ -330,6 +333,19 @@ export interface MessageListProps {
  */
 export interface PasswordChangeFormProps {
   onChangePassword: (currentPassword: string, newPassword: string) => Promise<void>;
+}
+
+/**
+ * 削除確認ダイアログ（削除操作確認用）
+ * - 削除確認表示
+ * - 削除操作
+ */
+export interface ConfirmDeleteDialogProps {
+  isOpen: boolean;
+  title?: string;
+  description?: string;
+  onConfirm: () => void;
+  onCancel: () => void;
 }
 
 /**

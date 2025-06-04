@@ -9,7 +9,10 @@ const ChatInputBox: React.FC<ChatInputBoxProps> = ({
   onSendMessage, 
   loading = false, 
   inputValue = "",
-  onInputChange 
+  onInputChange,
+  disabled = false,
+  placeholder,
+  isSessionSelected = true
 }) => {
   const [internalInputValue, setInternalInputValue] = useState<string>("");
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -26,7 +29,7 @@ const ChatInputBox: React.FC<ChatInputBoxProps> = ({
   };
 
   const handleSend = () => {
-    if (currentInputValue.trim() === "") return;
+    if (currentInputValue.trim() === "" || !isSessionSelected) return;
     onSendMessage(currentInputValue);
     handleInputChange("");
   };
@@ -41,31 +44,53 @@ const ChatInputBox: React.FC<ChatInputBoxProps> = ({
     textarea.style.height = `${textarea.scrollHeight}px`;
   }, [currentInputValue]);
 
+  // プレースホルダーの決定
+  const getPlaceholder = () => {
+    if (!isSessionSelected) {
+      return "チャットセッションを選択するか、新規チャットを作成してください";
+    }
+    return placeholder || "メッセージを入力...";
+  };
+
+  // 入力欄の無効化条件
+  const isInputDisabled = disabled || loading || !isSessionSelected;
+
   return (
     <div className="px-6 py-4">
+      {/* セッション未選択の警告メッセージ */}
+      {!isSessionSelected && (
+        <div className="mb-3 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+          <p className="text-yellow-800 text-sm">
+            ⚠️ チャットセッションが選択されていません。メッセージを送信するには、既存のチャットを選択するか新規チャットを作成してください。
+          </p>
+        </div>
+      )}
+      
       <div className="flex items-center p-2 bg-gray-50 rounded-lg max-w-5xl mx-auto">
         <textarea
           ref={textareaRef}
           value={currentInputValue}
           onChange={(e) => handleInputChange(e.target.value)}
-          placeholder="メッセージを入力..."
-          className="flex-1 py-2 px-4 resize-none outline-none focus:outline-none text-sm max-h-32 bg-transparent rounded-l-lg overflow-y-auto"
+          placeholder={getPlaceholder()}
+          className={`flex-1 py-2 px-4 resize-none outline-none focus:outline-none text-sm max-h-32 bg-transparent rounded-l-lg overflow-y-auto ${
+            isInputDisabled ? 'cursor-not-allowed text-gray-400' : ''
+          }`}
           rows={1}
           onKeyDown={(e) => {
-            if (e.key === 'Enter' && !e.shiftKey) {
+            if (e.key === 'Enter' && !e.shiftKey && isSessionSelected) {
               e.preventDefault();
               handleSend();
             }
           }}
-          disabled={loading}
+          disabled={isInputDisabled}
         />
         <div className="flex items-center px-2">
           <button
             onClick={handleSend}
-            disabled={!currentInputValue.trim() || loading}
+            disabled={!currentInputValue.trim() || isInputDisabled}
             className={`p-2 rounded-lg ${
-              !currentInputValue.trim() || loading
-                ? 'bg-gray-300 text-gray-400'
+              !currentInputValue.trim() || isInputDisabled
+                ? 'bg-gray-300 text-gray-400 cursor-not-allowed'
                 : 'bg-blue-600 text-white hover:bg-blue-700'
             } transition-colors duration-200 focus:outline-none`}
           >

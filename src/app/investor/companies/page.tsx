@@ -1,8 +1,8 @@
 // src/app/investor/companies/page.tsx
 "use client";
 
-import React, { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import React, { useState, useCallback } from 'react';
+import { useRouter, usePathname } from 'next/navigation';
 import { useUser } from '@auth0/nextjs-auth0';
 import Sidebar from '@/components/common/sidebar';
 import Footer from '@/components/common/footer';
@@ -22,12 +22,18 @@ const menuItems = [
 
 const CompaniesPage: React.FC = () => {
   const router = useRouter();
+  const pathname = usePathname();
   
   // Auth0のuseUserフックを使用して認証状態を取得
   const { user, isLoading: userLoading, error: userError } = useUser();
   
   // QA詳細モーダル表示用の状態
   const [selectedQA, setSelectedQA] = useState<QA | null>(null);
+  
+  // CompanyListingから企業データを受け取るコールバック
+  const handleCompaniesLoaded = useCallback((companies: Array<{ companyId: string }>) => {
+    // トラッキングは不要なので、何もしない
+  }, []);
   
   // ローディング表示
   if (userLoading) {
@@ -38,8 +44,6 @@ const CompaniesPage: React.FC = () => {
     );
   }
   
-  // 認証エラーチェックを削除 - ゲストユーザーも閲覧可能
-
   return (
     <div className="min-h-screen flex flex-col">
       <div className="flex flex-1">
@@ -55,7 +59,9 @@ const CompaniesPage: React.FC = () => {
             onRowClick={(qa) => setSelectedQA(qa)}
           />
           <h1 className="text-2xl font-semibold mb-2">企業一覧</h1>
-          <CompanyListing />
+          <CompanyListing 
+            onCompaniesLoaded={handleCompaniesLoaded}
+          />
           {/* QA詳細モーダルの表示 */}
           {selectedQA && (
             <QaDetailModal

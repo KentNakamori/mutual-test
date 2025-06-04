@@ -383,6 +383,8 @@ const ChatTabView: React.FC<ChatTabViewProps> = ({ companyId }) => {
             loading={loading}
             inputValue={inputValue}
             onInputChange={setInputValue}
+            isSessionSelected={!!selectedSessionId}
+            placeholder={selectedSessionId ? "メッセージを入力..." : "チャットセッションを選択するか、新規チャットを作成してください"}
           />
         </div>
       </div>
