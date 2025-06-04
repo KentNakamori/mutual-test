@@ -451,10 +451,26 @@ export async function sendCorporateChatMessageStream(
   onEnd?: (fullResponse: string) => void,
   onError?: (error: string) => void
 ): Promise<void> {
+  console.log('🚀 sendCorporateChatMessageStream開始:', {
+    chatId,
+    chatIdType: typeof chatId,
+    message,
+    messageType: typeof message,
+    messageLength: message.length
+  });
+  
   const endpoint = ENDPOINTS.corporate.ir.sendMessage(chatId);
+  console.log('📡 企業向けストリーミングエンドポイント:', endpoint);
+  
+  const requestBody = { 
+    chatId,
+    message 
+  };
+  console.log('📤 企業向けストリーミングリクエストボディ:', requestBody);
+  
   return streamingFetch(
     endpoint, 
-    { message }, 
+    requestBody, 
     onChunk,
     onStart,
     onEnd,

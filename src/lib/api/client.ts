@@ -104,7 +104,7 @@ export async function streamingFetch(
   const url = baseUrl + endpoint;
   
   try {
-    console.log('🚀 ストリーミング開始:', { endpoint, url });
+    console.log('🚀 ストリーミング開始:', { endpoint, url, data });
     
     const response = await fetch(url, {
       method: 'POST',
@@ -114,6 +114,13 @@ export async function streamingFetch(
         'Accept': 'text/event-stream',
       },
       body: JSON.stringify(data),
+    });
+    
+    console.log('📡 ストリーミングレスポンス受信:', {
+      status: response.status,
+      statusText: response.statusText,
+      contentType: response.headers.get('content-type'),
+      headers: Object.fromEntries(response.headers.entries())
     });
     
     if (!response.ok) {
@@ -138,6 +145,9 @@ export async function streamingFetch(
     let currentData = '';
     let firstChunkTime: number | null = null;
     let lastChunkTime: number | null = null;
+    let isStreamStarted = false;
+
+    console.log('🔄 ストリーミング読み取り開始');
 
     while (true) {
       const { done, value } = await reader.read();
@@ -146,7 +156,9 @@ export async function streamingFetch(
         const totalTime = lastChunkTime && firstChunkTime ? lastChunkTime - firstChunkTime : 0;
         console.log('✅ ストリーミング完了:', {
           totalChunks: chunkCount,
-          totalTimeMs: totalTime
+          totalTimeMs: totalTime,
+          finalResponseLength: fullResponse.length,
+          wasStreamStarted: isStreamStarted
         });
         break;
       }
@@ -158,6 +170,13 @@ export async function streamingFetch(
       
       const chunk = decoder.decode(value, { stream: true });
       buffer += chunk;
+      
+      console.log('📨 生チャンク受信:', {
+        chunkNumber: chunkCount,
+        chunkLength: chunk.length,
+        bufferLength: buffer.length,
+        rawChunk: chunk.substring(0, 100) + (chunk.length > 100 ? '...' : '')
+      });
       
       const events = buffer.split('\n\n');
       buffer = events.pop() || '';
@@ -177,39 +196,76 @@ export async function streamingFetch(
           }
         }
         
+        console.log('🎯 イベント処理:', {
+          event: currentEvent,
+          dataLength: currentData.length,
+          dataPreview: currentData.substring(0, 50) + (currentData.length > 50 ? '...' : '')
+        });
+        
         if (currentData) {
           try {
             const jsonData = JSON.parse(currentData);
             
+            console.log('📊 JSONデータ解析:', {
+              type: jsonData.type,
+              hasContent: !!jsonData.content,
+              contentLength: jsonData.content ? jsonData.content.length : 0
+            });
+            
             switch (jsonData.type) {
               case 'start':
+                console.log('🟢 ストリーミング開始イベント受信');
+                isStreamStarted = true;
                 onStart?.();
                 break;
                 
               case 'content':
                 if (jsonData.content) {
+                  console.log('📝 コンテンツチャンク:', {
+                    contentLength: jsonData.content.length,
+                    content: jsonData.content.substring(0, 20) + (jsonData.content.length > 20 ? '...' : ''),
+                    totalResponse: fullResponse.length
+                  });
                   fullResponse += jsonData.content;
                   onChunk(jsonData.content);
                 }
                 break;
                 
               case 'end':
+                console.log('🔚 ストリーミング終了イベント受信:', {
+                  finalContentLength: jsonData.content ? jsonData.content.length : 0,
+                  totalResponseLength: fullResponse.length
+                });
                 onEnd?.(jsonData.content || fullResponse);
                 break;
                 
               case 'error':
-                console.error('💥 エラー:', jsonData.message);
+                console.error('💥 エラーイベント受信:', jsonData.message);
                 onError?.(jsonData.message);
                 break;
             }
           } catch (parseError) {
-            console.error('🔥 JSONパースエラー:', parseError);
+            console.error('🔥 JSONパースエラー:', {
+              error: parseError,
+              rawData: currentData.substring(0, 100) + (currentData.length > 100 ? '...' : '')
+            });
           }
         }
       }
     }
+    
+    // ストリーミングが開始されなかった場合の警告
+    if (!isStreamStarted) {
+      console.warn('⚠️ ストリーミングが開始されませんでした - startイベントが受信されていません');
+    }
+    
   } catch (error) {
-    console.error('💀 ストリーミングエラー:', error);
+    console.error('💀 ストリーミングエラー:', {
+      error: error instanceof Error ? error.message : String(error),
+      endpoint,
+      url,
+      data
+    });
     onError?.(error instanceof Error ? error.message : String(error));
     throw error;
   }
