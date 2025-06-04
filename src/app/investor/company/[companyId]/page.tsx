@@ -2,7 +2,7 @@
 "use client";
 
 import React, { useEffect, useState } from 'react';
-import { useParams, useRouter, usePathname } from 'next/navigation';
+import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { useUser } from "@auth0/nextjs-auth0";
 import Sidebar from '@/components/common/sidebar';
 import CompanyHeader from '@/components/features/investor/company/CompanyHeader';
@@ -24,7 +24,7 @@ const menuItems = [
 const CompanyPage: React.FC = () => {
   const params = useParams();
   const router = useRouter();
-  const pathname = usePathname();
+  const searchParams = useSearchParams();
   const { companyId } = params;
   
   // Auth0 SDK v4の認証状態
