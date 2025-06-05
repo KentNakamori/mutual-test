@@ -2,26 +2,26 @@
 // タグ追加の際はここへオブジェクトを1つ追加するだけでOK
 import{ TagOption } from '@/types';
 
-// タグ→質問ルート
+// 質問ルート
 export const QUESTION_ROUTE_OPTIONS: TagOption[] = [
-  { label: '決算説明会', color: 'bg-indigo-100 text-indigo-800' },
-  { label: '個人投資家説明会', color: 'bg-indigo-100 text-indigo-800' },
-  { label: 'IR面談', color: 'bg-indigo-100 text-indigo-800' },
-  { label: '問い合わせ', color: 'bg-indigo-100 text-indigo-800' },
-  { label: 'FAQ', color: 'bg-indigo-100 text-indigo-800' },
-  { label: 'その他', color: 'bg-indigo-100 text-indigo-800' },
+  { label: '決算説明会', color: 'bg-blue-100 text-blue-800' },
+  { label: '個人投資家説明会', color: 'bg-green-100 text-green-800' },
+  { label: 'IR面談', color: 'bg-yellow-100 text-yellow-800' },
+  { label: '問い合わせ', color: 'bg-pink-100 text-pink-800' },
+  { label: 'FAQ', color: 'bg-purple-100 text-purple-800' },
+  { label: 'その他', color: 'bg-gray-100 text-gray-800' },
 ];
   
 // 情報ソース
 export const INFO_SOURCE_OPTIONS: TagOption[] = [
-  { label: '決算説明会資料', color: 'bg-purple-100 text-purple-800' },
-  { label: '有価証券報告書', color: 'bg-purple-100 text-purple-800' },
-  { label: '決算短信', color: 'bg-purple-100 text-purple-800' },
-  { label: '決算説明会の書き起こし', color: 'bg-purple-100 text-purple-800' },
-  { label: 'その他', color: 'bg-purple-100 text-purple-800' },
+  { label: '決算説明会資料', color: 'bg-red-100 text-red-800' },
+  { label: '有価証券報告書', color: 'bg-orange-100 text-orange-800' },
+  { label: '決算短信', color: 'bg-emerald-100 text-emerald-800' },
+  { label: '決算説明会の書き起こし', color: 'bg-violet-100 text-violet-800' },
+  { label: 'その他', color: 'bg-gray-100 text-gray-800' },
 ];
   
-// ジャンル→カテゴリ
+// カテゴリ
 export const GENRE_OPTIONS: TagOption[] = [
   { label: '業績', color: 'bg-amber-100 text-amber-800' },
   { label: '事業戦略', color: 'bg-blue-100 text-blue-800' },

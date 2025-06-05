@@ -72,8 +72,9 @@ const QACard: React.FC<QACardProps> = ({
     >
       <div className="p-4">
         <div className="mb-2 border-b border-gray-200 pb-2">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-6">
+          <div className="grid grid-cols-[minmax(0,600px)_1fr] items-center">
+            {/* 左グループ */}
+            <div className="flex items-center gap-3 overflow-hidden">
               <h3 className="text-lg font-semibold text-gray-800 hover:text-blue-600 cursor-pointer line-clamp-1">
                 {qa.title}
               </h3>
@@ -88,32 +89,38 @@ const QACard: React.FC<QACardProps> = ({
                 <span className="text-gray-700 text-sm">{qa.fiscalPeriod || '未設定'}</span>
               </div>
             </div>
-            <div className="flex items-center gap-6">
-              {qa.question_route && (
-                <div className="flex items-center">
-                  <Route size={14} className="text-indigo-600 mr-1" />
-                  <span className={`px-2 py-1 rounded-full text-xs font-medium ${getTagColor(qa.question_route)}`}>
-                    {qa.question_route}
-                  </span>
-                </div>
-              )}
-              {qa.genre && qa.genre.length > 0 && (
-                <div className="flex items-center gap-1">
-                  <Activity size={14} className="text-amber-600" />
-                  {qa.genre.map((genre, index) => (
-                    <span 
-                      key={`genre-${index}`} 
-                      className={`px-2 py-1 rounded-full text-xs font-medium ${getTagColor(genre)}`}
-                    >
-                      {genre}
+            {/* 右グループ */}
+            <div className="flex items-center justify-between min-w-0">
+              {/* 質問ルート・カテゴリ（左詰め） */}
+              <div className="flex items-center gap-4 min-w-0">
+                {qa.question_route && (
+                  <div className="flex items-center w-28">
+                    <Route size={14} className="text-indigo-600 mr-1" />
+                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${getTagColor(qa.question_route)}`}>
+                      {qa.question_route}
                     </span>
-                  ))}
-                </div>
-              )}
-            </div>
-            <div className="flex items-center text-gray-600 text-sm">
-              <Calendar size={14} className="mr-1" />
-              <span>{createdDate}</span>
+                  </div>
+                )}
+
+                {qa.genre && qa.genre.length > 0 && (
+                  <div className="flex items-center gap-1">
+                    <Activity size={14} className="text-amber-600" />
+                    {qa.genre.map((genre, index) => (
+                      <span 
+                        key={`genre-${index}`} 
+                        className={`px-2 py-1 rounded-full text-xs font-medium ${getTagColor(genre)}`}
+                      >
+                        {genre}
+                      </span>
+                    ))}
+                  </div>
+                )}
+              </div>
+              {/* 日付（右詰め） */}
+              <div className="flex items-center text-gray-600 text-sm flex-shrink-0 ml-4">
+                <Calendar size={14} className="mr-1" />
+                <span>{createdDate}</span>
+              </div>
             </div>
           </div>
         </div>
