@@ -6,8 +6,8 @@ export const GET = async () => {
 
   // ログイン済みで管理者ユーザーの場合は直接管理画面にリダイレクト
   if (session?.user) {
-    const userType = session.user['https://your-domain/userType'];
-    if (userType === 'admin') {
+    const userRole = session.user['https://salt2.dev/role'];
+    if (userRole === 'admin') {
       return NextResponse.redirect(new URL('/admin', process.env.APP_BASE_URL || 'http://localhost:3000'));
     }
   }

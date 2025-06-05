@@ -1,87 +1,21 @@
 "use client";
 
-import React, { useEffect } from "react";
+import React from "react";
 import Link from "next/link";
-import { useUser } from '@auth0/nextjs-auth0';
-import { useRouter } from 'next/navigation';
 
 const AdminPage: React.FC = () => {
-  const { user, error, isLoading } = useUser();
-  const router = useRouter();
-
-  useEffect(() => {
-    // ローディング中でない場合の認証チェック
-    if (!isLoading && !user) {
-      router.push('/admin/login');
-      return;
-    }
-    // 認証済みであればOK（権限チェックはFastAPI側で行う）
-  }, [user, isLoading, router]);
-
-  const handleLogout = () => {
-    window.location.href = '/api/auth/logout';
-  };
-
-  // ローディング中
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">認証を確認中...</p>
-        </div>
-      </div>
-    );
-  }
-
-  // エラー時
-  if (error) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-center">
-          <p className="text-red-600">認証エラーが発生しました</p>
-          <button 
-            onClick={() => router.push('/admin/login')}
-            className="mt-4 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
-          >
-            ログインページへ
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  // 未認証時は何も表示しない（useEffectでリダイレクト処理中）
-  if (!user) {
-    return null;
-  }
-
+  // ミドルウェアで認証チェック済みなので、ここに到達した時点で管理者確定
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-4xl mx-auto p-6">
         <div className="bg-white shadow-lg rounded-lg p-8">
-          <div className="flex justify-between items-center mb-8">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-800 mb-2">
-                管理者ダッシュボード
-              </h1>
-              <p className="text-gray-600">
-                システム管理機能へのアクセス
-              </p>
-              {user.email && (
-                <p className="text-sm text-gray-500 mt-1">
-                  ログイン中: {user.email}
-                </p>
-              )}
-            </div>
-            <div>
-              <button
-                onClick={handleLogout}
-                className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded transition-colors duration-200"
-              >
-                ログアウト
-              </button>
-            </div>
+          <div className="text-center mb-8">
+            <h1 className="text-3xl font-bold text-gray-800 mb-2">
+              管理者ダッシュボード
+            </h1>
+            <p className="text-gray-600">
+              システム管理機能へのアクセス
+            </p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-2xl mx-auto">

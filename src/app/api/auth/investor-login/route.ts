@@ -7,8 +7,8 @@ export const GET = async () => {
 
   // ログイン済みで投資家ユーザーの場合は直接企業一覧にリダイレクト
   if (session?.user) {
-    const userType = session.user['https://your-domain/userType'];
-    if (userType === 'investor') {
+    const userRole = session.user['https://salt2.dev/role'];
+    if (userRole === 'investor') {
       return NextResponse.redirect(new URL('/investor/companies', process.env.APP_BASE_URL || 'http://localhost:3000'));
     }
   }

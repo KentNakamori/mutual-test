@@ -7,8 +7,8 @@ export const GET = async () => {
 
   // ログイン済みで企業ユーザーの場合は直接ダッシュボードにリダイレクト
   if (session?.user) {
-    const userType = session.user['https://your-domain/userType'];
-    if (userType === 'corporate') {
+    const userRole = session.user['https://salt2.dev/role'];
+    if (userRole === 'corporate') {
       return NextResponse.redirect(new URL('/corporate/dashboard', process.env.APP_BASE_URL || 'http://localhost:3000'));
     }
   }

@@ -1,15 +1,13 @@
 "use client";
 
-import React, { useEffect } from "react";
+import React from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { companySchema, CompanyInput } from "../../../lib/companySchema";
 import { useState } from "react";
-import { useUser } from '@auth0/nextjs-auth0';
 import { useRouter } from 'next/navigation';
 
 export default function CompanyCreatePage() {
-  const { user, error, isLoading } = useUser();
   const router = useRouter();
   
   const {
@@ -21,49 +19,6 @@ export default function CompanyCreatePage() {
     resolver: zodResolver(companySchema),
   });
   const [flash, setFlash] = useState<string | null>(null);
-
-  useEffect(() => {
-    // ローディング中でない場合の認証チェック
-    if (!isLoading && !user) {
-      router.push('/admin/login');
-      return;
-    }
-    // 認証済みであればOK（権限チェックはFastAPI側で行う）
-  }, [user, isLoading, router]);
-
-  // ローディング中
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">認証を確認中...</p>
-        </div>
-      </div>
-    );
-  }
-
-  // エラー時
-  if (error) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="text-center">
-          <p className="text-red-600">認証エラーが発生しました</p>
-          <button 
-            onClick={() => router.push('/admin/login')}
-            className="mt-4 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
-          >
-            ログインページへ
-          </button>
-        </div>
-      </div>
-    );
-  }
-
-  // 未認証時は何も表示しない（useEffectでリダイレクト処理中）
-  if (!user) {
-    return null;
-  }
 
   async function onSubmit(data: CompanyInput) {
     setFlash(null);
@@ -79,7 +34,7 @@ export default function CompanyCreatePage() {
       
       console.log('変換後データ:', submitData); // デバッグ用
       
-      const res = await fetch("/api/proxy/companies", {
+      const res = await fetch("/api/admin/companies", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         cache: "no-store",
@@ -90,13 +45,6 @@ export default function CompanyCreatePage() {
       
       if (!res.ok) {
         const errorData = await res.json();
-        
-        // FastAPI側での権限エラーをチェック
-        if (res.status === 403) {
-          router.push('/unauthorized');
-          return;
-        }
-        
         throw new Error(errorData.error || `HTTP ${res.status}`);
       }
       
@@ -123,11 +71,6 @@ export default function CompanyCreatePage() {
               <p className="text-gray-600">
                 企業情報を入力してください
               </p>
-              {user.email && (
-                <p className="text-sm text-gray-500 mt-1">
-                  ログイン中: {user.email}
-                </p>
-              )}
             </div>
             <div>
               <button
