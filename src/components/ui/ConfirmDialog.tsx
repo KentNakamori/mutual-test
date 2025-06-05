@@ -17,15 +17,16 @@ const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
   cancelLabel = "Cancel",
   onConfirm,
   onCancel,
+  showCloseButton = true,
 }) => {
   return (
-    <Dialog isOpen={isOpen} onClose={onCancel} title={title}>
+    <Dialog isOpen={isOpen} onClose={onCancel} title={title} showCloseButton={showCloseButton}>
       <p className="mb-4">{description}</p>
       <div className="flex justify-end space-x-4">
         <button onClick={onCancel} className="bg-gray-200 text-black py-2 px-4 rounded hover:bg-gray-300">
           {cancelLabel}
         </button>
-        <button onClick={onConfirm} className="bg-red-600 text-white py-2 px-4 rounded hover:bg-red-700">
+        <button onClick={onConfirm} className="bg-red-500 text-white py-2 px-4 rounded hover:bg-red-600">
           {confirmLabel}
         </button>
       </div>

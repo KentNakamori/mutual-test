@@ -1,4 +1,3 @@
-// src/app/corporate/dashboard/page.tsx
 'use client';                                                     // ① クライアント側で実行
 
 import React, { useState, useEffect } from 'react';
