@@ -65,7 +65,8 @@ export interface CompanyPageProps {
  * - 企業ヘッダー表示
  */
 export interface CompanyHeaderProps {
-  company: Company;
+  company: Company & { isFollowed?: boolean };
+  onFollowStatusChange?: (isFollowed: boolean) => void;
 }
 
 /**
