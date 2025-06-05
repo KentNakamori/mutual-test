@@ -4,16 +4,19 @@ import React from "react";
 import Link from "next/link";
 
 const AdminPage: React.FC = () => {
+  // ミドルウェアで認証チェック済みなので、ここに到達した時点で管理者確定
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-4xl mx-auto p-6">
         <div className="bg-white shadow-lg rounded-lg p-8">
-          <h1 className="text-3xl font-bold text-gray-800 mb-2 text-center">
-            管理者ダッシュボード
-          </h1>
-          <p className="text-gray-600 text-center mb-8">
-            システム管理機能へのアクセス
-          </p>
+          <div className="text-center mb-8">
+            <h1 className="text-3xl font-bold text-gray-800 mb-2">
+              管理者ダッシュボード
+            </h1>
+            <p className="text-gray-600">
+              システム管理機能へのアクセス
+            </p>
+          </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 max-w-2xl mx-auto">
             {/* 企業登録ボタン */}

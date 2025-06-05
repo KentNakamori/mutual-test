@@ -5,6 +5,7 @@ import { NextRequest, NextResponse } from 'next/server';
  *  └─ 企業一覧取得（ユーザー登録ページ用）
  *     バックエンド: app/routers/admin/user.py の get_companies
  *     FastAPI: GET /admin/user/companies
+ *     レスポンス: CompanyItem[]（id, name）
  */
 export async function GET(req: NextRequest) {
   const backendUrl = process.env.API_BASE_URL;
@@ -20,11 +21,10 @@ export async function GET(req: NextRequest) {
 
   try {
     // バックエンドの /admin/user/companies エンドポイントを呼び出し
-    const resp = await fetch(`${backendUrl}/admin/user/companies`, {
+    const resp = await fetch(`${backendUrl}/admin/users/companies`, {
       method: "GET",
       headers: { 
         "Content-Type": "application/json",
-        // 必要に応じて認証ヘッダーを追加
       },
       next: { revalidate: 30 },  // ISR: 30秒キャッシュ
     });
@@ -64,7 +64,11 @@ export async function GET(req: NextRequest) {
  *     2. Auth0にユーザー作成
  *     3. DBにユーザー情報登録（Auth0UserIdを渡す）
  *     4. Authentication APIでパスワードリセットメール送信
- *     5. 招待メール送信（Auth0経由）
+ *     
+ *     バックエンド: app/routers/admin/user.py
+ *     FastAPI: POST /admin/user/register
+ *     リクエスト: UserCreateRequest（auth0_id, email, companyId, isAdmin）
+ *     レスポンス: UserCreateResponse（message, user_id, auth0_id, status）
  */
 export async function POST(req: NextRequest) {
   const backendUrl = process.env.API_BASE_URL;
@@ -103,7 +107,7 @@ export async function POST(req: NextRequest) {
     // 1. Auth0 Management APIアクセストークン取得
     const managementToken = await getAuth0ManagementToken();
 
-    // 2. 事前重複チェック
+    // 2. 事前重複チェック（Auth0 & DB）
     await checkUserExists(managementToken, email, backendUrl!);
 
     // 3. Auth0にユーザー作成
@@ -115,7 +119,7 @@ export async function POST(req: NextRequest) {
       dbUser = await createDbUser(backendUrl!, {
         email,
         companyId: companyId,
-        auth0_id: auth0User.user_id,  // 既存のDBスキーマに合わせてauth0_idに変更
+        auth0_id: auth0User.user_id,
         isAdmin: false  // デフォルトで一般ユーザーとして登録
       });
     } catch (dbError) {
@@ -141,8 +145,8 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({
       message: 'ユーザーアカウントを作成し、パスワード設定メールを送信しました。ユーザーはメール内のリンクからパスワードを設定できます。',
       userId: auth0User.user_id,
-      dbUserId: dbUser.user_id || dbUser._id,  // MongoDBの場合は_idを使用
-      auth0_id: auth0User.user_id,  // 既存の形式に合わせる
+      dbUserId: dbUser.user_id || dbUser._id,
+      auth0_id: auth0User.user_id,
       email: email
     }, { status: 201 });
 
@@ -201,6 +205,8 @@ async function getAuth0ManagementToken(): Promise<string> {
 
 /**
  * ユーザー重複チェック（Auth0 & DB）
+ * FastAPI: GET /admin/user/check-email?email={email}
+ * レスポンス: EmailCheckResponse（exists: boolean）
  */
 async function checkUserExists(token: string, email: string, backendUrl: string): Promise<void> {
   const auth0Domain = process.env.AUTH0_DOMAIN;
@@ -226,7 +232,7 @@ async function checkUserExists(token: string, email: string, backendUrl: string)
     throw new Error('このメールアドレスは既にAuth0に登録されています');
   }
 
-  // DBでの重複チェック
+  // DBでの重複チェック（FastAPIエンドポイント使用）
   try {
     const dbResponse = await fetch(`${backendUrl}/admin/user/check-email?email=${encodeURIComponent(email)}`, {
       method: 'GET',
@@ -240,6 +246,8 @@ async function checkUserExists(token: string, email: string, backendUrl: string)
       if (dbResult.exists) {
         throw new Error('このメールアドレスは既にデータベースに登録されています');
       }
+    } else {
+      console.warn('DB重複チェックでエラーが発生しました:', dbResponse.statusText);
     }
   } catch (error) {
     console.warn('DB重複チェック中にエラーが発生しました:', error);
@@ -296,9 +304,12 @@ function generateTempPassword(): string {
 
 /**
  * DBユーザー作成
+ * FastAPI: POST /admin/user/register
+ * リクエスト: UserCreateRequest（auth0_id, email, companyId, isAdmin）
+ * レスポンス: UserCreateResponse（message, user_id, auth0_id, status）
  */
 async function createDbUser(backendUrl: string, userData: any): Promise<any> {
-  const response = await fetch(`${backendUrl}/admin/user/register`, {
+  const response = await fetch(`${backendUrl}/admin/users/register`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(userData)

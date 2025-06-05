@@ -7,13 +7,15 @@ import { redirect } from 'next/navigation';
 export default async function Home() {
   const session = await auth0.getSession();
 
-  // ログイン済みの場合、ユーザータイプに応じてリダイレクト
+  // ログイン済みの場合、ロールに応じてリダイレクト
   if (session?.user) {
-    const userType = session.user['https://your-domain/userType'];
-    if (userType === 'corporate') {
+    const userRole = session.user['https://salt2.dev/role'];
+    if (userRole === 'corporate') {
       redirect('/corporate/dashboard');
-    } else if (userType === 'investor') {
+    } else if (userRole === 'investor') {
       redirect('/investor/companies');
+    } else if (userRole === 'admin') {
+      redirect('/admin');
     }
   }
 
