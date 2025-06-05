@@ -18,6 +18,12 @@ const GUEST_ACCESSIBLE_ENDPOINTS = [
     'investor/qa/latest-by-company', // 最新Q&A
 ];
 
+// 管理者認証が必要なエンドポイント
+const ADMIN_REQUIRED_ENDPOINTS = [
+    'admin/',                 // 管理者：すべてのadminエンドポイント
+    'companies',              // 企業登録（管理者のみ）
+];
+
 async function handler(
     req: Request,
     { params }: { params: Promise<{ path: string[] }> } // paramsはPromiseに変更
@@ -31,6 +37,11 @@ async function handler(
 
     // ゲストアクセス可能かチェック
     const isGuestAccessible = GUEST_ACCESSIBLE_ENDPOINTS.some(endpoint => 
+        targetPath.startsWith(endpoint)
+    );
+
+    // 管理者認証が必要かチェック
+    const isAdminRequired = ADMIN_REQUIRED_ENDPOINTS.some(endpoint => 
         targetPath.startsWith(endpoint)
     );
 
@@ -53,6 +64,15 @@ async function handler(
             isGuest = true;
             console.log('[PROXY] Treating as guest user for accessible endpoint:', targetPath);
         }
+    }
+    
+    // 管理者認証が必要なエンドポイントでトークンがない場合
+    if (isAdminRequired && !accessToken) {
+        console.log('[PROXY] Admin authentication required for endpoint:', targetPath);
+        return NextResponse.json(
+            { error: 'Admin authentication required', message: '管理者認証が必要です' }, 
+            { status: 401 }
+        );
     }
     
     // トークンもなく、ゲストアクセス不可能なエンドポイントの場合は認証エラー

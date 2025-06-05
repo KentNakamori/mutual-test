@@ -1,6 +1,8 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { useUser } from '@auth0/nextjs-auth0';
+import { useRouter } from 'next/navigation';
 
 interface Company {
   companyId: string;
@@ -8,28 +10,84 @@ interface Company {
 }
 
 export default function UserInvitePage() {
+  const { user, error, isLoading: authLoading } = useUser();
+  const router = useRouter();
+  
   const [companies, setCompanies] = useState<Company[]>([]);
   const [selectedCompanyId, setSelectedCompanyId] = useState<string>("");
   const [email, setEmail] = useState<string>("");
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [flash, setFlash] = useState<string | null>(null);
 
+  useEffect(() => {
+    // ローディング中でない場合の認証チェック
+    if (!authLoading && !user) {
+      router.push('/admin/login');
+      return;
+    }
+    // 認証済みであればOK（権限チェックはFastAPI側で行う）
+  }, [user, authLoading, router]);
+
   // 企業一覧を取得
   useEffect(() => {
-    const fetchCompanies = async () => {
-      try {
-        const response = await fetch("/api/admin/users");
-        if (!response.ok) throw new Error("企業一覧の取得に失敗しました");
-        const data = await response.json();
-        setCompanies(data);
-      } catch (error) {
-        console.error("企業一覧取得エラー:", error);
-        setFlash("❌ 企業一覧の取得に失敗しました");
-      }
-    };
+    // 認証後のみ企業一覧を取得
+    if (user && !authLoading) {
+      const fetchCompanies = async () => {
+        try {
+          const response = await fetch("/api/proxy/admin/users");
+          if (!response.ok) {
+            // FastAPI側での権限エラーをチェック
+            if (response.status === 403) {
+              router.push('/unauthorized');
+              return;
+            }
+            throw new Error("企業一覧の取得に失敗しました");
+          }
+          const data = await response.json();
+          setCompanies(data);
+        } catch (error) {
+          console.error("企業一覧取得エラー:", error);
+          setFlash("❌ 企業一覧の取得に失敗しました");
+        }
+      };
 
-    fetchCompanies();
-  }, []);
+      fetchCompanies();
+    }
+  }, [user, authLoading, router]);
+
+  // ローディング中
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">認証を確認中...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // エラー時
+  if (error) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <p className="text-red-600">認証エラーが発生しました</p>
+          <button 
+            onClick={() => router.push('/admin/login')}
+            className="mt-4 bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+          >
+            ログインページへ
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // 未認証時は何も表示しない（useEffectでリダイレクト処理中）
+  if (!user) {
+    return null;
+  }
 
   // ユーザー登録
   const handleSubmit = async (e: React.FormEvent) => {
@@ -49,7 +107,7 @@ export default function UserInvitePage() {
     setIsLoading(true);
 
     try {
-      const response = await fetch("/api/admin/users", {
+      const response = await fetch("/api/proxy/admin/users", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -60,6 +118,13 @@ export default function UserInvitePage() {
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
+        
+        // FastAPI側での権限エラーをチェック
+        if (response.status === 403) {
+          router.push('/unauthorized');
+          return;
+        }
+        
         const errorMessage = errorData.error || errorData.message || "ユーザー登録に失敗しました";
         throw new Error(errorMessage);
       }
@@ -81,12 +146,35 @@ export default function UserInvitePage() {
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-4xl mx-auto p-6">
         <div className="bg-white shadow-lg rounded-lg p-8">
-          <h1 className="text-3xl font-bold text-gray-800 mb-2 text-center">
-            企業ユーザー登録
-          </h1>
-          <p className="text-gray-600 text-center mb-8">
-            企業を選択してユーザーアカウントを作成し、招待メールを送信します
-          </p>
+          <div className="flex justify-between items-center mb-8">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-800 mb-2">
+                企業ユーザー登録
+              </h1>
+              <p className="text-gray-600">
+                企業を選択してユーザーアカウントを作成し、招待メールを送信します
+              </p>
+              {user.email && (
+                <p className="text-sm text-gray-500 mt-1">
+                  ログイン中: {user.email}
+                </p>
+              )}
+            </div>
+            <div>
+              <button
+                onClick={() => router.push('/admin')}
+                className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded transition-colors duration-200 mr-2"
+              >
+                戻る
+              </button>
+              <button
+                onClick={() => window.location.href = '/api/auth/logout'}
+                className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded transition-colors duration-200"
+              >
+                ログアウト
+              </button>
+            </div>
+          </div>
 
           <form onSubmit={handleSubmit} className="space-y-6 max-w-2xl mx-auto">
             {/* 企業選択 */}
