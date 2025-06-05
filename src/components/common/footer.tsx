@@ -17,6 +17,8 @@ export interface FooterProps {
  * - ページ下部のフッター表示
  *   - コピーライト表示
  *   - ナビゲーションリンク
+ *   - 運営会社へのリンク
+ *   - お問い合わせボタン
  *   - カスタマイズ可能なリンククリックハンドラ
  * 
  * 主な特徴：
@@ -37,21 +39,30 @@ const Footer: React.FC<FooterProps> = ({
   onSelectLink,
 }) => {
   return (
-    <footer className="bg-gray-50 text-gray-600 py-4 px-6 flex flex-col items-center">
-      <div className="flex space-x-4 mb-2">
-        {footerLinks.map((link, index) => (
+    <footer className="bg-gray-50 text-gray-600 py-4 px-6 flex flex-col items-center space-y-3">
+      {/* お問い合わせボタンと運営会社リンクを横並びに */}
+      <div className="flex flex-row items-center justify-center space-x-6 w-full">
+        {/* 運営会社リンク（大きく・強調） */}
+        <div className="text-base font-semibold">
+          運営会社：
           <a
-            key={index}
-            href={link.href}
-            onClick={() => onSelectLink && onSelectLink(link.href)}
-            className="text-sm hover:underline"
+            href="https://mutual-inc.co.jp/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-blue-600 hover:text-blue-800 hover:underline ml-1"
           >
-            {link.label}
+            株式会社Mutual
           </a>
-        ))}
-      </div>
-      <div className="text-xs">
-        &copy; {new Date().getFullYear()} {copyrightText}
+        </div>
+        {/* お問い合わせボタン */}
+        <a
+          href="https://mutual-inc.co.jp/contact/"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="bg-gradient-to-r from-cyan-400 to-purple-600 text-white px-6 py-2 rounded-full text-sm font-medium hover:from-cyan-500 hover:to-purple-700 transition-all duration-200 shadow-sm hover:shadow-md"
+        >
+          お問い合わせ
+        </a>
       </div>
     </footer>
   );

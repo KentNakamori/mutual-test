@@ -22,6 +22,11 @@ const QAResultList: React.FC<QAResultListProps> = ({
     console.log('QAResultList: qas length:', qas?.length);
     if (qas?.length > 0) {
       console.log('QAResultList: first qa sample:', qas[0]);
+      console.log('QAResultList: bookmark state check:', {
+        qaId: qas[0].qaId,
+        isLiked: qas[0].isLiked,
+        likeCount: qas[0].likeCount
+      });
     }
   }, [qas]);
 
@@ -41,19 +46,23 @@ const QAResultList: React.FC<QAResultListProps> = ({
   return (
     <div className="space-y-4 my-6">
       {validQAs.map((qa) => {
-        console.log(`QAResultList: Rendering QA ${qa.qaId}`);
+        console.log(`QAResultList: Rendering QA ${qa.qaId}, bookmark state:`, {
+          isLiked: qa.isLiked,
+          likeCount: qa.likeCount
+        });
         return (
           <QACard
             key={qa.qaId}
             mode="preview"
             role="investor"
             qa={qa}
-            onSelect={() => {
-              console.log(`QAResultList: QA selected: ${qa.qaId}`);
+            onSelect={(qaId) => {
+              console.log(`QAResultList: QA selected: ${qaId}`);
+              // QAオブジェクト全体を渡す（QATabViewで期待されている形式）
               onItemClick(qa);
             }}
             onLike={(qaId) => {
-              console.log(`QAResultList: QA liked: ${qaId}`);
+              console.log(`QAResultList: QA bookmark clicked: ${qaId}`);
               onLike(qaId);
             }}
           />

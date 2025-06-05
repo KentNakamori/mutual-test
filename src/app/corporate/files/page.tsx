@@ -54,7 +54,6 @@ const FilesPage: React.FC = () => {
           onSelectMenuItem={(link) => router.push(link)}
         />
         <main className="flex-1 p-6 bg-gray-50">
-          <h1 className="mb-8 text-3xl font-bold">ファイル管理</h1>
           <FileManagement />
         </main>
       </div>

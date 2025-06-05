@@ -21,6 +21,11 @@ const menuItems = [
   { label: 'マイページ', link: '/investor/mypage', icon: <User size={20} /> },
 ];
 
+// フォロー状態を含む拡張Company型
+interface CompanyWithFollow extends Company {
+  isFollowed?: boolean;
+}
+
 const CompanyPage: React.FC = () => {
   const params = useParams();
   const router = useRouter();
@@ -30,7 +35,7 @@ const CompanyPage: React.FC = () => {
   // Auth0 SDK v4の認証状態
   const { user, error: userError, isLoading: userLoading } = useUser();
 
-  const [companyData, setCompanyData] = useState<Company | null>(null);
+  const [companyData, setCompanyData] = useState<CompanyWithFollow | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<Error | null>(null);
   const [activeTab, setActiveTab] = useState<"chat" | "qa">("qa");
@@ -51,7 +56,7 @@ const CompanyPage: React.FC = () => {
         const response = await getInvestorCompanyDetail(companyId as string, undefined);
         
         // APIレスポンスをCompany型に変換
-        const company: Company = {
+        const company: CompanyWithFollow = {
           companyId: response.companyId,
           companyName: response.companyName,
           industry: response.industry,
@@ -59,6 +64,7 @@ const CompanyPage: React.FC = () => {
           securitiesCode: response.securitiesCode,
           majorStockExchange: response.majorStockExchange,
           websiteUrl: response.websiteUrl,
+          isFollowed: response.isFollowed, // フォロー状態を追加
         };
         
         setCompanyData(company);
@@ -81,6 +87,11 @@ const CompanyPage: React.FC = () => {
 
   const handleTabChange = (tab: "chat" | "qa") => {
     setActiveTab(tab);
+  };
+
+  // フォロー状態を更新する関数
+  const updateFollowStatus = (isFollowed: boolean) => {
+    setCompanyData(prev => prev ? { ...prev, isFollowed } : null);
   };
 
   // ローディング表示
@@ -133,7 +144,10 @@ const CompanyPage: React.FC = () => {
       {/* 固定サイズの main エリア */}
       <main className="flex flex-col w-full h-screen bg-gray-50">
         <div className="px-6 pt-6">
-          <CompanyHeader company={companyData} />
+          <CompanyHeader 
+            company={companyData} 
+            onFollowStatusChange={updateFollowStatus}
+          />
           <TabSwitcher activeTab={activeTab} onChangeTab={handleTabChange} />
         </div>
         {/* 固定された main 内で下部のみスクロール */}

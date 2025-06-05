@@ -159,32 +159,37 @@ const CompanyListing: React.FC<CompanyListingProps> = ({ isFollowedOnly = false,
     }
 
     try {
-      const method = currentFollowStatus ? 'DELETE' : 'POST';
+      // バックエンドの実装に合わせて全てPOSTメソッドを使用
       const response = await fetch(`/api/proxy/investor/companies/${companyId}/follow`, {
-        method,
+        method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ action: currentFollowStatus ? 'unfollow' : 'follow' })
+        body: JSON.stringify({ 
+          action: currentFollowStatus ? 'unfollow' : 'follow' 
+        })
       });
 
       if (!response.ok) {
-        throw new Error('フォロー操作に失敗しました');
+        const errorData = await response.json();
+        throw new Error(errorData.detail || 'フォロー操作に失敗しました');
       }
+
+      const data = await response.json();
 
       // 企業リストを更新
       setCompanies(prevCompanies =>
         prevCompanies.map(company =>
           company.companyId === companyId
-            ? { ...company, isFollowed: !currentFollowStatus }
+            ? { ...company, isFollowed: data.isFollowed }
             : company
         )
       );
       
-      console.log(`${currentFollowStatus ? 'フォロー解除' : 'フォロー'}しました: ${companyId}`);
+      console.log(data.message);
     } catch (err) {
       console.error('フォロー操作に失敗しました', err);
-      alert('フォロー操作に失敗しました。再度お試しください。');
+      alert(`フォロー操作に失敗しました: ${err instanceof Error ? err.message : '不明なエラー'}`);
     }
   };
   
