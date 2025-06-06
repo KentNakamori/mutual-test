@@ -77,9 +77,18 @@ const ChatInputBox: React.FC<ChatInputBoxProps> = ({
           }`}
           rows={1}
           onKeyDown={(e) => {
-            if (e.key === 'Enter' && !e.shiftKey && isSessionSelected) {
+            // IMEの変換中は処理をスキップ
+            if (e.nativeEvent.isComposing) {
+              return;
+            }
+            
+            // Enterキーでの送信を無効化し、改行のみを許可
+            if (e.key === 'Enter' && !e.shiftKey) {
               e.preventDefault();
-              handleSend();
+              // 改行を挿入
+              const cursorPosition = e.currentTarget.selectionStart;
+              const newValue = currentInputValue.slice(0, cursorPosition) + '\n' + currentInputValue.slice(cursorPosition);
+              handleInputChange(newValue);
             }
           }}
           disabled={isInputDisabled}
