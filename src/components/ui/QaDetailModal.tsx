@@ -8,11 +8,12 @@ import {
   QUESTION_ROUTE_OPTIONS,
   getTagColor,
 } from '@/components/ui/tagConfig';
-import { Calendar, ThumbsUp, X, BookOpen, Plus, Clock, FileText, Tag, Activity, HelpCircle, CheckCircle, Eye, Edit } from 'lucide-react';
+import { Calendar, Bookmark, X, BookOpen, Plus, Clock, FileText, Tag, Activity, HelpCircle, CheckCircle, Eye, Edit } from 'lucide-react';
 import { updateCorporateQa, deleteCorporateQa, generateCorporateQaAnswer } from '@/lib/api';
 import { useUser } from "@auth0/nextjs-auth0";
 import FiscalPeriodSelect from '@/components/ui/FiscalPeriodSelect';
 import AiGenerateButton from '@/components/features/corporate/qa/AiGenerateButton';
+import GuestRestrictedContent from '@/components/features/investor/common/GuestRestrictedContent';
 
 const QaDetailModal: React.FC<QADetailModalProps> = ({
   qa,
@@ -25,7 +26,7 @@ const QaDetailModal: React.FC<QADetailModalProps> = ({
   onCancelEdit,
   onSaveEdit,
 }) => {
-  const { user } = useUser();
+  const { user, isLoading: userLoading } = useUser();
   const token = user?.sub ?? null; 
   const [editableQA, setEditableQA] = useState<QA>({ ...qa });
   const [showSourceList, setShowSourceList] = useState(false);
@@ -37,6 +38,10 @@ const QaDetailModal: React.FC<QADetailModalProps> = ({
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [isGeneratingAI, setIsGeneratingAI] = useState(false);
   const [showInvestorPreview, setShowInvestorPreview] = useState(false);
+  const [showGuestRestricted, setShowGuestRestricted] = useState(false);
+  
+  // ゲスト判定
+  const isGuest = !user && !userLoading;
 
   useEffect(() => {
     if (isOpen) {
@@ -150,7 +155,13 @@ const QaDetailModal: React.FC<QADetailModalProps> = ({
   };
 
   const handleLike = () => {
-    // investor側のみいいね機能を有効にする
+    // ゲストユーザーの場合はGuestRestrictedContentを表示
+    if (isGuest && role === 'investor') {
+      setShowGuestRestricted(true);
+      return;
+    }
+    
+    // investor側のみブックマーク機能を有効にする
     if (role === 'investor' && onLike) {
       onLike(qa.qaId);
     }
@@ -287,21 +298,28 @@ const QaDetailModal: React.FC<QADetailModalProps> = ({
 
   return (
     <>
+      {showGuestRestricted && (
+        <GuestRestrictedContent 
+          featureName="ブックマーク" 
+          isPopup={true}
+          onClose={() => setShowGuestRestricted(false)}
+        />
+      )}
 
       <Dialog 
         isOpen={isOpen} 
         onClose={handleClose} 
-        title={role === 'investor' ? modalTitle : ''} 
-        className="max-w-7xl my-10" 
+        title="" 
+        className="max-w-7xl mx-4 lg:mx-8 my-10" 
         showCloseButton={false}
       >
-      <div className="overflow-y-auto" style={{ maxHeight: 'calc(90vh - 100px)' }}>
-        {error && (
-          <div className="mb-4 p-4 bg-red-100 text-red-700 rounded">
-            {error}
-          </div>
-        )}
-          {/* AI生成中のオーバーレイ */}
+        <div className="overflow-y-auto" style={{ maxHeight: 'calc(90vh - 100px)' }}>
+          {error && (
+            <div className="mb-4 p-4 bg-red-100 text-red-700 rounded">
+              {error}
+            </div>
+          )}
+
           {isGeneratingAI && (
             <div className="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
               <div className="bg-white p-6 rounded-lg shadow-xl">
@@ -312,11 +330,11 @@ const QaDetailModal: React.FC<QADetailModalProps> = ({
               </div>
             </div>
           )}
-          
-        {role === 'corporate' ? (
+
+          {role === 'corporate' ? (
             <div className="relative">
               {/* Corporate用のカスタムヘッダー */}
-              <div className="flex items-center justify-between p-6 border-b border-gray-200 -mx-6 -mt-4 mb-6">
+              <div className="flex items-center justify-between p-6 border-b border-gray-200 -mt-4 mb-6">
                 <h1 className="text-xl font-semibold text-gray-900">{modalTitle}</h1>
                 <div className="flex rounded-lg border border-gray-300 overflow-hidden bg-white shadow-sm">
                   <button
@@ -348,9 +366,9 @@ const QaDetailModal: React.FC<QADetailModalProps> = ({
 
               {showInvestorPreview ? (
                 // Investor画面と同じプレビュー表示
-                <div className="p-6 bg-white rounded-lg relative -mx-6">
+                <div className="p-6 bg-white rounded-lg relative">
                   {/* ヘッダー情報 */}
-                  <div className="mb-6 pb-4 border-b border-gray-200">
+                  <div className="mb-6 pb-4 border-b border-gray-200 pr-12">
                     <h2 className="text-2xl font-semibold text-gray-900 mb-3">{editableQA.title}</h2>
                     <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600">
                       <div className="flex items-center">
@@ -371,68 +389,77 @@ const QaDetailModal: React.FC<QADetailModalProps> = ({
                   </div>
                   
                   {/* 質問エリア */}
-                  <div className="mb-6 p-4 bg-blue-50 rounded-lg border-l-4 border-blue-400">
-                    <h3 className="text-sm font-medium text-blue-800 mb-2 flex items-center">
-                      <HelpCircle size={16} className="mr-2" />
+                  <div className="mb-6">
+                    <h3 className="text-sm font-medium text-gray-700 mb-2 flex items-center">
+                      <HelpCircle size={16} className="mr-2 text-blue-600" />
                       質問
                     </h3>
-                    <p className="text-gray-800 leading-relaxed">{editableQA.question}</p>
+                    <p className="text-gray-800 leading-relaxed pl-6">{editableQA.question}</p>
                   </div>
                   
                   {/* 回答エリア */}
-                  <div className="mb-6 p-4 bg-green-50 rounded-lg border-l-4 border-green-400">
-                    <h3 className="text-sm font-medium text-green-800 mb-2 flex items-center">
-                      <CheckCircle size={16} className="mr-2" />
+                  <div className="mb-6">
+                    <h3 className="text-sm font-medium text-gray-700 mb-2 flex items-center">
+                      <CheckCircle size={16} className="mr-2 text-green-600" />
                       回答
                     </h3>
-                    <div className="text-gray-800 leading-relaxed prose prose-sm max-w-none">
-                      <ReactMarkdown>
-                        {editableQA.answer || '*回答内容を入力してください*'}
-                      </ReactMarkdown>
+                    <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 ml-6">
+                      <div className="text-gray-800 leading-relaxed prose prose-sm max-w-none">
+                        <ReactMarkdown>
+                          {editableQA.answer || '*回答内容を入力してください*'}
+                        </ReactMarkdown>
+                      </div>
                     </div>
                   </div>
                   
                   {/* メタデータエリア */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                  <div className="space-y-4 mb-6">
                     {/* 情報ソース */}
-                    <div className="p-4 bg-gray-50 rounded-lg">
+                    <div>
                       <h4 className="text-sm font-medium text-gray-700 mb-2 flex items-center">
                         <BookOpen size={14} className="mr-2 text-gray-600" />
                         情報ソース
                       </h4>
-                      <div className="flex flex-wrap gap-2">
+                      <div className="flex flex-wrap gap-2 pl-5">
                         {editableQA.source && editableQA.source.length > 0 ? (
-                          editableQA.source.map((source) => (
+                          editableQA.source.map((source, index) => {
+                            const sourceOption = INFO_SOURCE_OPTIONS.find(opt => opt.label === source);
+                            const colorClass = sourceOption ? sourceOption.color : 'bg-gray-100 text-gray-800';
+                            return (
                             <span
-                              key={source}
-                              className="inline-flex items-center bg-white border border-gray-300 text-gray-700 px-2 py-1 rounded text-xs"
+                              key={`source-${index}`}
+                                className={`inline-flex items-center ${colorClass} px-3 py-1 rounded-full text-xs font-medium`}
                             >
-                              <BookOpen size={10} className="mr-1" />
                               {source}
                             </span>
-                          ))
+                            );
+                          })
                         ) : (
                           <span className="text-gray-500 text-sm">情報ソースなし</span>
                         )}
                       </div>
                     </div>
                     
-                    {/* ジャンル */}
-                    <div className="p-4 bg-gray-50 rounded-lg">
+                    {/* カテゴリ */}
+                    <div>
                       <h4 className="text-sm font-medium text-gray-700 mb-2 flex items-center">
                         <Activity size={14} className="mr-2 text-gray-600" />
                         カテゴリ
                       </h4>
-                      <div className="flex flex-wrap gap-2">
+                      <div className="flex flex-wrap gap-2 pl-5">
                         {editableQA.genre && editableQA.genre.length > 0 ? (
-                          editableQA.genre.map((genre) => (
+                          editableQA.genre.map((genre, index) => {
+                            const genreOption = GENRE_OPTIONS.find(opt => opt.label === genre);
+                            const colorClass = genreOption ? genreOption.color : 'bg-gray-100 text-gray-800';
+                            return (
                             <span
-                              key={genre}
-                              className={`inline-flex items-center ${getTagColor(genre)} px-2 py-1 rounded text-xs font-medium`}
+                              key={`genre-${index}`}
+                                className={`inline-flex items-center ${colorClass} px-3 py-1 rounded-full text-xs font-medium`}
                             >
                               {genre}
                             </span>
-                          ))
+                            );
+                          })
                         ) : (
                           <span className="text-gray-500 text-sm">カテゴリ未設定</span>
                         )}
@@ -440,201 +467,188 @@ const QaDetailModal: React.FC<QADetailModalProps> = ({
                     </div>
                   </div>
                   
-                  {/* いいねボタン */}
+                  {/* ブックマークボタン */}
                   <div className="flex justify-end mt-4">
                     <div className="flex items-center bg-gray-100 text-gray-600 px-4 py-2 rounded-lg">
-                      <ThumbsUp size={16} className="mr-2" />
+                      <Bookmark size={16} className="mr-2" />
                       <span className="font-medium">{qa.likeCount || 0}</span>
                     </div>
                   </div>
                 </div>
               ) : (
-                // 編集モード（従来のレイアウト）
-                <div className="grid grid-cols-5 gap-6 p-6 -mx-6">
-            {/* 左側：メタデータ編集 */}
-            <div className="col-span-2 space-y-5">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">質問タイトル</label>
-                <input
-                  type="text"
-                  name="title"
-                  value={editableQA.title}
-                  onChange={handleChangeTitle}
-                  className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                />
-              </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">決算期</label>
-                  <FiscalPeriodSelect
-                    value={editableQA.fiscalPeriod || ''}
-                    onChange={(value) => {
-                      setEditableQA({ ...editableQA, fiscalPeriod: value });
-                      setHasChanges(true);
-                    }}
-                    includeEmpty={true}
-                    className="w-full"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">質問ルート</label>
-                  <select
-                    name="question_route"
-                    value={editableQA.question_route || ''}
-                    onChange={(e) => handleChangeTag({ label: e.target.value } as TagOption)}
-                    className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  >
-                    <option value="">質問ルートを選択</option>
-                    {QUESTION_ROUTE_OPTIONS.map((option) => (
-                      <option key={option.label} value={option.label}>
-                        {option.label}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div className="border-t border-gray-200 pt-4 mt-4">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">ステータス</label>
-                <select
-                  name="status"
-                  value={editableQA.reviewStatus}
-                  onChange={handleToggleStatus}
-                    className={`w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-                      editableQA.reviewStatus === 'DRAFT' ? 'bg-yellow-50 border-yellow-200' :
-                      editableQA.reviewStatus === 'PENDING' ? 'bg-orange-50 border-orange-200' :
-                      editableQA.reviewStatus === 'PUBLISHED' ? 'bg-green-50 border-green-200' : ''
-                    }`}
-                  >
-                    <option value="DRAFT" className="text-yellow-700">下書き</option>
-                    <option value="PENDING" className="text-orange-700">非公開</option>
-                    <option value="PUBLISHED" className="text-green-700">公開</option>
-                </select>
-                  <p className="mt-1 text-xs text-gray-500">
-                    {editableQA.reviewStatus === 'DRAFT' ? '下書き状態です。編集可能です。' :
-                     editableQA.reviewStatus === 'PENDING' ? '非公開状態です。公開するには承認が必要です。' :
-                     '公開状態です。投資家に表示されます。'}
-                  </p>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">情報ソース</label>
-                <div className="flex flex-wrap gap-2 mb-2">
-                  {editableQA.source.map((source) => (
-                    <div key={source} className="inline-flex items-center bg-gray-100 text-gray-600 px-2 py-1 rounded-md text-xs">
-                      <BookOpen size={12} className="mr-1" />
-                      {source}
-                      <button
-                        onClick={() => handleRemoveSource(source)}
-                        className="ml-1 text-gray-600 hover:text-gray-800"
-                      >
-                        <X size={12} />
-                      </button>
+                // 編集モード（レスポンシブ対応）
+                <div className="flex flex-col lg:grid lg:grid-cols-5 gap-6 p-4 sm:p-6 overflow-x-hidden">
+                  {/* 左側：メタデータ編集 */}
+                  <div className="lg:col-span-2 space-y-5 min-w-0">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">質問タイトル</label>
+                      <input
+                        type="text"
+                        name="title"
+                        value={editableQA.title}
+                        onChange={handleChangeTitle}
+                        className="w-full min-w-0 px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      />
                     </div>
-                  ))}
-                </div>
-                <div className="relative">
-                  <button
-                    onClick={() => setShowSourceList(!showSourceList)}
-                    className="flex items-center text-sm px-2 py-1 rounded border bg-white hover:bg-gray-50"
-                  >
-                    <Plus size={14} className="mr-1" />
-                    ソースを追加
-                  </button>
-                  {showSourceList && (
-                    <div className="absolute z-10 mt-1 w-64 bg-white rounded-md shadow-lg border py-1 max-h-48 overflow-y-auto">
-                      {INFO_SOURCE_OPTIONS.filter(option => !editableQA.source.includes(option.label))
-                        .map((option) => (
-                          <button
-                            key={option.label}
-                            onClick={() => {
-                              handleAddSource(option);
-                              setShowSourceList(false);
-                            }}
-                            className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
-                          >
-                            {option.label}
-                          </button>
-                        ))}
-                    </div>
-                  )}
-                </div>
-              </div>
-              <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">カテゴリ</label>
-                <div className="flex flex-wrap gap-2 mb-2">
-                  {editableQA.genre.map((g) => (
-                    <div key={g} className={`inline-flex items-center ${getTagColor(g)} px-2 py-1 rounded-md text-xs`}>
-                      {g}
-                      <button
-                        onClick={() => handleRemoveGenre(g)}
-                        className="ml-1 text-gray-600 hover:text-gray-800"
-                      >
-                        <X size={12} />
-                      </button>
-                    </div>
-                  ))}
-                </div>
-                <div className="relative">
-                  <button
-                    onClick={() => setShowGenreList(!showGenreList)}
-                    className="flex items-center text-sm px-2 py-1 rounded border bg-white hover:bg-gray-50"
-                  >
-                    <Plus size={14} className="mr-1" />
-                      カテゴリを追加
-                  </button>
-                  {showGenreList && (
-                    <div className="absolute z-10 mt-1 w-64 bg-white rounded-md shadow-lg border py-1 max-h-48 overflow-y-auto">
-                      {GENRE_OPTIONS.filter(option => !editableQA.genre.includes(option.label))
-                        .map((option) => (
-                          <button
-                            key={option.label}
-                            onClick={() => {
-                              handleAddGenre(option);
-                              setShowGenreList(false);
-                            }}
-                            className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
-                          >
-                            {option.label}
-                          </button>
-                        ))}
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            {/* 右側：質問内容・回答編集 */}
-            <div className="col-span-3 space-y-5">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">質問内容</label>
-                <textarea
-                  name="question"
-                  value={editableQA.question}
-                  onChange={handleChangeQuestion}
-                  rows={4}
-                  className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">回答内容</label>
-                <textarea
-                  name="answer"
-                  value={editableQA.answer}
-                  onChange={handleChangeAnswer}
-                  rows={12}
-                  className="w-full px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                />
-                      <div className="mt-3">
-                        <AiGenerateButton
-                          onClick={handleGenerateAI}
-                          disabled={getAIButtonStatus().disabled}
-                          isLoading={isGeneratingAI}
-                          tooltip={getAIButtonStatus().tooltip}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">決算期</label>
+                      <div className="w-full min-w-0">
+                        <FiscalPeriodSelect
+                          value={editableQA.fiscalPeriod || ''}
+                          onChange={(value) => {
+                            setEditableQA({ ...editableQA, fiscalPeriod: value });
+                            setHasChanges(true);
+                          }}
+                          includeEmpty={true}
+                          className="w-full min-w-0"
                         />
                       </div>
-              </div>
-            </div>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">質問ルート</label>
+                      <select
+                        name="question_route"
+                        value={editableQA.question_route || ''}
+                        onChange={(e) => handleChangeTag({ label: e.target.value } as TagOption)}
+                        className="w-full min-w-0 px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      >
+                        <option value="">質問ルートを選択</option>
+                        {QUESTION_ROUTE_OPTIONS.map((option) => (
+                          <option key={option.label} value={option.label}>
+                            {option.label}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="border-t border-gray-200 pt-4 mt-4">
+                      <label className="block text-sm font-medium text-gray-700 mb-2">ステータス</label>
+                      <select
+                        name="status"
+                        value={editableQA.reviewStatus}
+                        onChange={handleToggleStatus}
+                        className={`w-full min-w-0 px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
+                          editableQA.reviewStatus === 'DRAFT' ? 'bg-yellow-50 border-yellow-200' :
+                          editableQA.reviewStatus === 'PENDING' ? 'bg-orange-50 border-orange-200' :
+                          editableQA.reviewStatus === 'PUBLISHED' ? 'bg-green-50 border-green-200' : ''
+                        }`}
+                      >
+                        <option value="DRAFT" className="text-yellow-700">下書き</option>
+                        <option value="PENDING" className="text-orange-700">非公開</option>
+                        <option value="PUBLISHED" className="text-green-700">公開</option>
+                    </select>
+                      <p className="mt-1 text-xs text-gray-500">
+                        {editableQA.reviewStatus === 'DRAFT' ? '下書き状態です。編集可能です。' :
+                         editableQA.reviewStatus === 'PENDING' ? '非公開状態です。公開するには承認が必要です。' :
+                         '公開状態です。投資家に表示されます。'}
+                      </p>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">情報ソース</label>
+                    <div className="flex flex-wrap gap-2 mb-2">
+                      {editableQA.source.map((source) => (
+                        <div key={source} className="inline-flex items-center bg-gray-100 text-gray-600 px-2 py-1 rounded-md text-xs">
+                          <BookOpen size={12} className="mr-1" />
+                          {source}
+                          <button
+                            onClick={() => handleRemoveSource(source)}
+                            className="ml-1 text-gray-600 hover:text-gray-800"
+                          >
+                            <X size={12} />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">情報ソース</label>
+                      <div className="flex flex-wrap gap-2 mb-2">
+                        {editableQA.source.map((source) => (
+                          <div key={source} className="inline-flex items-center bg-gray-100 text-gray-600 px-2 py-1 rounded-md text-xs">
+                            <BookOpen size={12} className="mr-1" />
+                            <span className="truncate max-w-[120px]">{source}</span>
+                            <button
+                              onClick={() => handleRemoveSource(source)}
+                              className="ml-1 text-gray-600 hover:text-gray-800 flex-shrink-0"
+                            >
+                              <X size={12} />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                      <div className="relative">
+                        <button
+                          onClick={() => setShowSourceList(!showSourceList)}
+                          className="flex items-center text-sm px-2 py-1 rounded border bg-white hover:bg-gray-50"
+                        >
+                          <Plus size={14} className="mr-1" />
+                          ソースを追加
+                        </button>
+                        {showSourceList && (
+                          <div className="absolute z-10 mt-1 w-full max-w-64 bg-white rounded-md shadow-lg border py-1 max-h-48 overflow-y-auto">
+                            {INFO_SOURCE_OPTIONS.filter(option => !editableQA.source.includes(option.label))
+                              .map((option) => (
+                                <button
+                                  key={option.label}
+                                  onClick={() => {
+                                    handleAddSource(option);
+                                    setShowSourceList(false);
+                                  }}
+                                  className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100 truncate"
+                                >
+                                  {option.label}
+                                </button>
+                              ))}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                  <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">カテゴリ</label>
+                      <div className="flex flex-wrap gap-2 mb-2">
+                        {editableQA.genre.map((g) => (
+                          <div key={g} className={`inline-flex items-center ${getTagColor(g)} px-2 py-1 rounded-md text-xs`}>
+                            <span className="truncate max-w-[120px]">{g}</span>
+                            <button
+                              onClick={() => handleRemoveGenre(g)}
+                              className="ml-1 text-gray-600 hover:text-gray-800 flex-shrink-0"
+                            >
+                              <X size={12} />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                      <div className="relative">
+                        <button
+                          onClick={() => setShowGenreList(!showGenreList)}
+                          className="flex items-center text-sm px-2 py-1 rounded border bg-white hover:bg-gray-50"
+                        >
+                          <Plus size={14} className="mr-1" />
+                          カテゴリを追加
+                        </button>
+                        {showGenreList && (
+                          <div className="absolute z-10 mt-1 w-full max-w-64 bg-white rounded-md shadow-lg border py-1 max-h-48 overflow-y-auto">
+                            {GENRE_OPTIONS.filter(option => !editableQA.genre.includes(option.label))
+                              .map((option) => (
+                                <button
+                                  key={option.label}
+                                  onClick={() => {
+                                    handleAddGenre(option);
+                                    setShowGenreList(false);
+                                  }}
+                                  className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100 truncate"
+                                >
+                                  {option.label}
+                                </button>
+                              ))}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
                 </div>
               )}
-          </div>
-        ) : (
+            </div>
+          ) : (
             // 投資家向けUI（企業プレビューと統一）
             <div className="p-6 bg-white rounded-lg relative">
               {/* 投資家向けモーダル用の閉じるボタン */}
@@ -646,14 +660,14 @@ const QaDetailModal: React.FC<QADetailModalProps> = ({
                 <X size={20} />
               </button>
               
-            {/* ヘッダー情報 */}
+              {/* ヘッダー情報 */}
               <div className="mb-6 pb-4 border-b border-gray-200 pr-12">
                 <h2 className="text-2xl font-semibold text-gray-900 mb-3">{qa.title}</h2>
-              <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600">
-                <div className="flex items-center">
+                <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600">
+                  <div className="flex items-center">
                     <Calendar size={16} className="mr-2 text-gray-500" />
-                  <span>{formatDate(qa.createdAt)}</span>
-                </div>
+                    <span>{formatDate(qa.createdAt)}</span>
+                  </div>
                   <div className="flex items-center">
                     <FileText size={16} className="mr-2 text-gray-500" />
                     <span>{qa.fiscalPeriod}</span>
@@ -662,85 +676,85 @@ const QaDetailModal: React.FC<QADetailModalProps> = ({
                     <div className="flex items-center">
                       <Tag size={16} className="mr-2 text-gray-500" />
                       <span>{qa.question_route}</span>
-                  </div>
-                )}
+                    </div>
+                  )}
+                </div>
               </div>
-            </div>
-            
-            {/* 質問エリア */}
+              
+              {/* 質問エリア */}
               <div className="mb-6 p-4 bg-blue-50 rounded-lg border-l-4 border-blue-400">
                 <h3 className="text-sm font-medium text-blue-800 mb-2 flex items-center">
                   <HelpCircle size={16} className="mr-2" />
-                質問
-              </h3>
+                  質問
+                </h3>
                 <p className="text-gray-800 leading-relaxed">{qa.question}</p>
-            </div>
-            
-            {/* 回答エリア */}
+              </div>
+              
+              {/* 回答エリア */}
               <div className="mb-6 p-4 bg-green-50 rounded-lg border-l-4 border-green-400">
                 <h3 className="text-sm font-medium text-green-800 mb-2 flex items-center">
                   <CheckCircle size={16} className="mr-2" />
-                回答
-              </h3>
+                  回答
+                </h3>
                 <div className="text-gray-800 leading-relaxed prose prose-sm max-w-none">
                   <ReactMarkdown>
                     {qa.answer}
                   </ReactMarkdown>
                 </div>
-            </div>
-            
-            {/* メタデータエリア */}
+              </div>
+              
+              {/* メタデータエリア */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-              {/* 情報ソース */}
+                {/* 情報ソース */}
                 <div className="p-4 bg-gray-50 rounded-lg">
                   <h4 className="text-sm font-medium text-gray-700 mb-2 flex items-center">
                     <BookOpen size={14} className="mr-2 text-gray-600" />
-                  情報ソース
-                </h4>
+                    情報ソース
+                  </h4>
                   <div className="flex flex-wrap gap-2">
-                  {qa.source && qa.source.length > 0 ? (
+                    {qa.source && qa.source.length > 0 ? (
                       qa.source.map((source) => (
-                      <span
-                        key={source}
-                            className="inline-flex items-center bg-white border border-gray-300 text-gray-700 px-2 py-1 rounded text-xs"
-                      >
-                        <BookOpen size={10} className="mr-1" />
-                        {source}
-                      </span>
-                        ))
-                  ) : (
-                    <span className="text-gray-500 text-sm">情報ソースなし</span>
-                  )}
+                        <span
+                          key={source}
+                          className="inline-flex items-center bg-white border border-gray-300 text-gray-700 px-2 py-1 rounded text-xs"
+                        >
+                          <BookOpen size={10} className="mr-1" />
+                          {source}
+                        </span>
+                      ))
+                    ) : (
+                      <span className="text-gray-500 text-sm">情報ソースなし</span>
+                    )}
+                  </div>
                 </div>
-              </div>
-              
+                
                 {/* カテゴリ */}
                 <div className="p-4 bg-gray-50 rounded-lg">
                   <h4 className="text-sm font-medium text-gray-700 mb-2 flex items-center">
                     <Activity size={14} className="mr-2 text-gray-600" />
                     カテゴリ
-                </h4>
+                  </h4>
                   <div className="flex flex-wrap gap-2">
-                  {qa.genre && qa.genre.length > 0 ? (
+                    {qa.genre && qa.genre.length > 0 ? (
                       qa.genre.map((genre) => (
-                      <span
-                        key={genre}
-                            className={`inline-flex items-center ${getTagColor(genre)} px-2 py-1 rounded text-xs font-medium`}
-                      >
-                        {genre}
-                      </span>
-                        ))
-                  ) : (
+                        <span
+                          key={genre}
+                          className={`inline-flex items-center ${getTagColor(genre)} px-2 py-1 rounded text-xs font-medium`}
+                        >
+                          {genre}
+                        </span>
+                      ))
+                    ) : (
                       <span className="text-gray-500 text-sm">カテゴリ未設定</span>
-                  )}
+                    )}
                   </div>
+                </div>
               </div>
-            </div>
-            
-            {/* いいねボタン */}
-            <div className="flex justify-end mt-4">
-              <button
-                onClick={handleLike}
+              
+              {/* ブックマークボタン */}
+              <div className="flex justify-end mt-4">
+                <button
+                  onClick={handleLike}
                   className={`flex items-center px-4 py-2 rounded-lg transition-all duration-200 ${
                     role === 'investor' 
                       ? qa.isLiked 
@@ -748,50 +762,49 @@ const QaDetailModal: React.FC<QADetailModalProps> = ({
                         : 'bg-gray-100 hover:bg-blue-50 text-gray-600 hover:text-blue-600' 
                       : 'bg-gray-100 text-gray-400 cursor-default' 
                   }`}
-                disabled={role !== 'investor'}
+                  disabled={role !== 'investor'}
+                >
+                  <Bookmark size={16} className="mr-2" />
+                  <span className="font-medium">{qa.likeCount || 0}</span>
+                </button>
+              </div>
+            </div>
+          )}
+
+          {role === 'corporate' && (
+            <div className="flex justify-end space-x-2 px-4 py-3 bg-white border-t">
+              <button 
+                onClick={handleClose} 
+                className="py-2 px-4 border rounded hover:bg-gray-100 transition-colors"
+                disabled={isSaving}
               >
-                  <ThumbsUp size={16} className="mr-2" />
-                <span className="font-medium">{qa.likeCount || 0}</span>
+                キャンセル
+              </button>
+              <button 
+                onClick={handleDelete} 
+                className="py-2 px-4 bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
+                disabled={isSaving}
+              >
+                削除
+              </button>
+              <button 
+                onClick={handleSave} 
+                className={`py-2 px-4 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors ${isSaving ? 'opacity-50 cursor-not-allowed' : ''}`}
+                disabled={isSaving}
+              >
+                {isSaving ? '保存中...' : '保存'}
               </button>
             </div>
-          </div>
-        )}
+          )}
+        </div>
+      </Dialog>
 
-        {role === 'corporate' && (
-            <div className="flex justify-end space-x-2 px-4 py-3 bg-white border-t">
-            <button 
-              onClick={handleClose} 
-                className="py-2 px-4 border rounded hover:bg-gray-100 transition-colors"
-              disabled={isSaving}
-            >
-              キャンセル
-            </button>
-            <button 
-              onClick={handleDelete} 
-                className="py-2 px-4 bg-red-500 text-white rounded hover:bg-red-600 transition-colors"
-              disabled={isSaving}
-            >
-              削除
-            </button>
-            <button 
-              onClick={handleSave} 
-                className={`py-2 px-4 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors ${isSaving ? 'opacity-50 cursor-not-allowed' : ''}`}
-              disabled={isSaving}
-            >
-              {isSaving ? '保存中...' : '保存'}
-            </button>
-          </div>
-        )}
-      </div>
-    </Dialog>
-
-      {/* 確認ダイアログ */}
       {showConfirmDialog && (
         <Dialog
           isOpen={showConfirmDialog}
           onClose={handleCancelClose}
           title="変更の確認"
-          className="max-w-md"
+          className="max-w-md mx-4"
           showCloseButton={false}
         >
           <div className="p-4">

@@ -225,17 +225,6 @@ export interface ProfileData {
 }
 
 /**
- * 通知設定（ユーザー通知管理用）
- * - 通知設定管理
- * - 通知配信制御
- */
-export interface NotificationSetting {
-  enabled: boolean;
-  email?: string;
-  frequency?: 'realtime' | 'daily' | 'weekly';
-}
-
-/**
  * グラフデータ項目（ダッシュボード用）
  * - グラフ表示データ
  */

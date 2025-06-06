@@ -15,6 +15,7 @@ export interface MyPageTabMenuProps {
   profileData: ProfileData;
   onSaveProfile: (updatedProfile: ProfileData) => Promise<void>;
   onChangePassword: (currentPass: string, newPass: string) => Promise<void>;
+
 }
 
 const MyPageTabMenu: React.FC<MyPageTabMenuProps> = ({
@@ -23,6 +24,7 @@ const MyPageTabMenu: React.FC<MyPageTabMenuProps> = ({
   profileData,
   onSaveProfile,
   onChangePassword,
+
 }) => {
   // PasswordChangeFormに渡すハンドラーを型に合わせて調整
   const handlePasswordChange = async (currentPassword: string, newPassword: string) => {
@@ -43,7 +45,7 @@ const MyPageTabMenu: React.FC<MyPageTabMenuProps> = ({
     {
       id: "password",
       label: "パスワード変更",
-      content: <PasswordChangeForm />,
+
     },
     {
       id: "delete",
