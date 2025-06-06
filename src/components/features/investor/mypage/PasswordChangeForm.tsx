@@ -24,8 +24,8 @@ const PasswordChangeForm: React.FC = () => {
     setMessageType("");
 
     try {
-      // Auth0のパスワードリセットAPIをproxy経由で呼び出し
-      const response = await fetch('/api/proxy/investor/account/reset-password', {
+      // Auth0のパスワードリセットAPIを直接呼び出し
+      const response = await fetch('/api/auth/reset-password', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',

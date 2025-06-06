@@ -6,9 +6,9 @@ import { useRouter } from "next/navigation";
 import Sidebar from "@/components/common/sidebar";
 import Footer from "@/components/common/footer";
 import MyPageTabMenu from "@/components/features/investor/mypage/MyPageTabMenu";
-import { ProfileData, NotificationSetting } from "@/types";
+import { ProfileData } from "@/types";
 import { Home, Heart, Search, MessageSquare, User } from 'lucide-react';
-import { getInvestorUser, updateInvestorUser, deleteInvestorAccount } from "@/lib/api";
+import { getInvestorUser, updateInvestorUser } from "@/lib/api";
 import GuestRestrictedContent from '@/components/features/investor/common/GuestRestrictedContent';
 
 // サイドバーのメニュー項目
@@ -28,7 +28,7 @@ const MyPage = () => {
   const [profile, setProfile] = useState<ProfileData | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const [error, setError] = useState<Error | null>(null);
-  const [activeTab, setActiveTab] = useState<"profile" | "password" | "notification" | "delete">("profile");
+  const [activeTab, setActiveTab] = useState<"profile" | "password" | "delete">("profile");
 
   // ゲスト判定
   const isGuest = !user && !userLoading && !userError;
@@ -92,42 +92,33 @@ const MyPage = () => {
 
   const handleChangePassword = async (currentPass: string, newPass: string) => {
     try {
-      // Auth0 SDK v4の場合、パスワード変更は Auth0 Management API 経由で行うことが推奨されますが、
-      // ここでは簡略化のためにAPIを呼び出さずにログだけ出力します
-      console.log('パスワード変更:', { currentPass, newPass });
+      // Auth0のAuthentication APIを使用してパスワードリセットメールを送信
+      if (!user?.email) {
+        throw new Error('ユーザー情報が取得できません。');
+      }
+
+      const response = await fetch('/api/auth/reset-password', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: user.email,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'パスワードリセットの送信に失敗しました。');
+      }
+
+      const data = await response.json();
+      console.log('パスワードリセットメール送信成功:', data);
       
       // 成功した場合は処理を完了
       return Promise.resolve();
     } catch (err) {
       console.error('パスワード変更エラー:', err);
-      throw err;
-    }
-  };
-
-  const handleSaveNotification = async (newSetting: NotificationSetting) => {
-    try {
-      // API関数を使用して通知設定を更新
-      // 注: 通知設定のAPI関数が未実装の場合は、後で実装してください
-      console.log('通知設定の更新:', newSetting);
-    } catch (err) {
-      console.error('通知設定更新エラー:', err);
-      throw err;
-    }
-  };
-
-  const handleDeleteAccount = async (password: string) => {
-    const confirmed = window.confirm("本当に退会しますか？ この操作は取り消せません。");
-    if (!confirmed) return;
-    
-    try {
-      // Auth0 SDK v4の場合、アカウント削除は管理者APIを通じて行う必要があります
-      // プロキシを使用してバックエンドからAPIを呼び出す
-      await deleteInvestorAccount("token-placeholder");
-      
-      // アカウント削除後はログアウトしてトップページにリダイレクト
-      router.push('/api/auth/logout');
-    } catch (err) {
-      console.error('アカウント削除エラー:', err);
       throw err;
     }
   };
@@ -269,8 +260,6 @@ const MyPage = () => {
             profileData={profile}
             onSaveProfile={handleSaveProfile}
             onChangePassword={handleChangePassword}
-            onSaveNotification={handleSaveNotification}
-            onDeleteAccount={handleDeleteAccount}
           />
         </main>
       </div>

@@ -1,0 +1,236 @@
+"use client";
+
+import React, { useState } from 'react';
+import { useUser } from '@auth0/nextjs-auth0';
+import { useRouter } from 'next/navigation';
+import { InvestorRegistrationData } from '@/types';
+
+const InvestorRegistrationForm: React.FC = () => {
+  const { user } = useUser();
+  const router = useRouter();
+  
+  const [formData, setFormData] = useState<InvestorRegistrationData>({
+    displayName: '',
+    email: user?.email || '',
+    investorType: 'individual',
+    assetScale: 'other',
+    bio: '',
+  });
+  
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const investorTypeOptions = [
+    { value: 'institutional', label: '機関投資家' },
+    { value: 'individual', label: '個人投資家' },
+    { value: 'analyst', label: 'アナリスト' },
+    { value: 'other', label: 'その他' },
+  ];
+
+  const assetScaleOptions = [
+    { value: 'under_5m', label: '500万円未満' },
+    { value: '5m_to_10m', label: '500万～1000万円' },
+    { value: '10m_to_30m', label: '1000万～3000万円' },
+    { value: 'over_30m', label: '3000万円以上' },
+    { value: 'other', label: 'その他' },
+  ];
+
+  const validateForm = (data: InvestorRegistrationData) => {
+    const newErrors: Record<string, string> = {};
+    
+    // 必須項目チェック
+    if (!data.investorType) {
+      newErrors.investorType = '投資家種別を選択してください';
+    }
+    
+    // メールアドレス形式チェック
+    if (!data.email || !/\S+@\S+\.\S+/.test(data.email)) {
+      newErrors.email = '有効なメールアドレスを入力してください';
+    }
+    
+    // 文字数制限
+    if (data.displayName && data.displayName.length > 50) {
+      newErrors.displayName = '表示名は50文字以内で入力してください';
+    }
+    
+    if (data.bio && data.bio.length > 500) {
+      newErrors.bio = '自己紹介は500文字以内で入力してください';
+    }
+    
+    return newErrors;
+  };
+
+  const handleInputChange = (field: keyof InvestorRegistrationData, value: string) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+    // エラーをクリア
+    if (errors[field]) {
+      setErrors(prev => ({ ...prev, [field]: '' }));
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    const validationErrors = validateForm(formData);
+    if (Object.keys(validationErrors).length > 0) {
+      setErrors(validationErrors);
+      return;
+    }
+    
+    setIsSubmitting(true);
+    setErrors({});
+    
+    try {
+      const response = await fetch('/api/investor/user/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'ユーザー登録に失敗しました');
+      }
+      
+      // 登録成功 - メインページにリダイレクト
+      router.push('/investor/companies');
+      
+    } catch (error) {
+      console.error('Registration error:', error);
+      setErrors({
+        submit: error instanceof Error ? error.message : 'ユーザー登録に失敗しました'
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-6">
+      {/* 表示名 */}
+      <div>
+        <label htmlFor="displayName" className="block text-sm font-medium text-gray-700">
+          表示名（任意）
+        </label>
+        <input
+          type="text"
+          id="displayName"
+          value={formData.displayName}
+          onChange={(e) => handleInputChange('displayName', e.target.value)}
+          className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+          placeholder="表示名を入力してください"
+        />
+        {errors.displayName && (
+          <p className="mt-1 text-sm text-red-600">{errors.displayName}</p>
+        )}
+      </div>
+
+      {/* メールアドレス */}
+      <div>
+        <label htmlFor="email" className="block text-sm font-medium text-gray-700">
+          メールアドレス <span className="text-red-500">*</span>
+        </label>
+        <input
+          type="email"
+          id="email"
+          value={formData.email}
+          onChange={(e) => handleInputChange('email', e.target.value)}
+          className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+          placeholder="メールアドレスを入力してください"
+          required
+        />
+        {errors.email && (
+          <p className="mt-1 text-sm text-red-600">{errors.email}</p>
+        )}
+      </div>
+
+      {/* 投資家種別 */}
+      <div>
+        <label htmlFor="investorType" className="block text-sm font-medium text-gray-700">
+          投資家種別 <span className="text-red-500">*</span>
+        </label>
+        <select
+          id="investorType"
+          value={formData.investorType}
+          onChange={(e) => handleInputChange('investorType', e.target.value as any)}
+          className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+        >
+          {investorTypeOptions.map(option => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </select>
+        {errors.investorType && (
+          <p className="mt-1 text-sm text-red-600">{errors.investorType}</p>
+        )}
+      </div>
+
+      {/* 資産運用規模 */}
+      <div>
+        <label htmlFor="assetScale" className="block text-sm font-medium text-gray-700">
+          資産運用規模（任意）
+        </label>
+        <select
+          id="assetScale"
+          value={formData.assetScale || ''}
+          onChange={(e) => handleInputChange('assetScale', e.target.value as any)}
+          className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+        >
+          <option value="">選択してください</option>
+          {assetScaleOptions.map(option => (
+            <option key={option.value} value={option.value}>
+              {option.label}
+            </option>
+          ))}
+        </select>
+        {errors.assetScale && (
+          <p className="mt-1 text-sm text-red-600">{errors.assetScale}</p>
+        )}
+      </div>
+
+      {/* 自己紹介 */}
+      <div>
+        <label htmlFor="bio" className="block text-sm font-medium text-gray-700">
+          自己紹介（任意）
+        </label>
+        <textarea
+          id="bio"
+          rows={4}
+          value={formData.bio}
+          onChange={(e) => handleInputChange('bio', e.target.value)}
+          className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+          placeholder="自己紹介を入力してください（500文字以内）"
+        />
+        <p className="mt-1 text-sm text-gray-500">
+          {formData.bio?.length || 0}/500文字
+        </p>
+        {errors.bio && (
+          <p className="mt-1 text-sm text-red-600">{errors.bio}</p>
+        )}
+      </div>
+
+      {/* エラーメッセージ */}
+      {errors.submit && (
+        <div className="rounded-md bg-red-50 p-4">
+          <p className="text-sm text-red-800">{errors.submit}</p>
+        </div>
+      )}
+
+      {/* 送信ボタン */}
+      <div>
+        <button
+          type="submit"
+          disabled={isSubmitting}
+          className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          {isSubmitting ? '登録中...' : '登録する'}
+        </button>
+      </div>
+    </form>
+  );
+};
+
+export default InvestorRegistrationForm; 
