@@ -10,14 +10,14 @@ import QaListCards from "@/components/features/corporate/qa/QaListCards";
 import QaDetailModal from "@/components/ui/QaDetailModal";
 import QaCreateModal from "@/components/features/corporate/qa/QaCreateModal";
 import { QA } from "@/types";
-import { LayoutDashboard, HelpCircle, MessageSquare, Settings, FileText } from 'lucide-react';
+import { LayoutDashboard, Edit, MessageSquare, Settings, FileText } from 'lucide-react';
 import { searchCorporateQa, createCorporateQa, updateCorporateQa, deleteCorporateQa } from "@/lib/api";
 import { useUser } from "@auth0/nextjs-auth0";
 
 
 const sidebarMenuItems = [
   { label: "ダッシュボード", link: "/corporate/dashboard", icon: <LayoutDashboard size={20} />},
-  { label: "Q&A管理", link: "/corporate/qa", icon: <HelpCircle size={20} /> },
+  { label: "Q&A管理", link: "/corporate/qa", icon: <Edit size={20} /> },
   { label: "IRチャット", link: "/corporate/irchat" , icon: <MessageSquare size={20} />},
   { label: "ファイル管理", link: "/corporate/files", icon: <FileText size={20} /> },
   { label: "設定", link: "/corporate/settings", icon: <Settings size={20} />  },

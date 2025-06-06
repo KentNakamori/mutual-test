@@ -1,13 +1,75 @@
 // src/components/features/investor/company/CompanyHeader.tsx
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Company, CompanyHeaderProps } from '../../../../types';
 import { getIndustryLabel } from '@/types/industry';
 import { getFullImageUrl } from '@/lib/utils/imageUtils';
+import { X } from 'lucide-react';
+import { useUser } from '@auth0/nextjs-auth0';
 
-const CompanyHeader: React.FC<CompanyHeaderProps> = ({ company }) => {
+const CompanyHeader: React.FC<CompanyHeaderProps> = ({ company, onFollowStatusChange }) => {
+  const { user, isLoading: userLoading } = useUser();
+  const [isFollowing, setIsFollowing] = useState(company.isFollowed || false);
+  const [isLoading, setIsLoading] = useState(false);
+  
+  // ゲスト判定
+  const isGuest = !user && !userLoading;
+  
   const handleBackClick = () => {
     window.location.assign('/investor/companies');
   };
+
+  // propsからフォロー状態が変更された時に更新
+  useEffect(() => {
+    if (company.isFollowed !== undefined) {
+      setIsFollowing(company.isFollowed);
+    }
+  }, [company.isFollowed]);
+
+  const handleFollowToggle = async () => {
+    if (isGuest) {
+      window.location.assign('/investor/login');
+      return;
+    }
+
+    if (isLoading) return;
+
+    try {
+      setIsLoading(true);
+      // バックエンドの実装に合わせて全てPOSTメソッドを使用
+      const response = await fetch(`/api/proxy/investor/companies/${company.companyId}/follow`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ 
+          action: isFollowing ? 'unfollow' : 'follow' 
+        })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.detail || 'フォロー操作に失敗しました');
+      }
+
+      const data = await response.json();
+      const newFollowStatus = data.isFollowed;
+      
+      setIsFollowing(newFollowStatus);
+      
+      // 親コンポーネントにフォロー状態の変更を通知
+      if (onFollowStatusChange) {
+        onFollowStatusChange(newFollowStatus);
+      }
+      
+      console.log(data.message);
+    } catch (error) {
+      console.error('フォロー操作に失敗しました:', error);
+      alert(`フォロー操作に失敗しました: ${error instanceof Error ? error.message : '不明なエラー'}`);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <div className="mb-2 flex items-center justify-between">
       {/* 左側：ロゴと企業情報を横並び */}
@@ -66,22 +128,42 @@ const CompanyHeader: React.FC<CompanyHeaderProps> = ({ company }) => {
           </div>
         </div>
       </div>
-      {/* 右側：戻るボタン */}
-      <button 
-        className="p-2 rounded-full hover:bg-gray-100 transition-colors" 
-        onClick={handleBackClick}
-        aria-label="戻る"
-      >
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          className="h-6 w-6 text-gray-600"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
+      
+      {/* 右側：フォローボタンと戻るボタン */}
+      <div className="flex items-center gap-3">
+        {/* フォローボタン */}
+        {isGuest ? (
+          <button 
+            onClick={() => window.location.assign('/investor/login')}
+            className="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 bg-white hover:bg-gray-50 transition-all duration-200"
+          >
+            <span className="font-medium">ログインが必要</span>
+          </button>
+        ) : (
+          <button 
+            onClick={handleFollowToggle}
+            disabled={isLoading}
+            className={`px-4 py-2 rounded-lg border transition-all duration-200 ${
+              isFollowing 
+                ? 'bg-gray-100 text-gray-700 hover:bg-gray-200' 
+                : 'bg-blue-600 text-white hover:bg-blue-700'
+            } ${isLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
+          >
+            <span className="font-medium">
+              {isLoading ? '処理中...' : isFollowing ? 'フォロー中' : 'フォローする'}
+            </span>
+          </button>
+        )}
+        
+        {/* 戻るボタン */}
+        <button 
+          className="p-2 rounded-full hover:bg-gray-100 transition-colors" 
+          onClick={handleBackClick}
+          aria-label="戻る"
         >
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-        </svg>
-      </button>
+          <X size={24} className="text-gray-600" />
+        </button>
+      </div>
     </div>
   );
 };

@@ -21,6 +21,11 @@ const menuItems = [
   { label: 'マイページ', link: '/investor/mypage', icon: <User size={20} /> },
 ];
 
+// フォロー状態を含む拡張Company型
+interface CompanyWithFollow extends Company {
+  isFollowed?: boolean;
+}
+
 const CompanyPage: React.FC = () => {
   const params = useParams();
   const router = useRouter();
@@ -34,7 +39,7 @@ const CompanyPage: React.FC = () => {
   // Auth0 SDK v4の認証状態
   const { user, error: userError, isLoading: userLoading } = useUser();
 
-  const [companyData, setCompanyData] = useState<Company | null>(null);
+  const [companyData, setCompanyData] = useState<CompanyWithFollow | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<Error | null>(null);
   // URLパラメータに基づいて初期タブを設定
@@ -60,10 +65,11 @@ const CompanyPage: React.FC = () => {
       try {
         // プロキシ経由でAPIリクエストを行う
         // token=undefinedにすることでプロキシ経由でJWTを送信
+        // バックエンドで自動的にアクセストラッキングが行われる
         const response = await getInvestorCompanyDetail(companyId as string, undefined);
         
         // APIレスポンスをCompany型に変換
-        const company: Company = {
+        const company: CompanyWithFollow = {
           companyId: response.companyId,
           companyName: response.companyName,
           industry: response.industry,
@@ -71,10 +77,14 @@ const CompanyPage: React.FC = () => {
           securitiesCode: response.securitiesCode,
           majorStockExchange: response.majorStockExchange,
           websiteUrl: response.websiteUrl,
+          isFollowed: response.isFollowed, // フォロー状態を追加
         };
         
         setCompanyData(company);
         setError(null);
+        
+        // トラッキングは不要 - バックエンドで自動的に記録される
+        console.log('ℹ️ 企業データ取得完了 - アクセストラッキングはバックエンドで自動実行されました');
       } catch (err) {
         console.error('企業データ取得エラー:', err);
         setError(err instanceof Error ? err : new Error('企業データの取得に失敗しました'));
@@ -86,7 +96,7 @@ const CompanyPage: React.FC = () => {
     if (companyId) {
       fetchCompanyData();
     }
-  }, [companyId, userLoading]);
+  }, [companyId, userLoading]); // pathnameを依存配列から削除
 
   const handleTabChange = (tab: "chat" | "qa") => {
     setActiveTab(tab);
@@ -102,6 +112,11 @@ const CompanyPage: React.FC = () => {
     }
     
     router.replace(`/investor/company/${companyId}?${newSearchParams.toString()}`);
+  };
+
+  // フォロー状態を更新する関数
+  const updateFollowStatus = (isFollowed: boolean) => {
+    setCompanyData(prev => prev ? { ...prev, isFollowed } : null);
   };
 
   // ローディング表示
@@ -154,7 +169,10 @@ const CompanyPage: React.FC = () => {
       {/* 固定サイズの main エリア */}
       <main className="flex flex-col w-full h-screen bg-gray-50">
         <div className="px-6 pt-6">
-          <CompanyHeader company={companyData} />
+          <CompanyHeader 
+            company={companyData} 
+            onFollowStatusChange={updateFollowStatus}
+          />
           <TabSwitcher activeTab={activeTab} onChangeTab={handleTabChange} />
         </div>
         {/* 固定された main 内で下部のみスクロール */}

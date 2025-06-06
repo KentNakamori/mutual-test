@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useUser } from '@auth0/nextjs-auth0';
 import {
   LayoutDashboard,
-  HelpCircle,
+  Edit,
   MessageSquare,
   Settings,
   FileText,
@@ -44,7 +44,7 @@ const FilesPage: React.FC = () => {
         <Sidebar
           menuItems={[
             { label: 'ダッシュボード', link: '/corporate/dashboard', icon: <LayoutDashboard size={20} /> },
-            { label: 'Q&A管理',       link: '/corporate/qa',        icon: <HelpCircle size={20} /> },
+            { label: 'Q&A管理',       link: '/corporate/qa',        icon: <Edit size={20} /> },
             { label: 'IRチャット',    link: '/corporate/irchat',    icon: <MessageSquare size={20} /> },
             { label: 'ファイル管理',  link: '/corporate/files',     icon: <FileText size={20} /> },
             { label: '設定',          link: '/corporate/settings',  icon: <Settings size={20} /> },
@@ -54,7 +54,6 @@ const FilesPage: React.FC = () => {
           onSelectMenuItem={(link) => router.push(link)}
         />
         <main className="flex-1 p-6 bg-gray-50">
-          <h1 className="mb-8 text-3xl font-bold">ファイル管理</h1>
           <FileManagement />
         </main>
       </div>

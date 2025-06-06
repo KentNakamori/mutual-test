@@ -94,8 +94,17 @@ export default function IrChatPage() {
     try {
       console.log('新規チャットUI作成');
       
-      // UIのみ更新（実際のチャット作成は最初のメッセージ送信時に行う）
-      setSelectedSessionId(null);
+      const response = await startNewCorporateChat();
+      console.log('新規チャットセッション作成完了:', response);
+      
+      const newSession: ChatSession = {
+        sessionId: response.chatId,
+        lastMessageSnippet: '新規チャット',
+        lastMessageTimestamp: new Date().toISOString(),
+      };
+      
+      setSessions(prev => [newSession, ...prev]);
+      setSelectedSessionId(response.chatId);
       setMessages([]);
     } catch (error) {
       console.error('新規チャットの作成中にエラーが発生しました:', error);
@@ -152,43 +161,56 @@ export default function IrChatPage() {
     try {
       let currentSessionId = selectedSessionId;
       
+      // セッションが選択されていない場合はエラー
       if (!currentSessionId) {
-        console.log('新規チャットセッションを作成します');
-        const response = await startNewCorporateChat();
-        console.log('新規チャットセッション作成完了:', response);
-        
-        currentSessionId = response.chatId;
-        const newSession: ChatSession = {
-          sessionId: response.chatId,
-          lastMessageSnippet: message.length > 30 ? message.substring(0, 30) + '...' : message,
-          lastMessageTimestamp: new Date().toISOString(),
-        };
-        
-        setSessions(prev => [newSession, ...prev]);
-        setSelectedSessionId(response.chatId);
+        console.error('チャットセッションが選択されていません。新規チャットを作成してください。');
+        setMessages(prev => {
+          const newMessages = [...prev];
+          const targetIndex = newMessages.findIndex(msg => msg.messageId === aiMessageId);
+          
+          if (targetIndex !== -1) {
+            newMessages[targetIndex] = {
+              ...newMessages[targetIndex],
+              text: 'チャットセッションが選択されていません。新規チャットを作成してください。',
+              timestamp: new Date().toISOString(),
+            };
+          }
+          
+          return newMessages;
+        });
+        setLoading(false);
+        return;
       }
       
-      console.log('既存セッションへのメッセージ送信開始:', currentSessionId);
-      
+      console.log('メッセージ送信開始:', currentSessionId);
       // ストリーミング処理
       await sendCorporateChatMessageStream(
         currentSessionId,
         message,
         // onChunk: 文字単位でメッセージを更新
         (chunk: string) => {
-          console.log('📨 チャンク受信:', chunk);
+          console.log('📨 チャンク受信:', { chunk, aiMessageId, sessionId: currentSessionId });
           setMessages(prev => {
-            // 新しい配列を作成して確実に再レンダリングをトリガー
             const newMessages = [...prev];
             const targetIndex = newMessages.findIndex(msg => msg.messageId === aiMessageId);
             
             if (targetIndex !== -1) {
-              // 既存のメッセージオブジェクトを新しいオブジェクトで置き換え
               newMessages[targetIndex] = {
                 ...newMessages[targetIndex],
                 text: newMessages[targetIndex].text + chunk,
-                timestamp: new Date().toISOString(), // タイムスタンプも更新
+                timestamp: new Date().toISOString(),
               };
+              console.log('✅ AIメッセージ更新成功:', { 
+                targetIndex, 
+                currentLength: newMessages[targetIndex].text.length,
+                messageId: aiMessageId
+              });
+            } else {
+              console.error('❌ AIメッセージが見つかりません:', { 
+                aiMessageId, 
+                availableIds: newMessages.map(m => ({ id: m.messageId, role: m.role })),
+                messagesCount: newMessages.length
+              });
             }
             
             return newMessages;
@@ -196,7 +218,7 @@ export default function IrChatPage() {
         },
         // onStart: ストリーミング開始時の処理
         () => {
-          console.log('🚀 ストリーミング開始');
+          console.log('🚀 ストリーミング開始:', { aiMessageId, sessionId: currentSessionId });
           // ストリーミング開始時に空のメッセージを確認
           setMessages(prev => {
             const newMessages = [...prev];
@@ -211,8 +233,11 @@ export default function IrChatPage() {
         },
         // onEnd: ストリーミング完了時の処理
         (fullResponse: string) => {
-          console.log('🏁 ストリーミング完了:', fullResponse.length, '文字');
-          // 最終的なメッセージを確定（念のため）
+          console.log('🏁 ストリーミング完了:', { 
+            responseLength: fullResponse.length, 
+            aiMessageId,
+            sessionId: currentSessionId
+          });
           setMessages(prev => {
             const newMessages = [...prev];
             const targetIndex = newMessages.findIndex(msg => msg.messageId === aiMessageId);
@@ -223,6 +248,11 @@ export default function IrChatPage() {
                 text: fullResponse,
                 timestamp: new Date().toISOString(),
               };
+            } else {
+              console.error('❌ onEnd: AIメッセージが見つかりません:', { 
+                aiMessageId, 
+                availableIds: newMessages.map(m => ({ id: m.messageId, role: m.role }))
+              });
             }
             
             return newMessages;
@@ -230,7 +260,7 @@ export default function IrChatPage() {
         },
         // onError: エラー時の処理
         (error: string) => {
-          console.error('❌ ストリーミングエラー:', error);
+          console.error('❌ ストリーミングエラー:', { error, aiMessageId, sessionId: currentSessionId });
           setMessages(prev => {
             const newMessages = [...prev];
             const targetIndex = newMessages.findIndex(msg => msg.messageId === aiMessageId);
@@ -241,6 +271,11 @@ export default function IrChatPage() {
                 text: `エラーが発生しました: ${error}`,
                 timestamp: new Date().toISOString(),
               };
+            } else {
+              console.error('❌ onError: AIメッセージが見つかりません:', { 
+                aiMessageId, 
+                availableIds: newMessages.map(m => ({ id: m.messageId, role: m.role }))
+              });
             }
             
             return newMessages;
@@ -249,9 +284,9 @@ export default function IrChatPage() {
       );
       
       // チャット履歴を更新
-      console.log('チャット履歴を更新します');
+      console.log('📋 チャット履歴を更新します');
       const sessionsResponse = await getCorporateChatHistory();
-      console.log('チャット履歴更新完了:', sessionsResponse);
+      console.log('✅ チャット履歴更新完了:', sessionsResponse);
       
       const convertedSessions: ChatSession[] = sessionsResponse.chatLogs.map((log: any) => ({
         sessionId: log.chatId,
@@ -261,22 +296,23 @@ export default function IrChatPage() {
       setSessions(convertedSessions);
       
     } catch (error) {
-      console.error('メッセージ送信中にエラーが発生しました:', error);
-      // エラーメッセージがすでに表示されていない場合のみ追加
+      console.error('💀 メッセージ送信中にエラーが発生しました:', error);
+      // エラー処理も改善
       setMessages(prev => {
-        const lastMessage = prev[prev.length - 1];
-        if (lastMessage && lastMessage.messageId === aiMessageId && !lastMessage.text.startsWith('エラーが発生しました')) {
-          return prev.map(msg => {
-            if (msg.messageId === aiMessageId) {
-              return {
-                ...msg,
-                text: 'メッセージの送信中にエラーが発生しました。もう一度お試しください。',
-              };
-            }
-            return msg;
-          });
+        const newMessages = [...prev];
+        // 最後のAIメッセージ（空または部分的なもの）を探してエラーメッセージに置き換え
+        for (let i = newMessages.length - 1; i >= 0; i--) {
+          if (newMessages[i].role === 'ai' && (newMessages[i].text === '' || newMessages[i].text.startsWith('エラーが発生しました'))) {
+            newMessages[i] = {
+              ...newMessages[i],
+              text: 'メッセージの送信中にエラーが発生しました。もう一度お試しください。',
+              timestamp: new Date().toISOString(),
+            };
+            break;
+          }
         }
-        return prev;
+        
+        return newMessages;
       });
     } finally {
       setLoading(false);
@@ -310,7 +346,12 @@ export default function IrChatPage() {
           <ChatMessages messages={messages} />
         </div>
         <div className="p-4 bg-white">
-          <ChatInputBox onSendMessage={handleSendMessage} loading={loading} />
+          <ChatInputBox 
+            onSendMessage={handleSendMessage} 
+            loading={loading}
+            isSessionSelected={!!selectedSessionId}
+            placeholder={selectedSessionId ? "メッセージを入力..." : "チャットセッションを選択するか、新規チャットを作成してください"}
+          />
         </div>
       </div>
     </div>

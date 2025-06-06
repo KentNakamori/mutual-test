@@ -151,30 +151,52 @@ const QATabView: React.FC<QATabViewProps> = ({ companyId, companyName }) => {
     setSelectedQA(null);
   }, []);
 
-  // いいね操作用のハンドラ
+  // ブックマーク操作用のハンドラ
   const handleLike = useCallback(async (qaId: string) => {
+    console.log(`QATabView: Starting bookmark operation for QA ${qaId}`);
+    
     try {
-      console.log(`QATabView: Liking QA ${qaId}`);
+      // 現在のQAを見つけてブックマーク状態を確認
+      const currentQA = qaList.find(qa => qa.qaId === qaId) || selectedQA;
+      const isCurrentlyBookmarked = currentQA?.isLiked || false;
       
-      // Auth0 SDK v4ではトークンはプロキシ側で取得される
-      const response = await fetch(`/api/proxy/investor/qa/${qaId}/like`, {
+      console.log(`QATabView: Current bookmark state for QA ${qaId}:`, {
+        isLiked: isCurrentlyBookmarked,
+        likeCount: currentQA?.likeCount,
+        qaExists: !!currentQA
+      });
+      
+      // 正しいAPIエンドポイントを使用
+      const endpoint = `/api/proxy/investor/qa/${qaId}/like`;
+      const action = isCurrentlyBookmarked ? 'remove' : 'add';
+      const payload = { action };
+      
+      console.log(`QATabView: Making request to ${endpoint} with payload:`, payload);
+      
+      const response = await fetch(endpoint, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ action: 'ADD' }) // APIで必要なリクエストボディ
+        body: JSON.stringify(payload)
       });
       
+      console.log(`QATabView: Response status: ${response.status}`);
+      
       if (!response.ok) {
-        throw new Error(`HTTPエラー: ${response.status}`);
+        const errorText = await response.text();
+        console.log(`QATabView: Error response body:`, errorText);
+        throw new Error(`HTTPエラー: ${response.status} - ${errorText}`);
       }
       
       const data = await response.json();
       console.log('QATabView: Like API Response:', data);
       
-      if (data.likeCount !== undefined) {
-        console.log(`QATabView: Successfully updated like for QA ${qaId}, new like count: ${data.likeCount}`);
-        // いいね数が更新されたQAをリストに反映
+      // レスポンスからブックマーク状態を更新
+      if (data.likeCount !== undefined && data.isLiked !== undefined) {
+        console.log(`QATabView: Successfully updated bookmark for QA ${qaId}`);
+        console.log(`QATabView: New state - bookmark: ${data.isLiked}, count: ${data.likeCount}`);
+        
         setQaList(prevList =>
           prevList.map(qa =>
             qa.qaId === qaId ? { 
@@ -185,7 +207,6 @@ const QATabView: React.FC<QATabViewProps> = ({ companyId, companyName }) => {
           )
         );
         
-        // 選択されたQAも更新
         if (selectedQA && selectedQA.qaId === qaId) {
           setSelectedQA({
             ...selectedQA,
@@ -194,13 +215,59 @@ const QATabView: React.FC<QATabViewProps> = ({ companyId, companyName }) => {
           });
         }
       } else {
-        console.error('QATabView: Like operation response missing likeCount:', data);
+        console.warn('QATabView: Unexpected API response format:', data);
+        // フォールバック: ローカル状態のみ更新
+        const newBookmarkStatus = !isCurrentlyBookmarked;
+        const newLikeCount = Math.max(0, (currentQA?.likeCount || 0) + (newBookmarkStatus ? 1 : -1));
+        
+        console.log(`QATabView: Fallback state - bookmark: ${newBookmarkStatus}, count: ${newLikeCount}`);
+        
+        setQaList(prevList =>
+          prevList.map(qa =>
+            qa.qaId === qaId ? { 
+              ...qa, 
+              likeCount: newLikeCount,
+              isLiked: newBookmarkStatus
+            } : qa
+          )
+        );
+        
+        if (selectedQA && selectedQA.qaId === qaId) {
+          setSelectedQA({
+            ...selectedQA,
+            likeCount: newLikeCount,
+            isLiked: newBookmarkStatus
+          });
+        }
       }
+      
+      console.log(`QATabView: Bookmark operation completed successfully for QA ${qaId}`);
+      
     } catch (error) {
-      console.error('QATabView: いいねの更新に失敗しました:', error);
-      setError('いいねの更新に失敗しました');
+      console.error('QATabView: ブックマークの更新に失敗しました:', error);
+      console.error('QATabView: Error details:', {
+        qaId,
+        error: error instanceof Error ? error.message : String(error),
+        stack: error instanceof Error ? error.stack : undefined
+      });
+      
+      // エラーメッセージをより詳細に
+      let errorMessage = 'ブックマークの更新に失敗しました';
+      if (error instanceof Error) {
+        if (error.message.includes('Failed to fetch')) {
+          errorMessage += ': ネットワーク接続をご確認ください';
+        } else if (error.message.includes('401')) {
+          errorMessage += ': 認証が必要です。ログインしてください';
+        } else if (error.message.includes('403')) {
+          errorMessage += ': アクセス権限がありません';
+        } else {
+          errorMessage += `: ${error.message}`;
+        }
+      }
+      
+      setError(errorMessage);
     }
-  }, [selectedQA]);
+  }, [qaList, selectedQA]);
 
   // 日付フォーマット関数
   const formatDate = (dateStr: string) => {
@@ -222,13 +289,26 @@ const QATabView: React.FC<QATabViewProps> = ({ companyId, companyName }) => {
       {/* エラー表示 */}
       {error && (
         <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
-          <p>{error}</p>
-          <button 
-            onClick={() => fetchCompanyQAs(searchKeyword, filters)} 
-            className="mt-2 px-4 py-1 bg-red-100 text-red-800 rounded-md text-sm hover:bg-red-200"
-          >
-            再試行
-          </button>
+          <div className="flex justify-between items-start">
+            <div>
+              <p className="font-medium">エラーが発生しました</p>
+              <p className="text-sm mt-1">{error}</p>
+            </div>
+            <div className="flex gap-2 ml-4">
+              <button 
+                onClick={() => setError(null)} 
+                className="px-3 py-1 bg-red-200 text-red-800 rounded-md text-sm hover:bg-red-300 transition-colors"
+              >
+                閉じる
+              </button>
+              <button 
+                onClick={() => fetchCompanyQAs(searchKeyword, filters)} 
+                className="px-3 py-1 bg-red-500 text-white rounded-md text-sm hover:bg-red-600 transition-colors"
+              >
+                再試行
+              </button>
+            </div>
+          </div>
         </div>
       )}
       

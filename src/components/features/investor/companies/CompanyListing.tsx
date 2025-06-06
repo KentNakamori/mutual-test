@@ -1,6 +1,7 @@
 // src/components/features/investor/companies/CompanyListing.tsx
 import React, { useState, useEffect } from 'react';
 import { Heart, Filter, Search, Grid, List, ChevronDown, ExternalLink } from 'lucide-react';
+import { usePathname } from 'next/navigation';
 import { Industry, INDUSTRY_OPTIONS, getIndustryLabel } from '@/types/industry';
 import GuestRestrictedContent from '@/components/features/investor/common/GuestRestrictedContent';
 import { useUser } from '@auth0/nextjs-auth0';
@@ -29,9 +30,10 @@ interface CompanyListResponse {
 
 interface CompanyListingProps {
   isFollowedOnly?: boolean;
+  onCompaniesLoaded?: (companies: Array<{ companyId: string }>) => void;
 }
 
-const CompanyListing: React.FC<CompanyListingProps> = ({ isFollowedOnly = false }) => {
+const CompanyListing: React.FC<CompanyListingProps> = ({ isFollowedOnly = false, onCompaniesLoaded }) => {
   const { user, error: userError, isLoading: userLoading } = useUser();
   // ゲスト判定: ユーザーがいない、ローディングが終了、エラーがない
   const isGuest = !user && !userLoading && !userError;
@@ -62,6 +64,10 @@ const CompanyListing: React.FC<CompanyListingProps> = ({ isFollowedOnly = false 
         if (response.status === 401) {
           console.warn('認証エラー: ゲストユーザーとして処理します');
           setCompanies([]);
+          // コールバック呼び出し（空の配列）
+          if (onCompaniesLoaded) {
+            onCompaniesLoaded([]);
+          }
           return;
         }
         
@@ -81,6 +87,11 @@ const CompanyListing: React.FC<CompanyListingProps> = ({ isFollowedOnly = false 
           : companiesList;
         
         setCompanies(filteredData);
+        
+        // トラッキング用にコールバック呼び出し
+        if (onCompaniesLoaded) {
+          onCompaniesLoaded(filteredData.map((company: CompanyItem) => ({ companyId: company.companyId })));
+        }
       } catch (err) {
         console.error('企業データ取得エラー:', err);
         
@@ -90,6 +101,11 @@ const CompanyListing: React.FC<CompanyListingProps> = ({ isFollowedOnly = false 
         } else {
           setError(err instanceof Error ? err.message : '企業データの取得に失敗しました');
         }
+        
+        // エラー時もコールバック呼び出し（空の配列）
+        if (onCompaniesLoaded) {
+          onCompaniesLoaded([]);
+        }
       } finally {
         setLoading(false);
       }
@@ -97,7 +113,7 @@ const CompanyListing: React.FC<CompanyListingProps> = ({ isFollowedOnly = false 
 
     // ゲストユーザーでもデータを取得
     fetchCompanies();
-  }, [isFollowedOnly]);
+  }, [isFollowedOnly, onCompaniesLoaded]);
   
   // フィルターとソートのオプション
   const genres = ['すべて', ...INDUSTRY_OPTIONS.map(option => option.value)];
@@ -143,31 +159,37 @@ const CompanyListing: React.FC<CompanyListingProps> = ({ isFollowedOnly = false 
     }
 
     try {
-      const method = currentFollowStatus ? 'DELETE' : 'POST';
+      // バックエンドの実装に合わせて全てPOSTメソッドを使用
       const response = await fetch(`/api/proxy/investor/companies/${companyId}/follow`, {
-        method,
+        method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
+        body: JSON.stringify({ 
+          action: currentFollowStatus ? 'unfollow' : 'follow' 
+        })
       });
 
       if (!response.ok) {
-        throw new Error('フォロー操作に失敗しました');
+        const errorData = await response.json();
+        throw new Error(errorData.detail || 'フォロー操作に失敗しました');
       }
+
+      const data = await response.json();
 
       // 企業リストを更新
       setCompanies(prevCompanies =>
         prevCompanies.map(company =>
           company.companyId === companyId
-            ? { ...company, isFollowed: !currentFollowStatus }
+            ? { ...company, isFollowed: data.isFollowed }
             : company
         )
       );
       
-      console.log(`${currentFollowStatus ? 'フォロー解除' : 'フォロー'}しました: ${companyId}`);
+      console.log(data.message);
     } catch (err) {
       console.error('フォロー操作に失敗しました', err);
-      alert('フォロー操作に失敗しました。再度お試しください。');
+      alert(`フォロー操作に失敗しました: ${err instanceof Error ? err.message : '不明なエラー'}`);
     }
   };
   
@@ -459,7 +481,10 @@ interface CompanyCardProps {
 }
 
 const CompanyGridCard = ({ company, isGuest, onFollowToggle }: CompanyCardProps) => {
-  const handleCardClick = () => {
+  const pathname = usePathname();
+  
+  const handleCardClick = async () => {
+    // 企業詳細ページに遷移（アクセストラッキングはバックエンドで自動実行）
     window.location.assign(`/investor/company/${company.companyId}`);
   };
   
@@ -534,7 +559,10 @@ const CompanyGridCard = ({ company, isGuest, onFollowToggle }: CompanyCardProps)
 };
 
 const CompanyListCard = ({ company, isGuest, onFollowToggle }: CompanyCardProps) => {
-  const handleCardClick = () => {
+  const pathname = usePathname();
+  
+  const handleCardClick = async () => {
+    // 企業詳細ページに遷移（アクセストラッキングはバックエンドで自動実行）
     window.location.assign(`/investor/company/${company.companyId}`);
   };
 

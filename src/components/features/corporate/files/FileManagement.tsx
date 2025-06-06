@@ -108,7 +108,6 @@ export const FileManagement: React.FC = () => {
       {/* ヘッダー */}
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-2xl font-bold mb-2">ファイル管理</h1>
           <p className="text-gray-600">
             IRドキュメントや財務資料をアップロードして管理できます
           </p>

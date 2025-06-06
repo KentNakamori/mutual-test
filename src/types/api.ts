@@ -11,8 +11,7 @@ import {
   QA, 
   ChatMessage, 
   ChatLog, 
-  ProfileData, 
-  NotificationSetting 
+  ProfileData
 } from './models';
 
 /**
@@ -201,7 +200,6 @@ export interface MailDraftResponse {
  * 投資家向けプロフィール/設定関連API（ユーザー管理用）
  * - プロフィール更新
  * - パスワード変更
- * - 通知設定更新
  * - アカウント削除
  */
 export interface UpdateProfileRequest extends ProfileData {}
@@ -216,11 +214,6 @@ export interface ChangePasswordRequest {
 export interface ChangePasswordResponse {
   success: boolean;
   message?: string;
-}
-export interface UpdateNotificationSettingRequest extends NotificationSetting {}
-export interface UpdateNotificationSettingResponse {
-  success: boolean;
-  updatedSetting: NotificationSetting;
 }
 export interface DeleteAccountRequest {
   password: string;

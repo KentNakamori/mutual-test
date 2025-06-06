@@ -1,34 +1,14 @@
 // src/components/features/corporate/settings/SettingsTabs.tsx
 "use client";
 
-import React, { useState } from 'react';
-import Tabs from '../../../ui/Tabs';
+import React from 'react';
 import CompanyInfoForm from './CompanyInfoForm';
-import LogoutButton from './LogoutButton';
 import { CompanyInfo, SettingsTabsProps} from '../../../../types';
 
-
 const SettingsTabs: React.FC<SettingsTabsProps> = ({ companyInfo, refetchCompanyInfo }) => {
-  const [activeTab, setActiveTab] = useState('company');
-
-  // 各タブの内容（shadcn等のTabsコンポーネント利用）
-  const tabs = [
-    {
-      id: 'company',
-      label: '企業情報',
-      content: <CompanyInfoForm initialData={companyInfo} onSaveSuccess={refetchCompanyInfo} />,
-    },
-   
-    {
-      id: 'logout',
-      label: 'ログアウト',
-      content: <LogoutButton />,
-    },
-  ];
-
   return (
     <div>
-      <Tabs tabs={tabs} activeTab={activeTab} onChangeTab={setActiveTab} />
+      <CompanyInfoForm initialData={companyInfo} onSaveSuccess={refetchCompanyInfo} />
     </div>
   );
 };
