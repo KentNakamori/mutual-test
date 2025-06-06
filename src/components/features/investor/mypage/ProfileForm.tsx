@@ -20,22 +20,30 @@ const investorTypeOptions = [
 const assetManagementScaleOptions = [
   { label: '500万円未満', value: '500万円未満' },
   { label: '500万～1000万円', value: '500万～1000万円' },
-  { label: '1000万～3000万', value: '1000万～3000万' },
+  { label: '1000万～3000万円', value: '1000万～3000万円' },
   { label: '3000万円以上', value: '3000万円以上' },
+  { label: 'その他', value: 'その他' },
 ];
 
 const ProfileForm: React.FC<ProfileFormProps> = ({
   initialProfile,
   onSaveProfile,
 }) => {
-  const [formData, setFormData] = useState<ProfileData>(initialProfile);
+  // 初期プロファイルの資産運用規模が未入力の場合は「その他」をデフォルトに設定
+  const [formData, setFormData] = useState<ProfileData>({
+    ...initialProfile,
+    assetManagementScale: initialProfile.assetManagementScale || 'その他'
+  });
   const [isSaving, setIsSaving] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   // 初期プロファイルが変更された場合にフォームデータを更新
   useEffect(() => {
-    setFormData(initialProfile);
+    setFormData({
+      ...initialProfile,
+      assetManagementScale: initialProfile.assetManagementScale || 'その他'
+    });
   }, [initialProfile]);
 
   // フィールド変更ハンドラ
