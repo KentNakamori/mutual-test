@@ -39,7 +39,7 @@ const Footer: React.FC<FooterProps> = ({
   onSelectLink,
 }) => {
   return (
-    <footer className="bg-gray-50 text-gray-600 py-4 px-6 flex flex-col items-center space-y-3">
+    <footer className="bg-gray-100 text-gray-600 py-4 px-6 flex flex-col items-center space-y-3 border-t border-gray-200">
       {/* お問い合わせボタンと運営会社リンクを横並びに */}
       <div className="flex flex-row items-center justify-center space-x-6 w-full">
         {/* 運営会社リンク（大きく・強調） */}
