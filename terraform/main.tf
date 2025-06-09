@@ -1,142 +1,47 @@
-terraform {
-  required_providers {
-    aws = {
-      source  = "hashicorp/aws"
-      version = "~> 5.0"
-    }
-  }
+# ------------------------------------------------------------------------------
+# Provider Configuration
+# ------------------------------------------------------------------------------
+provider "aws" {
+  region = var.region
 }
 
 provider "aws" {
-  region = var.aws_region
+  alias  = "virginia"
+  region = "us-east-1"
 }
 
-resource "aws_vpc" "main" {
-  cidr_block = "10.0.0.0/16"
+# ------------------------------------------------------------------------------
+# Data Sources for Existing VPC
+# ------------------------------------------------------------------------------
+data "aws_vpc" "existing" {
+  id = var.vpc_id
+}
 
+data "aws_subnets" "private" {
+  filter {
+    name   = "vpc-id"
+    values = [data.aws_vpc.existing.id]
+  }
   tags = {
-    Name = "${var.project_name}-vpc"
+    "aws-cdk:subnet-type" = "Private"
   }
 }
 
-resource "aws_subnet" "public_a" {
-  vpc_id                  = aws_vpc.main.id
-  cidr_block              = "10.0.1.0/24"
-  availability_zone       = "${var.aws_region}a"
-  map_public_ip_on_launch = true
-
+data "aws_subnets" "public" {
+  filter {
+    name   = "vpc-id"
+    values = [data.aws_vpc.existing.id]
+  }
   tags = {
-    Name = "${var.project_name}-public-a"
+    "aws-cdk:subnet-type" = "Public"
   }
 }
 
-resource "aws_subnet" "public_b" {
-  vpc_id                  = aws_vpc.main.id
-  cidr_block              = "10.0.2.0/24"
-  availability_zone       = "${var.aws_region}b"
-  map_public_ip_on_launch = true
-
-  tags = {
-    Name = "${var.project_name}-public-b"
-  }
-}
-
-resource "aws_subnet" "private_a" {
-  vpc_id            = aws_vpc.main.id
-  cidr_block        = "10.0.3.0/24"
-  availability_zone = "${var.aws_region}a"
-
-  tags = {
-    Name = "${var.project_name}-private-a"
-  }
-}
-
-resource "aws_subnet" "private_b" {
-  vpc_id            = aws_vpc.main.id
-  cidr_block        = "10.0.4.0/24"
-  availability_zone = "${var.aws_region}b"
-
-  tags = {
-    Name = "${var.project_name}-private-b"
-  }
-}
-
-resource "aws_internet_gateway" "main" {
-  vpc_id = aws_vpc.main.id
-
-  tags = {
-    Name = "${var.project_name}-igw"
-  }
-}
-
-resource "aws_route_table" "public" {
-  vpc_id = aws_vpc.main.id
-
-  route {
-    cidr_block = "0.0.0.0/0"
-    gateway_id = aws_internet_gateway.main.id
-  }
-
-  tags = {
-    Name = "${var.project_name}-public-rt"
-  }
-}
-
-resource "aws_route_table_association" "public_a" {
-  subnet_id      = aws_subnet.public_a.id
-  route_table_id = aws_route_table.public.id
-}
-
-resource "aws_route_table_association" "public_b" {
-  subnet_id      = aws_subnet.public_b.id
-  route_table_id = aws_route_table.public.id
-}
-
-resource "aws_eip" "nat" {
-  domain = "vpc"
-  tags = {
-    Name = "${var.project_name}-nat-eip"
-  }
-}
-
-resource "aws_nat_gateway" "main" {
-  allocation_id = aws_eip.nat.id
-  subnet_id     = aws_subnet.public_a.id
-
-  tags = {
-    Name = "${var.project_name}-nat-gw"
-  }
-
-  depends_on = [aws_internet_gateway.main]
-}
-
-resource "aws_route_table" "private" {
-  vpc_id = aws_vpc.main.id
-
-  route {
-    cidr_block     = "0.0.0.0/0"
-    nat_gateway_id = aws_nat_gateway.main.id
-  }
-
-  tags = {
-    Name = "${var.project_name}-private-rt"
-  }
-}
-
-resource "aws_route_table_association" "private_a" {
-  subnet_id      = aws_subnet.private_a.id
-  route_table_id = aws_route_table.private.id
-}
-
-resource "aws_route_table_association" "private_b" {
-  subnet_id      = aws_subnet.private_b.id
-  route_table_id = aws_route_table.private.id
-}
-
-# ECR
+# ------------------------------------------------------------------------------
+# ECR (Elastic Container Registry)
+# ------------------------------------------------------------------------------
 resource "aws_ecr_repository" "main" {
-  name = "${var.project_name}-repo"
-  
+  name                 = "${var.project_name}-repo"
   image_tag_mutability = "MUTABLE"
 
   image_scanning_configuration {
@@ -148,19 +53,76 @@ resource "aws_ecr_repository" "main" {
   }
 }
 
-# ECS
-resource "aws_ecs_cluster" "main" {
-  name = "${var.project_name}-cluster"
+# ------------------------------------------------------------------------------
+# CloudWatch Log Group
+# ------------------------------------------------------------------------------
+resource "aws_cloudwatch_log_group" "ecs" {
+  name              = "/ecs/${var.project_name}"
+  retention_in_days = 7
 
   tags = {
-    Name = "${var.project_name}-cluster"
+    Name = "${var.project_name}-ecs-logs"
   }
 }
 
+# ------------------------------------------------------------------------------
+# IAM Roles & Policies
+# ------------------------------------------------------------------------------
+data "aws_iam_policy_document" "ecs_task_assume_role" {
+  statement {
+    actions = ["sts:AssumeRole"]
+    principals {
+      type        = "Service"
+      identifiers = ["ecs-tasks.amazonaws.com"]
+    }
+  }
+}
+
+resource "aws_iam_role" "ecs_task_execution_role" {
+  name               = "${var.project_name}-ecs-exec-role"
+  assume_role_policy = data.aws_iam_policy_document.ecs_task_assume_role.json
+}
+
+resource "aws_iam_role_policy_attachment" "ecs_task_execution_role_policy" {
+  role       = aws_iam_role.ecs_task_execution_role.name
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
+}
+
+resource "aws_iam_role" "ecs_task_role" {
+  name               = "${var.project_name}-ecs-task-role"
+  assume_role_policy = data.aws_iam_policy_document.ecs_task_assume_role.json
+}
+
+resource "aws_iam_role_policy" "secrets_manager_access" {
+  name = "${var.project_name}-secrets-access"
+  role = aws_iam_role.ecs_task_execution_role.id
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Effect   = "Allow",
+        Action   = "secretsmanager:GetSecretValue",
+        Resource = aws_secretsmanager_secret.app_secrets.arn
+      }
+    ]
+  })
+}
+
+# ------------------------------------------------------------------------------
+# Secrets Manager
+# ------------------------------------------------------------------------------
+resource "aws_secretsmanager_secret" "app_secrets" {
+  name        = "${var.project_name}-app-secrets"
+  description = "Application secrets for ${var.project_name}"
+}
+
+# ------------------------------------------------------------------------------
+# Security Groups
+# ------------------------------------------------------------------------------
 resource "aws_security_group" "lb" {
   name        = "${var.project_name}-lb-sg"
-  description = "Allow HTTP inbound traffic"
-  vpc_id      = aws_vpc.main.id
+  description = "Allow HTTP traffic to ALB"
+  vpc_id      = data.aws_vpc.existing.id
 
   ingress {
     protocol    = "tcp"
@@ -170,21 +132,17 @@ resource "aws_security_group" "lb" {
   }
 
   egress {
+    protocol    = "-1"
     from_port   = 0
     to_port     = 0
-    protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  tags = {
-    Name = "${var.project_name}-lb-sg"
   }
 }
 
 resource "aws_security_group" "ecs_tasks" {
   name        = "${var.project_name}-ecs-tasks-sg"
-  description = "Allow inbound traffic from the ALB"
-  vpc_id      = aws_vpc.main.id
+  description = "Allow traffic from ALB to ECS tasks"
+  vpc_id      = data.aws_vpc.existing.id
 
   ingress {
     protocol        = "tcp"
@@ -194,43 +152,33 @@ resource "aws_security_group" "ecs_tasks" {
   }
 
   egress {
+    protocol    = "-1"
     from_port   = 0
     to_port     = 0
-    protocol    = "-1"
     cidr_blocks = ["0.0.0.0/0"]
-  }
-
-  tags = {
-    Name = "${var.project_name}-ecs-tasks-sg"
   }
 }
 
+# ------------------------------------------------------------------------------
+# ALB (Application Load Balancer)
+# ------------------------------------------------------------------------------
 resource "aws_lb" "main" {
   name               = "${var.project_name}-lb"
   internal           = false
   load_balancer_type = "application"
   security_groups    = [aws_security_group.lb.id]
-  subnets            = [aws_subnet.public_a.id, aws_subnet.public_b.id]
-
-  tags = {
-    Name = "${var.project_name}-lb"
-  }
+  subnets            = data.aws_subnets.public.ids
 }
 
 resource "aws_lb_target_group" "main" {
   name        = "${var.project_name}-tg"
   port        = 3000
   protocol    = "HTTP"
-  vpc_id      = aws_vpc.main.id
+  vpc_id      = data.aws_vpc.existing.id
   target_type = "ip"
-  
+
   health_check {
     path = "/"
-    port = "3000"
-  }
-
-  tags = {
-    Name = "${var.project_name}-tg"
   }
 }
 
@@ -245,24 +193,11 @@ resource "aws_lb_listener" "http" {
   }
 }
 
-data "aws_iam_policy_document" "ecs_task_execution_role" {
-  statement {
-    actions = ["sts:AssumeRole"]
-    principals {
-      type        = "Service"
-      identifiers = ["ecs-tasks.amazonaws.com"]
-    }
-  }
-}
-
-resource "aws_iam_role" "ecs_task_execution_role" {
-  name               = "${var.project_name}-ecs-task-execution-role"
-  assume_role_policy = data.aws_iam_policy_document.ecs_task_execution_role.json
-}
-
-resource "aws_iam_role_policy_attachment" "ecs_task_execution_role" {
-  role       = aws_iam_role.ecs_task_execution_role.name
-  policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
+# ------------------------------------------------------------------------------
+# ECS (Elastic Container Service)
+# ------------------------------------------------------------------------------
+resource "aws_ecs_cluster" "main" {
+  name = "${var.project_name}-cluster"
 }
 
 resource "aws_ecs_task_definition" "main" {
@@ -278,58 +213,32 @@ resource "aws_ecs_task_definition" "main" {
     {
       name      = "${var.project_name}-container"
       image     = "${aws_ecr_repository.main.repository_url}:latest"
-      cpu       = 512
-      memory    = 1024
       essential = true
-      
       portMappings = [
         {
           containerPort = 3000
           hostPort      = 3000
-          protocol      = "tcp"
         }
       ]
-
-      environment = [
-        {
-          name  = "NODE_ENV"
-          value = "production"
-        },
-        {
-          name  = "NEXT_TELEMETRY_DISABLED"
-          value = "1"
-        }
-      ]
-
-      secrets = [
-        {
-          name      = "AUTH0_SECRET"
-          valueFrom = aws_secretsmanager_secret.app_secrets.arn
-        }
-      ]
-
       logConfiguration = {
         logDriver = "awslogs"
         options = {
           "awslogs-group"         = aws_cloudwatch_log_group.ecs.name
-          "awslogs-region"        = var.aws_region
+          "awslogs-region"        = var.region
           "awslogs-stream-prefix" = "ecs"
         }
       }
-
-      healthCheck = {
-        command     = ["CMD-SHELL", "curl -f http://localhost:3000/ || exit 1"]
-        interval    = 30
-        timeout     = 5
-        retries     = 3
-        startPeriod = 60
-      }
+      secrets = [
+        # ここにSecrets Managerから取得するキーとコンテナ内の環境変数名をマッピング
+        # 例: { name = "DATABASE_PASSWORD", valueFrom = "${aws_secretsmanager_secret.app_secrets.arn}:password::" }
+      ]
+      environment = [
+        { name = "NODE_ENV", value = "production" },
+        # ここでAPI_BASE_URLなどを直接設定するか、Secrets Managerから取得する
+        # { name = "API_BASE_URL", value = "http://your-backend-url" }
+      ]
     }
   ])
-
-  tags = {
-    Name = "${var.project_name}-task"
-  }
 }
 
 resource "aws_ecs_service" "main" {
@@ -340,9 +249,8 @@ resource "aws_ecs_service" "main" {
   launch_type     = "FARGATE"
 
   network_configuration {
-    subnets          = [aws_subnet.private_a.id, aws_subnet.private_b.id]
-    security_groups  = [aws_security_group.ecs_tasks.id]
-    assign_public_ip = false
+    security_groups = [aws_security_group.ecs_tasks.id]
+    subnets         = data.aws_subnets.private.ids
   }
 
   load_balancer {
@@ -352,46 +260,35 @@ resource "aws_ecs_service" "main" {
   }
 
   depends_on = [aws_lb_listener.http]
-
-  tags = {
-    Name = "${var.project_name}-service"
-  }
 }
 
-# S3 Bucket for Static Assets
+# ------------------------------------------------------------------------------
+# S3 for Static Assets
+# ------------------------------------------------------------------------------
 resource "aws_s3_bucket" "static_assets" {
   bucket = "${var.project_name}-static-assets"
-  
-  tags = {
-    Name = "${var.project_name}-static-assets"
-  }
 }
 
 resource "aws_s3_bucket_public_access_block" "static_assets" {
-  bucket = aws_s3_bucket.static_assets.id
-
-  block_public_acls       = false
-  block_public_policy     = false
-  ignore_public_acls      = false
-  restrict_public_buckets = false
+  bucket                  = aws_s3_bucket.static_assets.id
+  block_public_acls       = true
+  block_public_policy     = true
+  ignore_public_acls      = true
+  restrict_public_buckets = true
 }
 
 resource "aws_s3_bucket_policy" "static_assets" {
   bucket = aws_s3_bucket.static_assets.id
-  depends_on = [aws_s3_bucket_public_access_block.static_assets]
-
   policy = jsonencode({
-    Version = "2012-10-17"
-    Id      = "PolicyForCloudFrontPrivateContent"
+    Version = "2012-10-17",
     Statement = [
       {
-        Sid    = "AllowCloudFrontServicePrincipal"
-        Effect = "Allow"
+        Action    = "s3:GetObject",
+        Effect    = "Allow",
+        Resource  = "${aws_s3_bucket.static_assets.arn}/*",
         Principal = {
           Service = "cloudfront.amazonaws.com"
-        }
-        Action   = "s3:GetObject"
-        Resource = "${aws_s3_bucket.static_assets.arn}/*"
+        },
         Condition = {
           StringEquals = {
             "AWS:SourceArn" = aws_cloudfront_distribution.main.arn
@@ -402,7 +299,9 @@ resource "aws_s3_bucket_policy" "static_assets" {
   })
 }
 
-# CloudFront Distribution
+# ------------------------------------------------------------------------------
+# CloudFront
+# ------------------------------------------------------------------------------
 resource "aws_cloudfront_origin_access_control" "main" {
   name                              = "${var.project_name}-oac"
   description                       = "OAC for ${var.project_name}"
@@ -412,13 +311,12 @@ resource "aws_cloudfront_origin_access_control" "main" {
 }
 
 resource "aws_cloudfront_distribution" "main" {
-  comment = "${var.project_name} CloudFront Distribution"
+  comment = "${var.project_name} Distribution"
+  enabled = true
   
-  # Next.js App Origin (ECS)
   origin {
     domain_name = aws_lb.main.dns_name
-    origin_id   = "next-app"
-    
+    origin_id   = "alb-${var.project_name}"
     custom_origin_config {
       http_port              = 80
       https_port             = 443
@@ -427,85 +325,42 @@ resource "aws_cloudfront_distribution" "main" {
     }
   }
 
-  # Static Assets Origin (S3)
   origin {
     domain_name              = aws_s3_bucket.static_assets.bucket_regional_domain_name
-    origin_id                = "static-assets"
+    origin_id                = "s3-${var.project_name}"
     origin_access_control_id = aws_cloudfront_origin_access_control.main.id
   }
 
-  enabled             = true
-  is_ipv6_enabled     = true
-  default_root_object = "index.html"
-  web_acl_id          = aws_wafv2_web_acl.main.arn
-
-  # Default behavior (Next.js App)
   default_cache_behavior {
-    target_origin_id       = "next-app"
+    target_origin_id       = "alb-${var.project_name}"
     viewer_protocol_policy = "redirect-to-https"
-    allowed_methods        = ["DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT"]
+    allowed_methods        = ["GET", "HEAD", "OPTIONS", "PUT", "POST", "PATCH", "DELETE"]
     cached_methods         = ["GET", "HEAD"]
     compress               = true
-
     forwarded_values {
       query_string = true
-      headers      = ["Authorization", "CloudFront-Forwarded-Proto", "Host"]
-      
+      headers      = ["Authorization", "Host"]
       cookies {
         forward = "all"
       }
     }
-
-    min_ttl     = 0
-    default_ttl = 0
-    max_ttl     = 31536000
   }
 
-  # Static assets behavior
   ordered_cache_behavior {
     path_pattern           = "/_next/static/*"
-    target_origin_id       = "static-assets"
+    target_origin_id       = "s3-${var.project_name}"
     viewer_protocol_policy = "redirect-to-https"
-    allowed_methods        = ["GET", "HEAD"]
+    allowed_methods        = ["GET", "HEAD", "OPTIONS"]
     cached_methods         = ["GET", "HEAD"]
     compress               = true
-
     forwarded_values {
       query_string = false
-      
       cookies {
         forward = "none"
       }
     }
-
-    min_ttl     = 86400
-    default_ttl = 31536000
-    max_ttl     = 31536000
   }
-
-  # API behavior (no caching)
-  ordered_cache_behavior {
-    path_pattern           = "/api/*"
-    target_origin_id       = "next-app"
-    viewer_protocol_policy = "redirect-to-https"
-    allowed_methods        = ["DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT"]
-    cached_methods         = ["GET", "HEAD"]
-    compress               = true
-
-    forwarded_values {
-      query_string = true
-      headers      = ["*"]
-      
-      cookies {
-        forward = "all"
-      }
-    }
-
-    min_ttl     = 0
-    default_ttl = 0
-    max_ttl     = 0
-  }
-
+  
   restrictions {
     geo_restriction {
       restriction_type = "none"
@@ -515,17 +370,18 @@ resource "aws_cloudfront_distribution" "main" {
   viewer_certificate {
     cloudfront_default_certificate = true
   }
-
-  tags = {
-    Name = "${var.project_name}-cloudfront"
-  }
+  
+  web_acl_id = aws_wafv2_web_acl.main.arn
 }
 
-# WAF Web ACL
+# ------------------------------------------------------------------------------
+# WAF (Web Application Firewall)
+# ------------------------------------------------------------------------------
 resource "aws_wafv2_web_acl" "main" {
+  provider    = aws.virginia
   name        = "${var.project_name}-waf"
-  description = "WAF for ${var.project_name}"
   scope       = "CLOUDFRONT"
+  description = "WAF for ${var.project_name}"
 
   default_action {
     allow {}
@@ -533,143 +389,26 @@ resource "aws_wafv2_web_acl" "main" {
 
   visibility_config {
     cloudwatch_metrics_enabled = true
-    metric_name                 = "${var.project_name}-WebACL"
-    sampled_requests_enabled    = true
+    metric_name                = "${var.project_name}-WebACL"
+    sampled_requests_enabled   = true
   }
 
-  # Rate limiting rule
   rule {
-    name     = "RateLimitRule"
+    name     = "AWSManagedRulesCommonRuleSet"
     priority = 1
-
-    action {
-      block {}
-    }
-
-    statement {
-      rate_based_statement {
-        limit              = 2000
-        aggregate_key_type = "IP"
-      }
-    }
-
-    visibility_config {
-      cloudwatch_metrics_enabled = true
-      metric_name                 = "${var.project_name}-RateLimit"
-      sampled_requests_enabled    = true
-    }
-  }
-
-  # AWS Managed Rules - Common Rule Set
-  rule {
-    name     = "AWS-AWSManagedRulesCommonRuleSet"
-    priority = 2
-
     override_action {
       none {}
     }
-
     statement {
       managed_rule_group_statement {
-        name        = "AWSManagedRulesCommonRuleSet"
         vendor_name = "AWS"
+        name        = "AWSManagedRulesCommonRuleSet"
       }
     }
-
     visibility_config {
       cloudwatch_metrics_enabled = true
-      metric_name                 = "${var.project_name}-CommonRuleSet"
-      sampled_requests_enabled    = true
+      metric_name                = "${var.project_name}-CommonRuleSet"
+      sampled_requests_enabled   = true
     }
-  }
-
-  tags = {
-    Name = "${var.project_name}-waf"
-  }
-}
-
-# Add ECS Task Role for additional permissions
-resource "aws_iam_role" "ecs_task_role" {
-  name = "${var.project_name}-ecs-task-role"
-
-  assume_role_policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Action = "sts:AssumeRole"
-        Effect = "Allow"
-        Principal = {
-          Service = "ecs-tasks.amazonaws.com"
-        }
-      }
-    ]
-  })
-
-  tags = {
-    Name = "${var.project_name}-ecs-task-role"
-  }
-}
-
-# S3 access for static assets
-resource "aws_iam_role_policy" "ecs_task_s3_policy" {
-  name = "${var.project_name}-ecs-task-s3-policy"
-  role = aws_iam_role.ecs_task_role.id
-
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Effect = "Allow"
-        Action = [
-          "s3:GetObject",
-          "s3:PutObject",
-          "s3:DeleteObject"
-        ]
-        Resource = [
-          "${aws_s3_bucket.static_assets.arn}/*"
-        ]
-      }
-    ]
-  })
-}
-
-# Secrets Manager access
-resource "aws_iam_role_policy" "ecs_task_secrets_policy" {
-  name = "${var.project_name}-ecs-task-secrets-policy"
-  role = aws_iam_role.ecs_task_execution_role.id
-
-  policy = jsonencode({
-    Version = "2012-10-17"
-    Statement = [
-      {
-        Effect = "Allow"
-        Action = [
-          "secretsmanager:GetSecretValue"
-        ]
-        Resource = [
-          aws_secretsmanager_secret.app_secrets.arn
-        ]
-      }
-    ]
-  })
-}
-
-# App Secrets
-resource "aws_secretsmanager_secret" "app_secrets" {
-  name        = "${var.project_name}-app-secrets"
-  description = "Application secrets for ${var.project_name}"
-
-  tags = {
-    Name = "${var.project_name}-app-secrets"
-  }
-}
-
-# CloudWatch Log Group
-resource "aws_cloudwatch_log_group" "ecs" {
-  name              = "/ecs/${var.project_name}"
-  retention_in_days = 7
-
-  tags = {
-    Name = "${var.project_name}-ecs-logs"
   }
 } 

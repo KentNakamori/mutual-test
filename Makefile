@@ -113,7 +113,7 @@ tf-plan:
 
 tf-apply:
 	@echo "🚀 Terraformでインフラを適用します..."
-	AWS_PROFILE=admin terraform -chdir=./terraform apply
+	AWS_PROFILE=admin terraform -chdir=./terraform apply --auto-approve
 
 tf-destroy:
 	@echo "🗑️ Terraformでインフラを破棄します..."
