@@ -1,0 +1,141 @@
+name: Deploy to AWS with CloudFront and S3
+
+on:
+  push:
+    branches:
+      - main
+
+env:
+  # These values will be fetched from Terraform output during the workflow run
+  ECR_REPOSITORY: "placeholder"
+  ECS_SERVICE: "placeholder"
+  ECS_CLUSTER: "placeholder"
+  ECS_TASK_DEFINITION: "placeholder"
+  CONTAINER_NAME: "placeholder"
+  S3_BUCKET: "placeholder"
+  CLOUDFRONT_DISTRIBUTION_ID: "placeholder"
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    name: Deploy
+    runs-on: ubuntu-latest
+    environment: production
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v4
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: ${{ secrets.AWS_REGION }}
+
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        cache: 'npm'
+
+    - name: Install dependencies
+      run: npm ci
+
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@v3
+      with:
+        terraform_wrapper: false
+
+    - name: Terraform Init
+      id: init
+      run: terraform init
+      working-directory: ./terraform
+
+    - name: Get Terraform Outputs
+      id: tf-output
+      run: |
+        echo "ecr_repository=$(terraform output -raw ecr_repository_url)" >> $GITHUB_ENV
+        echo "ecs_service=$(terraform output -raw ecs_service_name)" >> $GITHUB_ENV
+        echo "ecs_cluster=$(terraform output -raw ecs_cluster_name)" >> $GITHUB_ENV
+        echo "s3_bucket=$(terraform output -raw s3_static_bucket_name)" >> $GITHUB_ENV
+        echo "cloudfront_distribution_id=$(terraform output -raw cloudfront_distribution_id)" >> $GITHUB_ENV
+        echo "container_name=${{ vars.PROJECT_NAME || 'mutual-test' }}-container" >> $GITHUB_ENV
+        echo "ecs_task_definition=${{ vars.PROJECT_NAME || 'mutual-test' }}-task" >> $GITHUB_ENV
+      working-directory: ./terraform
+
+    - name: Build Next.js application
+      run: npm run build
+      env:
+        NODE_ENV: production
+        NEXT_TELEMETRY_DISABLED: 1
+
+    - name: Login to Amazon ECR
+      id: login-ecr
+      uses: aws-actions/amazon-ecr-login@v2
+
+    - name: Build, tag, and push Docker image to ECR
+      id: build-image
+      env:
+        IMAGE_TAG: ${{ github.sha }}
+      run: |
+        echo "Building Docker image..."
+        docker build -t $ECR_REPOSITORY:$IMAGE_TAG .
+        echo "Pushing image to ECR..."
+        docker push $ECR_REPOSITORY:$IMAGE_TAG
+        echo "image=$ECR_REPOSITORY:$IMAGE_TAG" >> $GITHUB_OUTPUT
+
+    - name: Deploy static assets to S3
+      run: |
+        if [ -d ".next/static" ]; then
+          echo "Uploading static assets to S3..."
+          aws s3 sync .next/static s3://$S3_BUCKET/_next/static \
+            --delete \
+            --cache-control "public, max-age=31536000, immutable" \
+            --metadata-directive REPLACE
+          echo "Static assets uploaded successfully"
+        else
+          echo "No static assets found to upload"
+        fi
+
+    - name: Download ECS task definition
+      run: |
+        aws ecs describe-task-definition \
+          --task-definition $ECS_TASK_DEFINITION \
+          --query taskDefinition > task-definition.json
+
+    - name: Fill in the new image ID in the Amazon ECS task definition
+      id: task-def
+      uses: aws-actions/amazon-ecs-render-task-definition@v1
+      with:
+        task-definition: task-definition.json
+        container-name: ${{ env.CONTAINER_NAME }}
+        image: ${{ steps.build-image.outputs.image }}
+
+    - name: Deploy Amazon ECS task definition
+      uses: aws-actions/amazon-ecs-deploy-task-definition@v1
+      with:
+        task-definition: ${{ steps.task-def.outputs.task-definition }}
+        service: ${{ env.ECS_SERVICE }}
+        cluster: ${{ env.ECS_CLUSTER }}
+        wait-for-service-stability: true
+
+    - name: Invalidate CloudFront distribution
+      run: |
+        echo "Creating CloudFront invalidation..."
+        aws cloudfront create-invalidation \
+          --distribution-id $CLOUDFRONT_DISTRIBUTION_ID \
+          --paths "/*" \
+          --query 'Invalidation.Id' \
+          --output text
+        echo "CloudFront invalidation created successfully"
+
+    - name: Deployment Summary
+      run: |
+        echo "🚀 Deployment completed successfully!"
+        echo "📦 Docker Image: ${{ steps.build-image.outputs.image }}"
+        echo "🌐 CloudFront Distribution: ${{ env.CLOUDFRONT_DISTRIBUTION_ID }}"
+        echo "🪣 S3 Bucket: ${{ env.S3_BUCKET }}"
+        echo "⚙️  ECS Service: ${{ env.ECS_SERVICE }}" 

@@ -3,8 +3,7 @@ import {
   CompanyId, 
   QaId, 
   ChatId, 
-  FilterType,
-  DateString
+  FilterType
 } from './common';
 import { 
   User, 

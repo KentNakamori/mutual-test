@@ -2,7 +2,7 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { Search, ChevronDown, Plus, MessageSquare, FileText, Bell, User } from 'lucide-react';
+import { Search, Plus, MessageSquare, FileText } from 'lucide-react';
 import { ChatSession } from '@/types';
 
 interface InvestorChatSidebarProps {

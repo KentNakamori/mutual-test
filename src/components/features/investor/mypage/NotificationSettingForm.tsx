@@ -11,13 +11,17 @@ import Select from "../../../../components/ui/Select";
 
 
 const NotificationSettingForm: React.FC<NotificationSettingFormProps> = ({
-  initialSetting,
-  onSaveSetting,
+  initialSetting = {
+    enabled: false,
+    email: '',
+    frequency: 'daily'
+  },
+  onSaveNotification,
 }) => {
   const [formData, setFormData] = useState<NotificationSetting>(initialSetting);
   const [isSaving, setIsSaving] = useState(false);
 
-  const handleChange = (field: keyof NotificationSetting, value: any) => {
+  const handleChange = (field: keyof NotificationSetting, value: string | boolean) => {
     setFormData({ ...formData, [field]: value });
   };
 
@@ -25,9 +29,9 @@ const NotificationSettingForm: React.FC<NotificationSettingFormProps> = ({
     e.preventDefault();
     setIsSaving(true);
     try {
-      await onSaveSetting(formData);
+      await onSaveNotification(formData);
       alert("通知設定が更新されました。");
-    } catch (error) {
+    } catch {
       alert("通知設定の更新に失敗しました。");
     } finally {
       setIsSaving(false);

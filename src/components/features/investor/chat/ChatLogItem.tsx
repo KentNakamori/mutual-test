@@ -1,6 +1,6 @@
 // src/components/features/investor/chat/ChatLogItem.tsx
 import React, { useState } from 'react';
-import { ChatLog, ChatLogItemProps } from '@/types';
+import { ChatLogItemProps } from '@/types';
 import ConfirmDeleteDialog from './ConfirmDeleteDialog';
 import { useRouter } from 'next/navigation';
 import { Trash2 } from 'lucide-react';

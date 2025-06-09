@@ -159,7 +159,7 @@ export default function IrChatPage() {
     setMessages(prev => [...prev, aiMessage]);
 
     try {
-      let currentSessionId = selectedSessionId;
+      const currentSessionId = selectedSessionId;
       
       // セッションが選択されていない場合はエラー
       if (!currentSessionId) {

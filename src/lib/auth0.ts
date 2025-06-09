@@ -23,15 +23,5 @@ export const auth0 = new Auth0Client({
     authorizationParameters: {
         audience: process.env.AUTH0_AUDIENCE || 'https://api.local.dev',
         scope: 'openid profile email'
-    },
-    // セッション設定を追加
-    session: {
-        name: 'appSession',
-        cookie: {
-            httpOnly: true,
-            secure: process.env.NODE_ENV === 'production',
-            sameSite: 'lax',
-            maxAge: 24 * 60 * 60 // 24時間
-        }
     }
 });

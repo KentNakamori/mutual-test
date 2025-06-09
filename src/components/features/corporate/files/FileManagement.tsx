@@ -4,7 +4,6 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { FileList } from './FileList';
 import { FileUploadModal } from './FileUploadModal';
 import { PDFPreviewModal } from './PDFPreviewModal';
-import { Plus } from 'lucide-react';
 import {
   getCorporateFiles,
   uploadCorporateFile,
@@ -12,7 +11,6 @@ import {
 } from '@/lib/api';
 import { FileManagementResponse, FileCollection } from '@/types';
 import Select from '@/components/ui/Select';
-import UploadButton from '@/components/features/corporate/qa/UploadButton';
 
 export const FileManagement: React.FC = () => {
   const [fileData, setFileData] = useState<FileManagementResponse | null>(null);

@@ -2,7 +2,7 @@
 "use client";
 
 import React, { useEffect } from 'react';
-import { QA, QAResultListProps } from '@/types';
+import { QAResultListProps } from '@/types';
 import QACard from '@/components/ui/QACard';
 
 /**

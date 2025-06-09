@@ -3,7 +3,7 @@
 
 import React from 'react';
 import MessageList from '@/components/ui/MessageList';
-import { ChatMessage, ChatMessagesProps } from '@/types';
+import { ChatMessagesProps } from '@/types';
 
 const ChatMessages: React.FC<ChatMessagesProps> = ({ messages }) => {
   return (

@@ -1,7 +1,7 @@
 // components/ui/SearchBar.tsx
-import React, { useState, ReactNode } from 'react';
-import { Search, Filter, ChevronDown, ArrowUpDown, X } from 'lucide-react';
-import { FilterOption, SearchBarProps, EnhancedSearchBarProps, SortOption } from '@/types';
+import React, { useState } from 'react';
+import { Search, Filter, ChevronDown } from 'lucide-react';
+import { EnhancedSearchBarProps } from '@/types';
 import { getTagColor } from '@/components/ui/tagConfig';
 
 const SearchBar: React.FC<EnhancedSearchBarProps> = ({

@@ -38,7 +38,9 @@ export const useUserProfile = () => {
    /* --- 更新ミューテーション --- */
    const mutation = useMutation({
     mutationFn: (d: ProfileUpdateData) => updateInvestorUser(user!.sub, d),
-    onSuccess: (updated) => qc.setQueryData(['investorProfile'], updated.updatedProfile),
+    onSuccess: (updated) => {
+      qc.setQueryData(['investorProfile'], updated.updatedProfile);
+    },
   });
 
   return {

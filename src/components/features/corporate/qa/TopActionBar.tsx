@@ -5,7 +5,6 @@ import Button from '@/components/ui/Button';
 import { TopActionBarProps } from '@/types';
 import { GENRE_OPTIONS, QUESTION_ROUTE_OPTIONS } from '@/components/ui/tagConfig';
 import { FilterOption } from '@/types';
-import { Plus } from 'lucide-react';
 
 interface TopActionBarWithCreateProps extends TopActionBarProps {
   onCreateNew?: () => void;

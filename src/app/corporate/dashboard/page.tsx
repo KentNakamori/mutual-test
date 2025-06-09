@@ -5,7 +5,6 @@ import { useRouter } from 'next/navigation';
 import { useUser } from '@auth0/nextjs-auth0';             // ② 公式クライアントフック
 import {
   LayoutDashboard,
-  MessageCircleQuestion,
   MessageSquare,
   Settings,
   FileText,

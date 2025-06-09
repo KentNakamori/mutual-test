@@ -20,45 +20,41 @@ const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content, className 
   }, []);
 
   return (
-    <div className={`prose prose-sm max-w-none ${className}`}>
+    <div className={`prose prose-blue max-w-none ${className}`}>
       <ReactMarkdown
         remarkPlugins={[remarkGfm]}
         rehypePlugins={[rehypeHighlight]}
         components={{
-          // コードブロックのカスタマイズ
-          code: ({ node, className, children, ...props }: any) => {
-            const match = /language-(\w+)/.exec(className || '');
-            const language = match ? match[1] : '';
-            
-            // inlineかどうかを判定（親要素がpreでない場合はインライン）
-            const isInline = !props.className?.includes('language-');
-            
-            if (isInline) {
-              return (
-                <code 
-                  className="bg-gray-100 px-1 py-0.5 rounded text-sm font-mono" 
-                  {...props}
-                >
-                  {children}
-                </code>
-              );
-            }
-            
-            return (
-              <div className="my-4">
-                {language && (
-                  <div className="bg-gray-800 text-gray-300 px-3 py-1 text-xs font-mono rounded-t-md">
-                    {language}
-                  </div>
-                )}
-                <pre className={`${language ? 'rounded-t-none' : ''} bg-gray-900 text-gray-100 p-4 rounded-md overflow-x-auto`}>
-                  <code className={className} {...props}>
-                    {children}
-                  </code>
-                </pre>
-              </div>
-            );
-          },
+          // カスタムコンポーネントの設定
+          h1: ({ children }) => (
+            <h1 className="text-2xl font-bold mb-4 text-gray-900">
+              {children}
+            </h1>
+          ),
+          h2: ({ children }) => (
+            <h2 className="text-xl font-semibold mb-3 text-gray-800">
+              {children}
+            </h2>
+          ),
+          h3: ({ children }) => (
+            <h3 className="text-lg font-medium mb-2 text-gray-700">
+              {children}
+            </h3>
+          ),
+          p: ({ children }) => (
+            <p className="mb-4 text-gray-600 leading-relaxed">
+              {children}
+            </p>
+          ),
+           
+          code: ({ children, className: codeClassName, ...props }) => (
+            <code 
+              className={`bg-gray-100 px-1 py-0.5 rounded text-sm font-mono ${codeClassName || ''}`}
+              {...props}
+            >
+              {children}
+            </code>
+          ),
           // テーブルのスタイリング
           table: ({ children }) => (
             <div className="overflow-x-auto my-4">

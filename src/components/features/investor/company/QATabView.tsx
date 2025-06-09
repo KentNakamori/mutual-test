@@ -52,7 +52,13 @@ const QATabView: React.FC<QATabViewProps> = ({ companyId, companyName }) => {
         
         // 決算期
         if (searchFilters.fiscalPeriod) {
-          queryParams.append('fiscalPeriod', searchFilters.fiscalPeriod);
+          if (Array.isArray(searchFilters.fiscalPeriod)) {
+            searchFilters.fiscalPeriod.forEach((period) => {
+              if (period) queryParams.append('fiscalPeriod', period);
+            });
+          } else {
+            queryParams.append('fiscalPeriod', searchFilters.fiscalPeriod);
+          }
         }
         
         // ソート

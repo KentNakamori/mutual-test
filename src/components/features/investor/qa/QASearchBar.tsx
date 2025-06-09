@@ -1,10 +1,10 @@
 // components/features/qa/QASearchBar.tsx
 import React from 'react';
-import { FilterOption, QASearchBarProps } from '@/types';
+import { FilterOption, QaSearchBarProps } from '@/types';
 import SearchBar from '@/components/ui/SearchBar';
 import { GENRE_OPTIONS, QUESTION_ROUTE_OPTIONS } from '@/components/ui/tagConfig';
 
-const QASearchBar: React.FC<QASearchBarProps> = ({ 
+const QASearchBar: React.FC<QaSearchBarProps> = ({ 
   onSearchSubmit, 
   onSortChange, 
   initialKeyword = '', 
@@ -118,7 +118,9 @@ const QASearchBar: React.FC<QASearchBarProps> = ({
     };
     
     console.log('QASearchBar - 送信する検索条件:', searchParams);
-    onSearchSubmit(searchParams.keyword, searchParams);
+    if (onSearchSubmit) {
+      onSearchSubmit(searchParams.keyword, searchParams);
+    }
     
     // ソート変更の通知
     if (onSortChange && filters.sort) {

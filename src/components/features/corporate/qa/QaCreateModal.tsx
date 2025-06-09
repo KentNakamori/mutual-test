@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import Dialog from '@/components/ui/Dialog';
 import Input from '@/components/ui/Input';
-import Textarea from '@/components/ui/Textarea';
 import FiscalPeriodSelect from '@/components/ui/FiscalPeriodSelect';
 import AiGenerateButton from './AiGenerateButton';
 import Button from '@/components/ui/Button';

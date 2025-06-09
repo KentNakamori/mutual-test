@@ -5,18 +5,9 @@ import React from "react";
 import Tabs from "../../../../components/ui/Tabs";
 import ProfileForm from "./ProfileForm";
 import PasswordChangeForm from "./PasswordChangeForm";
+import NotificationSettingForm from "./NotificationSettingForm";
 import AccountDeleteForm from "./AccountDeleteForm";
-import { ProfileData } from "@/types";
-
-// MyPageTabMenuProps型を拡張
-export interface MyPageTabMenuProps {
-  activeTab: "profile" | "password" | "delete";
-  onTabChange: (tab: "profile" | "password" | "delete") => void;
-  profileData: ProfileData;
-  onSaveProfile: (updatedProfile: ProfileData) => Promise<void>;
-  onChangePassword: (currentPass: string, newPass: string) => Promise<void>;
-  onDeleteAccount: (password: string) => Promise<void>;
-}
+import { NotificationSetting, MyPageTabMenuProps } from "@/types";
 
 const MyPageTabMenu: React.FC<MyPageTabMenuProps> = ({
   activeTab,
@@ -24,6 +15,7 @@ const MyPageTabMenu: React.FC<MyPageTabMenuProps> = ({
   profileData,
   onSaveProfile,
   onChangePassword,
+  onSaveNotification,
   onDeleteAccount,
 }) => {
   // PasswordChangeFormとAccountDeleteFormに渡すハンドラーを型に合わせて調整
@@ -33,6 +25,10 @@ const MyPageTabMenu: React.FC<MyPageTabMenuProps> = ({
 
   const handleAccountDelete = async (password: string) => {
     return onDeleteAccount(password);
+  };
+
+  const handleNotificationSave = async (notification: NotificationSetting) => {
+    return onSaveNotification(notification);
   };
 
   const tabs = [
@@ -52,6 +48,11 @@ const MyPageTabMenu: React.FC<MyPageTabMenuProps> = ({
       content: <PasswordChangeForm onChangePassword={handlePasswordChange} />,
     },
     {
+      id: "notification",
+      label: "通知設定",
+      content: <NotificationSettingForm onSaveNotification={handleNotificationSave} />,
+    },
+    {
       id: "delete",
       label: "退会",
       content: <AccountDeleteForm onDeleteAccount={handleAccountDelete} />,
@@ -64,7 +65,7 @@ const MyPageTabMenu: React.FC<MyPageTabMenuProps> = ({
         tabs={tabs}
         activeTab={activeTab}
         onChangeTab={(tabId: string) =>
-          onTabChange(tabId as "profile" | "password" | "delete")
+          onTabChange(tabId as "profile" | "password" | "notification" | "delete")
         }
       />
     </div>

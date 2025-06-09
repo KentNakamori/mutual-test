@@ -1,10 +1,10 @@
 // src/components/features/corporate/settings/CompanyInfoForm.tsx
-import React, { useState, ChangeEvent } from 'react';
+import React, { useState } from 'react';
 import Input from '../../../ui/Input';
 import Button from '../../../ui/Button';
 import { CompanyInfo, CompanyInfoFormProps } from '../../../../types';
 import { updateCorporateCompanySettings } from '../../../../lib/api';
-import { Industry, INDUSTRY_OPTIONS, getIndustryLabel } from '@/types/industry';
+import { INDUSTRY_OPTIONS } from '@/types/industry';
 
 const CompanyInfoForm: React.FC<CompanyInfoFormProps> = ({ initialData, onSaveSuccess }) => {
   const [formData, setFormData] = useState<CompanyInfo>(initialData);

@@ -1,5 +1,5 @@
 // src/components/features/corporate/settings/AccountSettingsForm.tsx
-import React, { useState, ChangeEvent } from 'react';
+import React, { useState } from 'react';
 import Input from '../../../ui/Input';
 import Button from '../../../ui/Button';
 import { updateCorporateAccountSettings } from '../../../../lib/api';
@@ -53,7 +53,7 @@ const AccountSettingsForm: React.FC = () => {
 
   // 入力値の変更ハンドラ
   const handleInputChange = (setter: React.Dispatch<React.SetStateAction<string>>) => 
-    (e: ChangeEvent<HTMLInputElement>) => setter(e.target.value);
+    (value: string) => setter(value);
 
   return (
     <div className="max-w-lg mx-auto">

@@ -1,7 +1,6 @@
 //src\components\features\investor\company\ChatHistory.tsx
 
 import React, { useEffect, useRef } from 'react';
-import { ChatMessage } from '@/types/models';
 import { ChatMessagesProps } from '@/types/components/chat';
 import MarkdownRenderer from '@/components/ui/MarkdownRenderer';
 

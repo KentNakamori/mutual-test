@@ -1,7 +1,7 @@
 // src/components/features/corporate/dashboard/DashboardStats.tsx
 import React from "react";
 import Card from "@/components/ui/Card";
-import { Stat, DashboardStatsProps } from "@/types";
+import { DashboardStatsProps } from "@/types";
 
 /**
  * DashboardStats コンポーネント

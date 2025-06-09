@@ -4,10 +4,11 @@
 import React, { useState } from 'react';
 import { useUser } from '@auth0/nextjs-auth0';
 import { useRouter } from 'next/navigation';
+import { AccountDeleteFormProps } from '../../../../types';
 import Button from '../../../ui/Button';
 import Checkbox from '../../../ui/Checkbox';
 
-const AccountDeleteForm: React.FC = () => {
+const AccountDeleteForm: React.FC<AccountDeleteFormProps> = ({ onDeleteAccount }) => {
   const { user, isLoading } = useUser();
   const router = useRouter();
   const [agreed, setAgreed] = useState(false);

@@ -69,7 +69,7 @@ const CompaniesPage: React.FC = () => {
               role="investor"
               isOpen={true}
               onClose={() => setSelectedQA(null)}
-              onLike={(id: string) => console.log("いいね:", id)}
+              onLike={async (id: string) => console.log("いいね:", id)}
             />
           )}
         </main>
