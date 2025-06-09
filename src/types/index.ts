@@ -12,10 +12,10 @@ export * from './api';
 export * from './components';
 
 export interface InvestorRegistrationData {
-  displayName?: string;
+  display_name?: string;
   email: string;
-  investorType: 'institutional' | 'individual' | 'analyst' | 'other';
-  assetScale?: 'under_5m' | '5m_to_10m' | '10m_to_30m' | 'over_30m' | 'other';
+  investor_type: 'institutional' | 'individual' | 'analyst' | 'other';
+  asset_scale?: 'under_5m' | '5m_to_10m' | '10m_to_30m' | 'over_30m' | 'other';
   bio?: string;
 }
 

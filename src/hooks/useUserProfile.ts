@@ -5,21 +5,21 @@ import { getInvestorUser, updateInvestorUser } from '@/lib/api';
 
 export interface InvestorProfile {
   userId: string;
-  displayName: string;
+  display_name: string;
   email: string;
-  investorType: string;
+  investor_type: string;
   investmentExperience: string;
   companyName?: string;
-  assetManagementScale?: string;
+  asset_scale?: string;
   bio?: string;
 }
 
 export interface ProfileUpdateData {
-  displayName?: string;
-  investorType?: string;
+  display_name?: string;
+  investor_type?: string;
   investmentExperience?: string;
   companyName?: string;
-  assetManagementScale?: string;
+  asset_scale?: string;
   bio?: string;
 }
 

@@ -44,8 +44,8 @@ const AccountDeleteForm: React.FC = () => {
     setMessageType("");
 
     try {
-      // Auth0のアカウント削除APIをproxy経由で呼び出し
-      const response = await fetch('/api/proxy/investor/account/delete', {
+      // 直接JWTを送信してバックエンドとAuth0の両方を削除
+      const response = await fetch('/api/auth/delete-account', {
         method: 'DELETE',
         headers: {
           'Content-Type': 'application/json',
@@ -94,27 +94,13 @@ const AccountDeleteForm: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-        <h3 className="text-lg font-medium text-blue-800 mb-2">
-          Auth0アカウント削除について
-        </h3>
-        <p className="text-blue-700 text-sm mb-3">
-          アカウント削除はAuth0のManagement APIを通じて安全に実行されます。
-        </p>
-        <ul className="text-blue-700 text-sm space-y-1">
-          <li>• アカウント情報および関連データは完全に削除されます</li>
-          <li>• この操作は取り消すことができません</li>
-          <li>• 削除後は自動的にログアウトされます</li>
-          <li>• 同じメールアドレスで再度アカウントを作成することは可能です</li>
-        </ul>
-      </div>
+
 
       <div className="bg-red-50 border border-red-200 rounded-lg p-4">
         <h4 className="text-red-800 font-medium mb-2">⚠️ 重要な注意事項</h4>
         <ul className="text-red-700 text-sm space-y-1">
           <li>• 退会するとアカウント情報および関連データは完全に削除され、元に戻せません</li>
           <li>• 進行中の取引やチャット履歴も全て削除されます</li>
-          <li>• 削除前に必要なデータのバックアップを取ることをお勧めします</li>
         </ul>
       </div>
 
@@ -124,7 +110,6 @@ const AccountDeleteForm: React.FC = () => {
         </label>
         <div className="text-sm text-gray-600">
           <p><strong>メールアドレス:</strong> {user.email}</p>
-          <p><strong>ユーザーID:</strong> {user.sub}</p>
         </div>
       </div>
 
@@ -159,10 +144,10 @@ const AccountDeleteForm: React.FC = () => {
 
       <div className="text-xs text-gray-500 space-y-1">
         <p>※ アカウント削除後は、全てのサービスへのアクセスが不可能になります。</p>
-        <p>※ ソーシャルログイン（Google、Facebook等）をご利用の場合も、Auth0上のアカウントが削除されます。</p>
       </div>
     </div>
   );
 };
 
 export default AccountDeleteForm;
+
