@@ -248,10 +248,10 @@ export interface RegisterRequest {
   email: string;
   password: string;
   userName: string;
-  investorType: string;
+  investor_type: string;
   investmentExperience: string;
   companyName?: string;
-  assetManagementScale?: string;
+  asset_scale?: string;
 }
 
 /**

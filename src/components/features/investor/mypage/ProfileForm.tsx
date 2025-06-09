@@ -17,7 +17,7 @@ const investorTypeOptions = [
 ];
 
 // 資産管理規模のオプション
-const assetManagementScaleOptions = [
+const assetScaleOptions = [
   { label: '500万円未満', value: '500万円未満' },
   { label: '500万～1000万円', value: '500万～1000万円' },
   { label: '1000万～3000万円', value: '1000万～3000万円' },
@@ -32,7 +32,7 @@ const ProfileForm: React.FC<ProfileFormProps> = ({
   // 初期プロファイルの資産運用規模が未入力の場合は「その他」をデフォルトに設定
   const [formData, setFormData] = useState<ProfileData>({
     ...initialProfile,
-    assetManagementScale: initialProfile.assetManagementScale || 'その他'
+    asset_scale: initialProfile.asset_scale || 'その他'
   });
   const [isSaving, setIsSaving] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -42,7 +42,7 @@ const ProfileForm: React.FC<ProfileFormProps> = ({
   useEffect(() => {
     setFormData({
       ...initialProfile,
-      assetManagementScale: initialProfile.assetManagementScale || 'その他'
+      asset_scale: initialProfile.asset_scale || 'その他'
     });
   }, [initialProfile]);
 
@@ -93,8 +93,8 @@ const ProfileForm: React.FC<ProfileFormProps> = ({
       <div>
         <label className="block mb-1">表示名</label>
         <Input
-          value={formData.displayName || ''}
-          onChange={(value) => handleChange("displayName", value)}
+          value={formData.display_name || ''}
+          onChange={(value) => handleChange("display_name", value)}
           placeholder="表示名"
         />
       </div>
@@ -113,16 +113,16 @@ const ProfileForm: React.FC<ProfileFormProps> = ({
         <label className="block mb-1">投資家種別</label>
         <Select
           options={investorTypeOptions}
-          value={formData.investorType || ""}
-          onChange={(value) => handleChange("investorType", value)}
+          value={formData.investor_type|| ""}
+          onChange={(value) => handleChange("investor_type", value)}
         />
       </div>
       <div>
         <label className="block mb-1">資産運用規模</label>
         <Select
-          options={assetManagementScaleOptions}
-          value={formData.assetManagementScale || ""}
-          onChange={(value) => handleChange("assetManagementScale", value)}
+          options={assetScaleOptions}
+          value={formData.asset_scale || ""}
+          onChange={(value) => handleChange("asset_scale", value)}
         />
       </div>
       <div>

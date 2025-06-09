@@ -587,22 +587,22 @@ export async function deleteInvestorChat(
  * 
  * 出力:
  * - userId: ユーザーID
- * - displayName: 表示名
+ * - display_name: 表示名
  * - email: メールアドレス
- * - investorType: 投資家タイプ
+ * - investor_type: 投資家タイプ
  * - investmentExperience: 投資経験
  * - companyName: 会社名（オプション）
- * - assetManagementScale: 資産運用規模（オプション）
+ * - asset_scale: 資産運用規模（オプション）
  * - bio: 自己紹介（オプション）
  */
 export async function getInvestorUser(token: string): Promise<{
   userId: string;
-  displayName: string;
+  display_name: string;
   email: string;
-  investorType: string;
+  investor_type: string;
   investmentExperience: string;
   companyName?: string;
-  assetManagementScale?: string;
+  asset_scale?: string;
   bio?: string;
 }> {
   return apiFetch<any>(ENDPOINTS.investor.profile.get, "GET", undefined, token, true);
@@ -614,11 +614,11 @@ export async function getInvestorUser(token: string): Promise<{
  * 入力:
  * - token: 認証トークン
  * - updateData: 更新するユーザー情報
- *   - displayName: 表示名（オプション）
- *   - investorType: 投資家タイプ（オプション）
+ *   - display_name: 表示名（オプション）
+ *   - investor_type: 投資家タイプ（オプション）
  *   - investmentExperience: 投資経験（オプション）
  *   - companyName: 会社名（オプション）
- *   - assetManagementScale: 資産運用規模（オプション）
+ *   - asset_scale: 資産運用規模（オプション）
  *   - bio: 自己紹介（オプション）
  * 
  * 出力:
@@ -628,23 +628,23 @@ export async function getInvestorUser(token: string): Promise<{
 export async function updateInvestorUser(
   token: string, 
   updateData: {
-    displayName?: string;
-    investorType?: string;
+    display_name?: string;
+    investor_type?: string;
     investmentExperience?: string;
     companyName?: string;
-    assetManagementScale?: string;
+    asset_scale?: string;
     bio?: string;
   }
 ): Promise<{
   success: boolean;
   updatedProfile: {
     userId: string;
-    displayName: string;
+    display_name: string;
     email: string;
-    investorType: string;
+    investor_type: string;
     investmentExperience: string;
     companyName?: string;
-    assetManagementScale?: string;
+    asset_scale?: string;
     bio?: string;
   };
 }> {

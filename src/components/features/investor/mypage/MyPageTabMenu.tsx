@@ -45,7 +45,7 @@ const MyPageTabMenu: React.FC<MyPageTabMenuProps> = ({
     {
       id: "password",
       label: "パスワード変更",
-
+      content: <PasswordChangeForm />,
     },
     {
       id: "delete",

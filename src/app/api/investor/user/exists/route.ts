@@ -27,7 +27,7 @@ export async function GET() {
     }
 
     // プロキシ経由でバックエンドAPIを呼び出し（エンドポイント修正）
-    const backendUrl = process.env.BACKEND_URL || 'http://localhost:8000';
+    const backendUrl = process.env.API_BASE_URL || 'http://localhost:8000';
     const response = await fetch(`${backendUrl}/investor/users/exists`, {
       method: 'GET',
       headers: {

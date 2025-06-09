@@ -10,10 +10,10 @@ const InvestorRegistrationForm: React.FC = () => {
   const router = useRouter();
   
   const [formData, setFormData] = useState<InvestorRegistrationData>({
-    displayName: '',
+    display_name: '',
     email: user?.email || '',
-    investorType: 'individual',
-    assetScale: 'other',
+    investor_type: 'individual',
+    asset_scale: 'other',
     bio: '',
   });
   
@@ -39,8 +39,8 @@ const InvestorRegistrationForm: React.FC = () => {
     const newErrors: Record<string, string> = {};
     
     // 必須項目チェック
-    if (!data.investorType) {
-      newErrors.investorType = '投資家種別を選択してください';
+    if (!data.investor_type) {
+      newErrors.investor_type = '投資家種別を選択してください';
     }
     
     // メールアドレス形式チェック
@@ -49,8 +49,8 @@ const InvestorRegistrationForm: React.FC = () => {
     }
     
     // 文字数制限
-    if (data.displayName && data.displayName.length > 50) {
-      newErrors.displayName = '表示名は50文字以内で入力してください';
+    if (data.display_name && data.display_name.length > 50) {
+      newErrors.display_name = '表示名は50文字以内で入力してください';
     }
     
     if (data.bio && data.bio.length > 500) {
@@ -111,19 +111,19 @@ const InvestorRegistrationForm: React.FC = () => {
     <form onSubmit={handleSubmit} className="space-y-6">
       {/* 表示名 */}
       <div>
-        <label htmlFor="displayName" className="block text-sm font-medium text-gray-700">
+        <label htmlFor="display_name" className="block text-sm font-medium text-gray-700">
           表示名（任意）
         </label>
         <input
           type="text"
-          id="displayName"
-          value={formData.displayName}
-          onChange={(e) => handleInputChange('displayName', e.target.value)}
+          id="display_name"
+          value={formData.display_name}
+          onChange={(e) => handleInputChange('display_name', e.target.value)}
           className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
           placeholder="表示名を入力してください"
         />
-        {errors.displayName && (
-          <p className="mt-1 text-sm text-red-600">{errors.displayName}</p>
+        {errors.display_name && (
+          <p className="mt-1 text-sm text-red-600">{errors.display_name}</p>
         )}
       </div>
 
@@ -148,13 +148,13 @@ const InvestorRegistrationForm: React.FC = () => {
 
       {/* 投資家種別 */}
       <div>
-        <label htmlFor="investorType" className="block text-sm font-medium text-gray-700">
+        <label htmlFor="investor_type" className="block text-sm font-medium text-gray-700">
           投資家種別 <span className="text-red-500">*</span>
         </label>
         <select
-          id="investorType"
-          value={formData.investorType}
-          onChange={(e) => handleInputChange('investorType', e.target.value as any)}
+          id="investor_type"
+          value={formData.investor_type}
+          onChange={(e) => handleInputChange('investor_type', e.target.value as any)}
           className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
         >
           {investorTypeOptions.map(option => (
@@ -163,20 +163,20 @@ const InvestorRegistrationForm: React.FC = () => {
             </option>
           ))}
         </select>
-        {errors.investorType && (
-          <p className="mt-1 text-sm text-red-600">{errors.investorType}</p>
+        {errors.investor_type && (
+          <p className="mt-1 text-sm text-red-600">{errors.investor_type}</p>
         )}
       </div>
 
       {/* 資産運用規模 */}
       <div>
-        <label htmlFor="assetScale" className="block text-sm font-medium text-gray-700">
+        <label htmlFor="asset_scale" className="block text-sm font-medium text-gray-700">
           資産運用規模（任意）
         </label>
         <select
-          id="assetScale"
-          value={formData.assetScale || ''}
-          onChange={(e) => handleInputChange('assetScale', e.target.value as any)}
+          id="asset_scale"
+          value={formData.asset_scale || ''}
+          onChange={(e) => handleInputChange('asset_scale', e.target.value as any)}
           className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
         >
           <option value="">選択してください</option>
@@ -186,8 +186,8 @@ const InvestorRegistrationForm: React.FC = () => {
             </option>
           ))}
         </select>
-        {errors.assetScale && (
-          <p className="mt-1 text-sm text-red-600">{errors.assetScale}</p>
+        {errors.asset_scale && (
+          <p className="mt-1 text-sm text-red-600">{errors.asset_scale}</p>
         )}
       </div>
 

@@ -99,10 +99,10 @@ export async function investorRegister(requestData: {
   email: string;
   password: string;
   userName: string;
-  investorType: string;
+  investor_type: string;
   investmentExperience: string;
   companyName?: string;
-  assetManagementScale?: string;
+  asset_scale?: string;
 }): Promise<{ userId: string; message: string }> {
   return apiFetch<{ userId: string; message: string }>(ENDPOINTS.investor.auth.register, "POST", requestData);
 }
@@ -113,5 +113,5 @@ export async function investorRegister(requestData: {
  * @returns 削除処理の結果（成功/失敗とメッセージ）
  */
 export async function deleteInvestorAccount(token: string): Promise<{ success: boolean; message: string }> {
-  return apiFetch<{ success: boolean; message: string }>(ENDPOINTS.investor.auth.me, "DELETE", undefined, token);
+  return apiFetch<{ success: boolean; message: string }>(ENDPOINTS.investor.profile.get, "DELETE", undefined, token);
 } 

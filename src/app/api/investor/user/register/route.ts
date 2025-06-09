@@ -13,7 +13,7 @@ export async function POST(request: Request) {
     const userData: InvestorRegistrationData = await request.json();
     
     // バリデーション
-    if (!userData.investorType) {
+    if (!userData.investor_type) {
       return NextResponse.json({ error: '投資家種別は必須です' }, { status: 400 });
     }
 
@@ -41,9 +41,9 @@ export async function POST(request: Request) {
     // バックエンドAPIに送信するデータを準備
     const registrationData = {
       email: userData.email, // フロントエンドから送られてきたemailをそのまま使用
-      display_name: userData.displayName || null,
-      investor_type: investorTypeMap[userData.investorType] || userData.investorType,
-      asset_scale: userData.assetScale ? assetScaleMap[userData.assetScale] : 'その他',
+      display_name: userData.display_name || null,
+      investor_type: investorTypeMap[userData.investor_type] || userData.investor_type,
+      asset_scale: userData.asset_scale ? assetScaleMap[userData.asset_scale] : 'その他',
       bio: userData.bio || null,
     };
 
@@ -65,7 +65,7 @@ export async function POST(request: Request) {
     }
 
     // プロキシ経由でバックエンドAPIを呼び出し（エンドポイント修正）
-    const backendUrl = process.env.BACKEND_URL || 'http://localhost:8000';
+    const backendUrl = process.env.API_BASE_URL || 'http://localhost:8000';
     const response = await fetch(`${backendUrl}/investor/user/register`, {
       method: 'POST',
       headers: {
