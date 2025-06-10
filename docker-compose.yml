@@ -3,7 +3,6 @@ services:
   frontend:
     build:
       context: .
-      target: deps
       dockerfile: Dockerfile
     ports:
       - "3000:3000"
@@ -11,15 +10,14 @@ services:
       - .:/app
       - /app/node_modules
       - /app/.next
-    working_dir: /app
     environment:
       - NODE_ENV=development
       - NEXT_TELEMETRY_DISABLED=1
       - WATCHPACK_POLLING=true
       - API_BASE_URL=http://mutual-backend:8000
-    env_file:
-      - .env.local
     command: npm run dev
+    stdin_open: true
+    tty: true
     networks:
       - mutual-network
 

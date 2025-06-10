@@ -83,7 +83,9 @@ export interface FollowedCompaniesPageProps {
  * - ログイン表示
  * - ログイン処理
  */
-export interface InvestorLoginPageProps {}
+export interface InvestorLoginPageProps {
+  // ログインページのプロパティを必要に応じて追加
+}
 
 /**
  * ゲストログインボタン（ゲストログイン用）
@@ -98,7 +100,9 @@ export interface GuestLoginButtonProps {
  * サインアップリンク（サインアップ用）
  * - サインアップリンク表示
  */
-export interface LinkToSignupProps {}
+export interface LinkToSignupProps {
+  // サインアップリンクのプロパティを必要に応じて追加
+}
 
 /**
  * トップページ（トップ表示用）

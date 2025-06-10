@@ -99,7 +99,7 @@ export async function DELETE(request: NextRequest) {
         if (errorData.message) {
           errorMessage = errorData.message;
         }
-      } catch (e) {
+      } catch (_e) {
         // JSON解析に失敗した場合はデフォルトメッセージを使用
       }
 
@@ -108,8 +108,8 @@ export async function DELETE(request: NextRequest) {
         { status: 400 }
       );
     }
-  } catch (error) {
-    console.error('Account deletion API error:', error);
+  } catch (_e) {
+    console.error('Account deletion API error:', _e);
     return NextResponse.json(
       { message: 'サーバーエラーが発生しました。' },
       { status: 500 }

@@ -1,4 +1,4 @@
-.PHONY: help setup dev build test clean lint docker-build docker-run tf-init tf-plan tf-apply tf-destroy deploy backup
+.PHONY: help setup dev dev-docker build test clean lint lint-fix docker-build docker-run docker-dev docker-stop docker-restart docker-logs docker-status docker-network-check tf-init tf-plan tf-apply tf-destroy deploy backup
 
 # ==============================================================================
 # HELP
@@ -11,19 +11,21 @@ help:
 	@echo ""
 	@echo "  開発 & テスト:"
 	@echo "    make dev             - Next.js開発サーバーを起動する (ホットリロード)"
-	@echo "    make dev-with-backend - バックエンドと連携した開発サーバーを起動する"
+	@echo "    make dev-docker      - Dockerで開発サーバーを起動する (ホットリロード)"
 	@echo "    make build           - 本番用ビルドを実行する"
 	@echo "    make lint            - ESLintを使ってコードの静的解析を実行する"
+	@echo "    make lint-fix        - ESLintの自動修正を実行する"
 	@echo "    make test            - テストを実行する"
 	@echo "    make clean           - ビルドキャッシュをクリーンアップする"
 	@echo ""
 	@echo "  Docker:"
-	@echo "    make docker-build         - Next.jsアプリケーションのDockerイメージをビルドする"
-	@echo "    make docker-run           - mutual-networkでDockerコンテナを起動する"
-	@echo "    make docker-stop          - Dockerコンテナを停止・削除する"
-	@echo "    make docker-restart       - Dockerコンテナを再起動する"
-	@echo "    make docker-logs          - フロントエンドコンテナのログを表示する"
-	@echo "    make docker-status        - 開発環境のコンテナ状況を確認する"
+	@echo "    make docker-build    - Next.jsアプリケーションのDockerイメージをビルドする"
+	@echo "    make docker-run      - mutual-networkでDockerコンテナを起動する"
+	@echo "    make docker-dev      - 開発用Dockerコンテナを起動する (ホットリロード)"
+	@echo "    make docker-stop     - Dockerコンテナを停止・削除する"
+	@echo "    make docker-restart  - Dockerコンテナを再起動する"
+	@echo "    make docker-logs     - フロントエンドコンテナのログを表示する"
+	@echo "    make docker-status   - 開発環境のコンテナ状況を確認する"
 	@echo "    make docker-network-check - バックエンドとの接続をテストする"
 	@echo ""
 	@echo "  Terraform (インフラ管理):"
@@ -75,25 +77,19 @@ dev:
 	@echo "🚀 開発サーバーを起動します (ホットリロード)..."
 	npm run dev
 
-dev-with-backend:
-	@echo "🚀 バックエンドと連携した開発サーバーを起動します..."
-	@echo "📡 API_BASE_URL を http://localhost:8000 に設定します"
-	@if ! docker ps | grep -q mutual-backend; then \
-		echo "❌ バックエンドが起動していません"; \
-		echo "バックエンドリポジトリで 'make dev-start' を実行してください"; \
-		echo "または、単独で開発する場合は 'make dev' を使用してください"; \
-		exit 1; \
-	fi
-	@echo "✅ バックエンドとの連携を確認しました"
-	API_BASE_URL=http://localhost:8000 npm run dev
-
-build:
-	@echo "📦 本番用ビルドを実行します..."
-	npm run build
+dev-docker:
+	@echo "🚀 Dockerで開発サーバーを起動します (ホットリロード)..."
+	@echo "📡 既存のコンテナがあれば停止・削除します..."
+	docker-compose down --remove-orphans 2>/dev/null || true
+	docker-compose up --build
 
 lint:
 	@echo "🔍 ESLintでコードをチェックします..."
 	npm run lint
+
+lint-fix:
+	@echo "🔧 ESLintの自動修正を実行します..."
+	npx eslint --fix "src/**/*.{ts,tsx}"
 
 test:
 	@echo "🧪 テストを実行します..."
@@ -126,9 +122,11 @@ docker-run:
 		mutual-frontend:latest
 	@echo "✅ フロントエンドコンテナが起動しました: http://localhost:3000"
 
+docker-dev: dev-docker
+
 docker-stop:
-	@echo "🛑 Dockerコンテナを停止・削除します..."
-	docker rm -f mutual-frontend 2>/dev/null || echo "コンテナ mutual-frontend は既に停止済みです"
+	@echo "🛑 docker-composeコンテナを停止・削除します..."
+	docker-compose down --remove-orphans
 
 docker-restart: docker-stop docker-run
 	@echo "🔄 Dockerコンテナを再起動しました"
@@ -185,7 +183,7 @@ tf-destroy:
 	AWS_PROFILE=admin terraform -chdir=./terraform destroy
 
 tf-output:
-	@echo "📊 Terraformの出力値を表示します..."
+	@echo "�� Terraformの出力値を表示します..."
 	AWS_PROFILE=admin terraform -chdir=./terraform output
 
 # ==============================================================================

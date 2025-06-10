@@ -48,7 +48,6 @@ export async function apiFetch<T>(
         throw new Error(`API Error: ${response.status} ${response.statusText}`);
       }
       console.log(`API ${method} Response from ${url} (status ${response.status}): No JSON content`);
-      // @ts-ignore
       return { message: `Operation successful with status ${response.status}` } as T;
     }
 

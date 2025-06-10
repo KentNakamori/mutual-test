@@ -51,7 +51,7 @@ export async function POST(request: NextRequest) {
         if (errorData.error_description) {
           errorMessage = errorData.error_description;
         }
-      } catch (e) {
+      } catch (_e) {
         // JSON解析に失敗した場合はデフォルトメッセージを使用
       }
 

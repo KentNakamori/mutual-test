@@ -105,7 +105,9 @@ export interface UpdateUserResponse {
  * - Q&Aいいね
  * - Q&Aブックマーク
  */
-export interface GetQAListRequest extends FilterType {}
+export interface GetQAListRequest extends FilterType {
+  // 追加のフィルター条件があればここに定義
+}
 export interface GetQAListResponse {
   items: QA[];
   totalCount: number;
@@ -201,7 +203,9 @@ export interface MailDraftResponse {
  * - パスワード変更
  * - アカウント削除
  */
-export interface UpdateProfileRequest extends ProfileData {}
+export interface UpdateProfileRequest extends ProfileData {
+  // ProfileDataを継承し、必要に応じて追加フィールドを定義
+}
 export interface UpdateProfileResponse {
   success: boolean;
   updatedProfile: ProfileData;

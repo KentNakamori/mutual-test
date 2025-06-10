@@ -52,7 +52,9 @@ export interface QATabViewProps {
  * Q&A検索ページ（Q&A検索用）
  * - Q&A検索表示
  */
-export interface QASearchPageProps {}
+export interface QASearchPageProps {
+  // Q&A検索ページのプロパティを必要に応じて追加
+}
 
 /**
  * Q&A検索バー（Q&A検索用）
