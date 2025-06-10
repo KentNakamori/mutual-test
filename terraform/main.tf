@@ -17,24 +17,78 @@ data "aws_vpc" "existing" {
   id = var.vpc_id
 }
 
-data "aws_subnets" "private" {
+data "aws_subnets" "all" {
   filter {
     name   = "vpc-id"
     values = [data.aws_vpc.existing.id]
-  }
-  tags = {
-    "aws-cdk:subnet-type" = "Private"
   }
 }
 
-data "aws_subnets" "public" {
-  filter {
-    name   = "vpc-id"
-    values = [data.aws_vpc.existing.id]
+data "aws_route_tables" "all" {
+  vpc_id = data.aws_vpc.existing.id
+}
+
+locals {
+  # より簡単な方法：Internet Gatewayを持つルートテーブルを探す
+  route_tables_with_routes = {
+    for rt_id in data.aws_route_tables.all.ids :
+    rt_id => data.aws_route_table.all_tables[rt_id]
   }
-  tags = {
-    "aws-cdk:subnet-type" = "Public"
-  }
+
+  # Internet Gatewayを持つルートテーブル（パブリック）
+  public_route_table_ids = [
+    for rt_id, rt in local.route_tables_with_routes :
+    rt_id if length([
+      for route in rt.routes :
+      route if route.gateway_id != null && startswith(route.gateway_id, "igw-")
+    ]) > 0
+  ]
+
+  # NAT Gatewayを持つルートテーブル（プライベート）
+  private_route_table_ids = [
+    for rt_id, rt in local.route_tables_with_routes :
+    rt_id if length([
+      for route in rt.routes :
+      route if route.nat_gateway_id != null
+    ]) > 0
+  ]
+
+  # パブリックサブネット（最低限2つのAZに分散させる）
+  public_subnet_ids = slice(
+    flatten([
+      for rt_id in local.public_route_table_ids : [
+        for assoc in data.aws_route_table.all_tables[rt_id].associations :
+        assoc.subnet_id if assoc.subnet_id != ""
+      ]
+    ]),
+    0,
+    min(2, length(flatten([
+      for rt_id in local.public_route_table_ids : [
+        for assoc in data.aws_route_table.all_tables[rt_id].associations :
+        assoc.subnet_id if assoc.subnet_id != ""
+      ]
+    ])))
+  )
+
+  # プライベートサブネット（最低限2つのAZに分散させる）
+  # プライベートサブネットがない場合はパブリックサブネットを使用
+  private_subnet_candidates = flatten([
+    for rt_id in local.private_route_table_ids : [
+      for assoc in data.aws_route_table.all_tables[rt_id].associations :
+      assoc.subnet_id if assoc.subnet_id != ""
+    ]
+  ])
+  
+  private_subnet_ids = length(local.private_subnet_candidates) > 0 ? slice(
+    local.private_subnet_candidates,
+    0,
+    min(2, length(local.private_subnet_candidates))
+  ) : local.public_subnet_ids
+}
+
+data "aws_route_table" "all_tables" {
+  for_each = toset(data.aws_route_tables.all.ids)
+  route_table_id = each.key
 }
 
 # ------------------------------------------------------------------------------
@@ -74,8 +128,8 @@ data "aws_iam_policy_document" "ecs_task_assume_role" {
     principals {
       type        = "Service"
       identifiers = ["ecs-tasks.amazonaws.com"]
-    }
   }
+}
 }
 
 resource "aws_iam_role" "ecs_task_execution_role" {
@@ -114,6 +168,18 @@ resource "aws_iam_role_policy" "secrets_manager_access" {
 resource "aws_secretsmanager_secret" "app_secrets" {
   name        = "${var.project_name}-app-secrets"
   description = "Application secrets for ${var.project_name}"
+}
+
+resource "aws_secretsmanager_secret_version" "app_secrets" {
+  secret_id = aws_secretsmanager_secret.app_secrets.id
+  secret_string = jsonencode({
+    AUTH0_ISSUER_BASE_URL = "https://dev-ldw81lf4gyh8azw6.jp.auth0.com/"
+    AUTH0_DOMAIN         = "dev-ldw81lf4gyh8azw6.jp.auth0.com"
+    AUTH0_CLIENT_ID      = "Y5p4Fn2rllKLs4M2zoIShqIhn4JdKZzP"
+    AUTH0_CLIENT_SECRET  = "RWAG_gPJ-1ZPoXfkefvFMPSlhRL7e86iM_hHRDsJNb_FLkMwfyWdGccFCMOopoA5"
+    AUTH0_AUDIENCE       = "https://api.local.dev"
+    AUTH0_SECRET         = "this-is-a-secret-value-at-least-32-characters-long-for-production-use"
+  })
 }
 
 # ------------------------------------------------------------------------------
@@ -167,7 +233,7 @@ resource "aws_lb" "main" {
   internal           = false
   load_balancer_type = "application"
   security_groups    = [aws_security_group.lb.id]
-  subnets            = data.aws_subnets.public.ids
+  subnets            = local.public_subnet_ids
 }
 
 resource "aws_lb_target_group" "main" {
@@ -176,9 +242,17 @@ resource "aws_lb_target_group" "main" {
   protocol    = "HTTP"
   vpc_id      = data.aws_vpc.existing.id
   target_type = "ip"
-
+  
   health_check {
-    path = "/"
+    enabled             = true
+    healthy_threshold   = 2
+    interval            = 30
+    matcher             = "200"
+    path                = "/"
+    port                = "traffic-port"
+    protocol            = "HTTP"
+    timeout             = 5
+    unhealthy_threshold = 2
   }
 }
 
@@ -229,13 +303,18 @@ resource "aws_ecs_task_definition" "main" {
         }
       }
       secrets = [
-        # ここにSecrets Managerから取得するキーとコンテナ内の環境変数名をマッピング
-        # 例: { name = "DATABASE_PASSWORD", valueFrom = "${aws_secretsmanager_secret.app_secrets.arn}:password::" }
+        { name = "AUTH0_ISSUER_BASE_URL", valueFrom = "${aws_secretsmanager_secret.app_secrets.arn}:AUTH0_ISSUER_BASE_URL::" },
+        { name = "AUTH0_DOMAIN", valueFrom = "${aws_secretsmanager_secret.app_secrets.arn}:AUTH0_DOMAIN::" },
+        { name = "AUTH0_CLIENT_ID", valueFrom = "${aws_secretsmanager_secret.app_secrets.arn}:AUTH0_CLIENT_ID::" },
+        { name = "AUTH0_CLIENT_SECRET", valueFrom = "${aws_secretsmanager_secret.app_secrets.arn}:AUTH0_CLIENT_SECRET::" },
+        { name = "AUTH0_AUDIENCE", valueFrom = "${aws_secretsmanager_secret.app_secrets.arn}:AUTH0_AUDIENCE::" },
+        { name = "AUTH0_SECRET", valueFrom = "${aws_secretsmanager_secret.app_secrets.arn}:AUTH0_SECRET::" }
       ]
       environment = [
         { name = "NODE_ENV", value = "production" },
-        # ここでAPI_BASE_URLなどを直接設定するか、Secrets Managerから取得する
-        # { name = "API_BASE_URL", value = "http://your-backend-url" }
+        { name = "API_BASE_URL", value = "https://d9dahhwcea92g.cloudfront.net" },
+        { name = "AUTH0_BASE_URL", value = "https://${aws_cloudfront_distribution.main.domain_name}" },
+        { name = "APP_BASE_URL", value = "https://${aws_cloudfront_distribution.main.domain_name}" }
       ]
     }
   ])
@@ -249,8 +328,9 @@ resource "aws_ecs_service" "main" {
   launch_type     = "FARGATE"
 
   network_configuration {
-    security_groups = [aws_security_group.ecs_tasks.id]
-    subnets         = data.aws_subnets.private.ids
+    security_groups  = [aws_security_group.ecs_tasks.id]
+    subnets          = local.public_subnet_ids
+    assign_public_ip = true
   }
 
   load_balancer {
@@ -348,13 +428,14 @@ resource "aws_cloudfront_distribution" "main" {
 
   ordered_cache_behavior {
     path_pattern           = "/_next/static/*"
-    target_origin_id       = "s3-${var.project_name}"
+    target_origin_id       = "alb-${var.project_name}"
     viewer_protocol_policy = "redirect-to-https"
     allowed_methods        = ["GET", "HEAD", "OPTIONS"]
     cached_methods         = ["GET", "HEAD"]
     compress               = true
     forwarded_values {
       query_string = false
+      headers      = ["Host"]
       cookies {
         forward = "none"
       }

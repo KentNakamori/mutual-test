@@ -10,15 +10,21 @@ help:
 	@echo "    make setup           - 依存関係のインストールと.env.localファイルの初期設定を行う"
 	@echo ""
 	@echo "  開発 & テスト:"
-	@echo "    make dev             - Next.js開発サーバーを起動する"
+	@echo "    make dev             - Next.js開発サーバーを起動する (ホットリロード)"
+	@echo "    make dev-with-backend - バックエンドと連携した開発サーバーを起動する"
 	@echo "    make build           - 本番用ビルドを実行する"
 	@echo "    make lint            - ESLintを使ってコードの静的解析を実行する"
 	@echo "    make test            - テストを実行する"
 	@echo "    make clean           - ビルドキャッシュをクリーンアップする"
 	@echo ""
 	@echo "  Docker:"
-	@echo "    make docker-build    - Next.jsアプリケーションのDockerイメージをビルドする"
-	@echo "    make docker-run      - ビルドしたDockerコンテナをローカルで実行する"
+	@echo "    make docker-build         - Next.jsアプリケーションのDockerイメージをビルドする"
+	@echo "    make docker-run           - mutual-networkでDockerコンテナを起動する"
+	@echo "    make docker-stop          - Dockerコンテナを停止・削除する"
+	@echo "    make docker-restart       - Dockerコンテナを再起動する"
+	@echo "    make docker-logs          - フロントエンドコンテナのログを表示する"
+	@echo "    make docker-status        - 開発環境のコンテナ状況を確認する"
+	@echo "    make docker-network-check - バックエンドとの接続をテストする"
 	@echo ""
 	@echo "  Terraform (インフラ管理):"
 	@echo "    make tf-init         - Terraformを初期化する"
@@ -66,8 +72,20 @@ setup:
 # DEVELOPMENT & TESTING
 # ==============================================================================
 dev:
-	@echo "🚀 開発サーバーを起動します..."
+	@echo "🚀 開発サーバーを起動します (ホットリロード)..."
 	npm run dev
+
+dev-with-backend:
+	@echo "🚀 バックエンドと連携した開発サーバーを起動します..."
+	@echo "📡 API_BASE_URL を http://localhost:8000 に設定します"
+	@if ! docker ps | grep -q mutual-backend; then \
+		echo "❌ バックエンドが起動していません"; \
+		echo "バックエンドリポジトリで 'make dev-start' を実行してください"; \
+		echo "または、単独で開発する場合は 'make dev' を使用してください"; \
+		exit 1; \
+	fi
+	@echo "✅ バックエンドとの連携を確認しました"
+	API_BASE_URL=http://localhost:8000 npm run dev
 
 build:
 	@echo "📦 本番用ビルドを実行します..."
@@ -97,8 +115,53 @@ docker-build:
 
 docker-run:
 	@echo "🚀 Dockerコンテナを起動します (ポート3000)..."
+	@echo "📡 mutual-network ネットワークに接続します..."
 	@echo "停止するには Ctrl+C を押してください。"
-	docker run --env-file .env.local -p 3000:3000 mutual-frontend:latest
+	docker run -d \
+		--name mutual-frontend \
+		--network mutual-network \
+		-p 3000:3000 \
+		--env-file .env.local \
+		-e API_BASE_URL=http://mutual-backend:8000 \
+		mutual-frontend:latest
+	@echo "✅ フロントエンドコンテナが起動しました: http://localhost:3000"
+
+docker-stop:
+	@echo "🛑 Dockerコンテナを停止・削除します..."
+	docker rm -f mutual-frontend 2>/dev/null || echo "コンテナ mutual-frontend は既に停止済みです"
+
+docker-restart: docker-stop docker-run
+	@echo "🔄 Dockerコンテナを再起動しました"
+
+docker-logs:
+	@echo "📋 フロントエンドコンテナのログを表示します..."
+	docker logs mutual-frontend -f
+
+docker-status:
+	@echo "📊 開発環境の状況を確認します..."
+	@echo "\n🐳 アクティブなコンテナ:"
+	@docker ps --filter "name=mutual-frontend" --filter "name=mutual-backend" --filter "name=mongodb" --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}" || echo "コンテナが見つかりません"
+	@echo "\n🌐 mutual-network の状況:"
+	@docker network inspect mutual-network --format "{{range .Containers}}{{.Name}}: {{.IPv4Address}}\n{{end}}" 2>/dev/null || echo "⚠️  mutual-network が見つかりません。バックエンドで 'make dev-start' を実行してください"
+
+docker-network-check:
+	@echo "🔍 ネットワーク接続をテストします..."
+	@if docker network ls | grep -q mutual-network; then \
+		echo "✅ mutual-network が存在します"; \
+		if docker ps | grep -q mutual-backend; then \
+			echo "✅ mutual-backend コンテナが起動中です"; \
+			if docker ps | grep -q mutual-frontend; then \
+				echo "🧪 フロントエンド→バックエンド接続テスト:"; \
+				docker exec mutual-frontend curl -s -o /dev/null -w "%{http_code}" http://mutual-backend:8000/ 2>/dev/null | grep -q 200 && echo "✅ 接続成功" || echo "❌ 接続失敗"; \
+			else \
+				echo "⚠️  mutual-frontend コンテナが起動していません"; \
+			fi; \
+		else \
+			echo "❌ mutual-backend コンテナが起動していません"; \
+		fi; \
+	else \
+		echo "❌ mutual-network が存在しません。バックエンドで 'make dev-start' を実行してください"; \
+	fi
 
 # ==============================================================================
 # TERRAFORM
