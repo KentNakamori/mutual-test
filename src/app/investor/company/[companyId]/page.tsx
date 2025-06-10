@@ -1,7 +1,7 @@
 // src/app/investor/company/[companyId]/page.tsx
 "use client";
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, Suspense } from 'react';
 import { useParams, useRouter, useSearchParams } from 'next/navigation';
 import { useUser } from "@auth0/nextjs-auth0";
 import Sidebar from '@/components/common/sidebar';
@@ -26,7 +26,8 @@ interface CompanyWithFollow extends Company {
   isFollowed?: boolean;
 }
 
-const CompanyPage: React.FC = () => {
+// useSearchParamsを使用するコンポーネントを分離
+const CompanyPageContent: React.FC = () => {
   const params = useParams();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -188,6 +189,21 @@ const CompanyPage: React.FC = () => {
         </div>
       </main>
     </div>
+  );
+};
+
+const CompanyPage: React.FC = () => {
+  return (
+    <Suspense fallback={
+      <div className="flex items-center justify-center h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500 mx-auto mb-4"></div>
+          <p className="text-gray-600">読み込み中...</p>
+        </div>
+      </div>
+    }>
+      <CompanyPageContent />
+    </Suspense>
   );
 };
 

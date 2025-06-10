@@ -1,5 +1,3 @@
-import { ReactNode } from 'react';
-
 /**
  * ナビゲーションリンク（ナビゲーション用）
  * - メニュー項目定義
@@ -328,15 +326,6 @@ export interface MessageListProps {
 }
 
 /**
- * パスワード変更フォーム（パスワード変更用）
- * - パスワード変更
- * - 変更処理
- */
-export interface PasswordChangeFormProps {
-  onChangePassword: (currentPassword: string, newPassword: string) => Promise<void>;
-}
-
-/**
  * 削除確認ダイアログ（削除操作確認用）
  * - 削除確認表示
  * - 削除操作
@@ -347,13 +336,4 @@ export interface ConfirmDeleteDialogProps {
   description?: string;
   onConfirm: () => void;
   onCancel: () => void;
-}
-
-/**
- * アカウント削除フォーム（アカウント削除用）
- * - アカウント削除
- * - 削除処理
- */
-export interface AccountDeleteFormProps {
-  onDeleteAccount: (password: string) => Promise<void>;
 } 

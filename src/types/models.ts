@@ -1,4 +1,3 @@
-import { ReactNode } from 'react';
 import { 
   UserId, 
   CompanyId, 
@@ -7,8 +6,7 @@ import {
   DocumentId, 
   DraftId, 
   FileId, 
-  DateString,
-  Timestamp
+  DateString
 } from './common';
 import { Industry } from './industry';
 
@@ -166,7 +164,7 @@ export interface CompanyInfo {
   employeeCount?: number;
   websiteUrl?: string;
   contactEmail?: string;
-  [key: string]: any;
+  [key: string]: string | number | Industry | undefined;
 }
 
 /**
@@ -222,6 +220,18 @@ export interface ProfileData {
   bio?: string;
   investmentExperience?: string;
   asset_scale?: asset_scale;
+}
+
+/**
+ * 通知設定（通知管理用）
+ * - 通知設定の有効/無効
+ * - 通知先メールアドレス
+ * - 通知頻度
+ */
+export interface NotificationSetting {
+  enabled: boolean;
+  email?: string;
+  frequency?: 'realtime' | 'daily' | 'weekly';
 }
 
 /**

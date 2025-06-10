@@ -1,11 +1,9 @@
 // /components/ui/QACard.tsx
 import React, { useState } from 'react';
-import ReactMarkdown from 'react-markdown';
-import { QA, QACardProps } from '@/types';
+import { QACardProps } from '@/types';
 import { getTagColor } from '@/components/ui/tagConfig';
 import { 
-  Calendar, Users, FileText, HelpCircle, CheckCircle, 
-  BookOpen, Bookmark, Clock, Tag, Activity, Route
+  Calendar, Users, FileText, HelpCircle, Bookmark, Activity, Route
 } from 'lucide-react';
 import { useUser } from '@auth0/nextjs-auth0';
 import { useRouter } from 'next/navigation';

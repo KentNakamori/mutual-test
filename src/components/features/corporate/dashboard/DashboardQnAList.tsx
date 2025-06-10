@@ -33,8 +33,7 @@ const DashboardQnAList: React.FC<DashboardQnAListProps> = ({ publishedQAs }) => 
           role="corporate"
           isOpen={true}
           onClose={() => setSelectedQA(null)}
-          onLike={(id: string) => {
-            // ここにいいね操作の処理を実装（例：API呼び出し）
+          onLike={async (id: string) => {
             console.log("いいね", id);
           }}
         />

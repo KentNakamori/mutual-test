@@ -1,6 +1,6 @@
 // components/ui/Tabs.tsx
 import React, { useState } from 'react';
-import{ Tab, TabsProps } from '@/types';
+import{ TabsProps } from '@/types';
 
 
 
@@ -13,7 +13,9 @@ const Tabs: React.FC<TabsProps> = ({ tabs, activeTab, onChangeTab }) => {
 
   const handleTabChange = (tabId: string) => {
     setCurrentTab(tabId);
-    onChangeTab && onChangeTab(tabId);
+    if (onChangeTab) {
+      onChangeTab(tabId);
+    }
   };
 
   const currentTabContent = tabs.find(tab => tab.id === currentTab)?.content;

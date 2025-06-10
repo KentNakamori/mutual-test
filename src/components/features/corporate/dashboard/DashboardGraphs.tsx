@@ -11,7 +11,7 @@ import {
 } from "recharts";
 
 // 型定義ファイルから GraphDataItem および DashboardGraphsProps をインポート
-import { GraphDataItem, DashboardGraphsProps } from "@/types";
+import { DashboardGraphsProps } from "@/types";
 
 /**
  * DashboardGraphs コンポーネント

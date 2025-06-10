@@ -1,11 +1,11 @@
 // src/components/features/investor/companies/CompanyListing.tsx
 import React, { useState, useEffect } from 'react';
-import { Heart, Filter, Search, Grid, List, ChevronDown, ExternalLink } from 'lucide-react';
+import { Filter, Search, Grid, List, ChevronDown } from 'lucide-react';
 import { usePathname } from 'next/navigation';
 import { Industry, INDUSTRY_OPTIONS, getIndustryLabel } from '@/types/industry';
-import GuestRestrictedContent from '@/components/features/investor/common/GuestRestrictedContent';
 import { useUser } from '@auth0/nextjs-auth0';
 import { getFullImageUrl } from '@/lib/utils/imageUtils';//画像のURLを取得する関数仮
+import { getInvestorCompanies } from '@/lib/api/investor'; // getInvestorCompaniesをインポート
 
 // APIレスポンスの型定義
 interface CompanyItem {
@@ -37,7 +37,7 @@ const CompanyListing: React.FC<CompanyListingProps> = ({ isFollowedOnly = false,
   const { user, error: userError, isLoading: userLoading } = useUser();
   // ゲスト判定: ユーザーがいない、ローディングが終了、エラーがない
   const isGuest = !user && !userLoading && !userError;
-  const token = undefined;
+  const token = user?.sub; // user.subをトークンとして使用
   
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [showGenreFilter, setShowGenreFilter] = useState(false);
@@ -58,51 +58,27 @@ const CompanyListing: React.FC<CompanyListingProps> = ({ isFollowedOnly = false,
       setError(null);
       
       try {
-        const response = await fetch('/api/proxy/investor/companies');
+        // 認証状態がロード中の場合は何もしない
+        if (userLoading) return;
+
+        const data = await getInvestorCompanies(token); // 修正: getInvestorCompaniesを使用
         
-        // 401エラー（認証エラー）の場合は空の配列を返す（ゲストとして扱う）
-        if (response.status === 401) {
-          console.warn('認証エラー: ゲストユーザーとして処理します');
-          setCompanies([]);
-          // コールバック呼び出し（空の配列）
-          if (onCompaniesLoaded) {
-            onCompaniesLoaded([]);
-          }
-          return;
-        }
-        
-        if (!response.ok) {
-          throw new Error('データの取得に失敗しました');
-        }
-        
-        const data = await response.json();
         console.log('取得した企業データ:', data);
         
-        // dataが配列の場合とオブジェクトの場合の両方に対応
-        const companiesList = Array.isArray(data) ? data : data.companies || [];
+        const companiesList = data.companies || [];
         
-        // フォロー済みフィルターを適用
         const filteredData = isFollowedOnly 
           ? companiesList.filter((company: CompanyItem) => company.isFollowed === true)
           : companiesList;
         
         setCompanies(filteredData);
         
-        // トラッキング用にコールバック呼び出し
         if (onCompaniesLoaded) {
           onCompaniesLoaded(filteredData.map((company: CompanyItem) => ({ companyId: company.companyId })));
         }
       } catch (err) {
         console.error('企業データ取得エラー:', err);
-        
-        // ネットワークエラーなどの場合
-        if (err instanceof TypeError && err.message.includes('fetch')) {
-          setError('ネットワークエラー: サーバーに接続できません');
-        } else {
-          setError(err instanceof Error ? err.message : '企業データの取得に失敗しました');
-        }
-        
-        // エラー時もコールバック呼び出し（空の配列）
+        setError(err instanceof Error ? err.message : '企業データの取得に失敗しました');
         if (onCompaniesLoaded) {
           onCompaniesLoaded([]);
         }
@@ -111,9 +87,8 @@ const CompanyListing: React.FC<CompanyListingProps> = ({ isFollowedOnly = false,
       }
     };
 
-    // ゲストユーザーでもデータを取得
     fetchCompanies();
-  }, [isFollowedOnly, onCompaniesLoaded]);
+  }, [isFollowedOnly, onCompaniesLoaded, userLoading, token]); // 依存配列にuserLoadingとtokenを追加
   
   // フィルターとソートのオプション
   const genres = ['すべて', ...INDUSTRY_OPTIONS.map(option => option.value)];

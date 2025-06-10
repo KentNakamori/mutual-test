@@ -3,7 +3,7 @@
 
 import React from 'react';
 import CompanyInfoForm from './CompanyInfoForm';
-import { CompanyInfo, SettingsTabsProps} from '../../../../types';
+import { SettingsTabsProps} from '../../../../types';
 
 const SettingsTabs: React.FC<SettingsTabsProps> = ({ companyInfo, refetchCompanyInfo }) => {
   return (

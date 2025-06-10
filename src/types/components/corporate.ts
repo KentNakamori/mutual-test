@@ -65,29 +65,13 @@ export interface AccountSettingsFormProps {
 }
 
 /**
- * パスワード変更フォーム（パスワード変更用）
- * - パスワード変更
- */
-export interface PasswordChangeFormProps {
-  onChangePassword: (data: { currentPassword: string; newPassword: string }) => Promise<void>;
-}
-
-/**
  * 通知設定フォーム（通知設定用）
  * - 通知設定編集
  * - 保存処理
  */
 export interface NotificationSettingFormProps {
-  initialSetting: NotificationSetting;
-  onSaveSetting: (setting: NotificationSetting) => Promise<void>;
-}
-
-/**
- * アカウント削除フォーム（アカウント削除用）
- * - アカウント削除
- */
-export interface AccountDeleteFormProps {
-  onDeleteAccount: (data: { password: string }) => Promise<void>;
+  initialSetting?: NotificationSetting;
+  onSaveNotification: (setting: NotificationSetting) => Promise<void>;
 }
 
 /**

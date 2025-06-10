@@ -1,6 +1,6 @@
 // src/components/features/corporate/qa/QaTableRow.tsx
 import React from 'react';
-import { QA, QaTableRowProps} from '@/types';
+import { QaTableRowProps} from '@/types';
 import Button from '@/components/ui/Button';
 
 

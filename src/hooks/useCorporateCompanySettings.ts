@@ -1,6 +1,5 @@
 import { useQuery } from '@tanstack/react-query';
 import { getCorporateCompanySettings } from '../lib/api';
-import { CompanyInfo } from '../types';
 import { useUser } from "@auth0/nextjs-auth0";
 
 export const useCorporateCompanySettings = () => {

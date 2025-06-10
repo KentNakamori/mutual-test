@@ -7,7 +7,7 @@ import { NextRequest, NextResponse } from 'next/server';
  *     FastAPI: GET /admin/user/companies
  *     レスポンス: CompanyItem[]（id, name）
  */
-export async function GET(req: NextRequest) {
+export async function GET(_req: NextRequest) {
   const backendUrl = process.env.API_BASE_URL;
 
   // 環境変数チェック

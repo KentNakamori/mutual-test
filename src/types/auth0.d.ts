@@ -1,54 +1,57 @@
-declare module '@auth0/nextjs-auth0/client' {
-  export interface UserProfile {
-    sub?: string;
-    name?: string;
-    given_name?: string;
-    family_name?: string;
-    middle_name?: string;
+declare global {
+  namespace NodeJS {
+    interface ProcessEnv {
+      AUTH0_SECRET: string;
+      AUTH0_BASE_URL: string;
+      AUTH0_ISSUER_BASE_URL: string;
+      AUTH0_CLIENT_ID: string;
+      AUTH0_CLIENT_SECRET: string;
+      AUTH0_SCOPE: string;
+      
+      // その他の環境変数
+      NEXT_PUBLIC_API_URL: string;
+      NEXT_PUBLIC_ENVIRONMENT: string;
+      POSTGRES_URL: string;
+      POSTGRES_PRISMA_URL: string;
+      POSTGRES_URL_NO_SSL: string;
+      POSTGRES_URL_NON_POOLING: string;
+      POSTGRES_USER: string;
+      POSTGRES_HOST: string;
+      POSTGRES_PASSWORD: string;
+      POSTGRES_DATABASE: string;
+      DATABASE_URL: string;
+      
+      // AWS環境変数
+      AWS_ACCESS_KEY_ID?: string;
+      AWS_SECRET_ACCESS_KEY?: string;
+      AWS_REGION?: string;
+    }
+  }
+}
+
+declare module '@auth0/nextjs-auth0' {
+  interface UserProfile {
+    // 標準のUserProfileプロパティ
     nickname?: string;
-    preferred_username?: string;
-    profile?: string;
+    name?: string;
     picture?: string;
-    website?: string;
+    updated_at?: string;
     email?: string;
     email_verified?: boolean;
-    gender?: string;
-    birthdate?: string;
-    zoneinfo?: string;
-    locale?: string;
-    phone_number?: string;
-    phone_number_verified?: boolean;
-    address?: string;
-    updated_at?: string;
-    [key: string]: any;
+    sub: string;
+    
+    // カスタムプロパティ
+    'mutual-test/role'?: string;
+    'mutual-test/company_id'?: string;
+    'mutual-test/permissions'?: string[];
   }
-
-  export interface UserContext {
-    user?: UserProfile;
-    error?: Error;
-    isLoading: boolean;
+  
+  interface Session {
+    user: UserProfile;
+    accessToken?: string;
+    refreshToken?: string;
+    idToken?: string;
   }
+}
 
-  export function (): UserContext;
-  export function UserProvider({ children }: { children: React.ReactNode }): JSX.Element;
-} 
-
-declare module '@auth0/nextjs-auth0/edge' {
-  import { NextRequest, NextResponse } from 'next/server';
-
-  export interface HandleLoginOptions {
-    authorizationParams?: {
-      scope?: string;
-      audience?: string;
-      client_id?: string;
-      [key: string]: string | undefined;
-    };
-    returnTo?: string;
-    getLoginState?: (req: NextRequest) => any;
-  }
-
-  export function handleLogin(
-    req: NextRequest,
-    options?: HandleLoginOptions
-  ): NextResponse;
-} 
+export {}; 

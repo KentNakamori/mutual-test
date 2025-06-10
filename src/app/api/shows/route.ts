@@ -4,7 +4,7 @@ import { auth0 } from '@/lib/auth0';
 
 export const GET = async () => {
   try {
-    const session = await auth0.getSession();
+    const _session = await auth0.getSession();
    
     const { token: accessToken } = await auth0.getAccessToken();
     console.log('[debug] send token =>', accessToken);   // ★開発時だけ

@@ -1,5 +1,5 @@
 import { ChatMessage, ChatLog, ChatSession } from '../models';
-import { ChatId, CompanyId, FilterType } from '../common';
+import { CompanyId, FilterType } from '../common';
 
 /**
  * チャット履歴（チャット履歴表示用）

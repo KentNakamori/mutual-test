@@ -1,5 +1,4 @@
-import { QA } from '../models';
-import { FilterType } from '../common';
+import { QA, Company } from '../models';
 
 /**
  * Q&Aカード（Q&A表示用）
@@ -22,20 +21,22 @@ export interface QACardProps {
 }
 
 /**
- * Q&A詳細モーダル（Q&A詳細表示用）
+ * Q&A詳細モーダル（Q&A詳細表示・編集用）
  * - Q&A詳細表示
- * - Q&A操作
+ * - Q&A編集（企業向け）
+ * - いいね機能
  */
-export interface QADetailModalProps {
-  qa: QA;
+export interface QaDetailModalProps {
+  qa: QA | null;
   isOpen: boolean;
   onClose: () => void;
-  role: QACardRole;
-  onLike?: (qaId: string) => void;
-  onEdit?: (qaId: string) => void;
-  onDelete?: (qaId: string) => void;
+  role?: string;
+  onLike?: (qaId: string) => Promise<void>;
+  onEdit?: (qa: QA) => Promise<void>;
+  onDelete?: (qaId: string) => Promise<void>;
   onCancelEdit?: () => void;
-  onSaveEdit?: (updatedQa: QA) => void;
+  onSaveEdit?: (qa: QA) => Promise<void>;
+  mode?: 'view' | 'edit';
 }
 
 /**
@@ -51,18 +52,27 @@ export interface QATabViewProps {
  * Q&A検索ページ（Q&A検索用）
  * - Q&A検索表示
  */
-export interface QASearchPageProps {}
+export interface QASearchPageProps {
+  // Q&A検索ページのプロパティを必要に応じて追加
+}
 
 /**
  * Q&A検索バー（Q&A検索用）
- * - 検索表示
- * - 検索処理
+ * - キーワード検索
+ * - フィルター機能
+ * - ソート機能
  */
-export interface QASearchBarProps {
-  onSearchSubmit: (keyword: string, filters: FilterType) => void;
-  onSortChange?: (sortBy: string) => void;
+export interface QaSearchBarProps {
+  onSearchSubmit?: (keyword: string, newFilters: any) => void;
+  onSortChange?: (sortValue: string) => void;
   initialKeyword?: string;
-  initialFilters?: FilterType;
+  initialFilters?: any;
+  onSearch?: (query: string) => void;
+  onFilter?: (filters: QaFilterOptions) => void;
+  onSort?: (sortOption: QaSortOption) => void;
+  placeholder?: string;
+  filters?: QaFilterOptions;
+  sortOption?: QaSortOption;
 }
 
 /**
@@ -128,6 +138,8 @@ export interface QaListCardsWithFilterProps {
     reviewStatus?: 'DRAFT' | 'PENDING' | 'PUBLISHED';
     page?: number;
     limit?: number;
+    totalCount?: number;
+    totalPages?: number;
   }) => void;
 }
 
@@ -165,16 +177,58 @@ export interface GeneratedQaListProps {
 }
 
 /**
- * トップアクションバーのプロパティ
+ * Q&Aフィルターオプション
  */
-export interface TopActionBarProps {
-  onSearch: (params: {
-    query: string;
-    genre?: string[];
-    question_route?: string;
-    fiscalPeriod?: string[];
-    sort?: 'createdAt' | 'likeCount';
-    order?: 'asc' | 'desc';
-    reviewStatus?: 'DRAFT' | 'PENDING' | 'PUBLISHED';
-  }) => void;
+export interface QaFilterOptions {
+  companies?: string[];
+  genres?: string[];
+  fiscalPeriods?: string[];
+  status?: ('draft' | 'published' | 'archived')[];
+  dateRange?: {
+    from?: string;
+    to?: string;
+  };
+}
+
+/**
+ * Q&Aソートオプション
+ */
+export interface QaSortOption {
+  field: 'createdAt' | 'updatedAt' | 'likeCount' | 'title';
+  order: 'asc' | 'desc';
+}
+
+/**
+ * Q&A作成・編集フォーム（企業向けQ&A管理用）
+ * - Q&A作成
+ * - Q&A編集
+ * - 下書き保存
+ */
+export interface QaFormProps {
+  qa?: QA;
+  onSave: (qa: Partial<QA>) => Promise<void>;
+  onCancel: () => void;
+  companies: Company[];
+  mode: 'create' | 'edit';
+}
+
+/**
+ * Q&A一覧コンポーネント（Q&A表示用）
+ * - Q&A一覧表示
+ * - ページング
+ * - 検索・フィルター連携
+ */
+export interface QaListProps {
+  qas?: QA[];
+  items?: QA[];
+  totalCount?: number;
+  currentPage?: number;
+  pageSize?: number;
+  onPageChange?: (page: number) => void;
+  onQaSelect?: (qa: QA) => void;
+  onSelectQA?: (qa: QA) => void;
+  onQaEdit?: (qa: QA) => void;
+  onQaDelete?: (qaId: string) => void;
+  mode?: 'investor' | 'corporate';
+  loading?: boolean;
 } 

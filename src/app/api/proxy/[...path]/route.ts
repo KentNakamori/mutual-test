@@ -121,7 +121,7 @@ async function handler(
             body: body,
             // duplex: 'half' を追加 (特にPOST/PUT/PATCHでリクエストボディがある場合)
             // Node.js v18.14.0以降またはEdge Runtimeで有効
-            // @ts-ignore
+            // @ts-expect-error - duplex property is not typed in RequestInit but supported in Node.js
             duplex: (req.method !== 'GET' && req.method !== 'HEAD') ? 'half' : undefined,
         });
 

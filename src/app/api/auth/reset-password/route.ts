@@ -54,8 +54,8 @@ export async function POST(request: NextRequest) {
             { status: 404 }
           );
         }
-      } catch (e) {
-        // JSON解析に失敗した場合は一般的なエラーメッセージ
+      } catch (_e) {
+        // JSON解析に失敗した場合はデフォルトメッセージを使用
       }
       
       return NextResponse.json(

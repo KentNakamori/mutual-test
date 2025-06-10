@@ -1,7 +1,7 @@
 // src/components/features/corporate/qa/QaListCards.tsx
 import React, { useState, useCallback } from "react";
 import QACard from "@/components/ui/QACard";
-import { QA, QaListCardsWithFilterProps } from "@/types";
+import { QaListCardsWithFilterProps } from "@/types";
 import StatusFilter from "./StatusFilter";
 
 const QaListCards: React.FC<QaListCardsWithFilterProps> = ({ 

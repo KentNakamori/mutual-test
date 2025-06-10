@@ -1,7 +1,7 @@
 // src/components/features/corporate/qa/GeneratedQaList.tsx
 import React, { useState } from 'react';
 import Button from '@/components/ui/Button';
-import { QA, GeneratedQaListProps} from '@/types';
+import { GeneratedQaListProps} from '@/types';
 import Input from '@/components/ui/Input';
 import Textarea from '@/components/ui/Textarea';
 

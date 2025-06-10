@@ -35,9 +35,8 @@ import {
  * - DashboardData: ダッシュボードに表示するデータ
  */
 export async function getCorporateDashboard(query: { period: string }): Promise<DashboardData> {
-  const qs = new URLSearchParams(query).toString();
-  const endpoint = `${ENDPOINTS.corporate.dashboard}?${qs}`;
-  return apiFetch<DashboardData>(endpoint, "GET", undefined, undefined, true, true);
+  const queryString = new URLSearchParams(query).toString();
+  return apiFetch<DashboardData>(`/corporate/dashboard?${queryString}`, "GET", undefined, undefined, true);
 }
 
 /**

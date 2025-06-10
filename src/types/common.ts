@@ -1,7 +1,7 @@
 /** ISO8601形式の文字列（日付データの保存・表示用） */
 export type DateString = string;
 /** Epochタイムスタンプ（ミリ秒）（時間計算・比較用） */
-export type Timestamp = number;
+export type Timestamp = string;
 
 /** エンティティIDのエイリアス（型の一貫性と可読性向上のため） */
 export type UserId = string;
@@ -65,10 +65,10 @@ export interface ApiResult<T> {
 
 // APIレスポンス型
 export interface ApiResponse<T> {
-  results: T[];
-  totalCount: number;
-  page: number;
-  limit: number;
+  success: boolean;
+  data?: T;
+  error?: string;
+  message?: string;
 }
 
 // 検索関連の型
@@ -82,4 +82,33 @@ export interface SearchParams {
   order: 'asc' | 'desc';
   page: number;
   limit: number;
+}
+
+// API関連の共通型
+export interface PaginationParams {
+  page?: number;
+  limit?: number;
+  offset?: number;
+}
+
+export interface PaginatedResponse<T> {
+  data: T[];
+  pagination: {
+    page: number;
+    limit: number;
+    total: number;
+    totalPages: number;
+    hasNext: boolean;
+    hasPrev: boolean;
+  };
+}
+
+// ソート・フィルタリング
+export interface SortParams {
+  sortBy?: string;
+  sortOrder?: 'asc' | 'desc';
+}
+
+export interface FilterParams {
+  [key: string]: string | number | boolean | string[] | number[] | undefined;
 } 

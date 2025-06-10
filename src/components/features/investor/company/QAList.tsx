@@ -1,21 +1,38 @@
 //src\components\features\investor\company\QAList.tsx
 
 import React from 'react';
-import { QAItem } from './QATabView';
-import QACard from './QACard';
-import { QAListProps } from '../../../../types';
+import QACard from '../../../ui/QACard';
+import { QaListProps, QA } from '../../../../types';
 
 
 
 /**
  * QAList コンポーネント
- * QAの各項目を QACard としてグリッド表示します。
+ * Q&A項目のリストを表示します。
  */
-const QAList: React.FC<QAListProps> = ({ items, onSelectQA }) => {
+const QAList: React.FC<QaListProps> = ({ 
+  items, 
+  onSelectQA 
+}) => {
+  // propsのバリデーション
+  if (!items || items.length === 0) {
+    return (
+      <div className="text-center py-8 text-gray-500">
+        Q&Aデータがありません
+      </div>
+    );
+  }
+
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-      {items.map((qa) => (
-        <QACard key={qa.id} qa={qa} onClick={() => onSelectQA(qa)} />
+    <div className="space-y-4">
+      {items.map((qa: QA) => (
+        <QACard 
+          key={qa.qaId} 
+          mode="preview"
+          role="investor"
+          qa={qa} 
+          onSelect={() => onSelectQA && onSelectQA(qa)} 
+        />
       ))}
     </div>
   );

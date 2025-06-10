@@ -11,7 +11,7 @@ import QaDetailModal from "@/components/ui/QaDetailModal";
 import QaCreateModal from "@/components/features/corporate/qa/QaCreateModal";
 import { QA } from "@/types";
 import { LayoutDashboard, Edit, MessageSquare, Settings, FileText } from 'lucide-react';
-import { searchCorporateQa, createCorporateQa, updateCorporateQa, deleteCorporateQa } from "@/lib/api";
+import { searchCorporateQa, deleteCorporateQa } from "@/lib/api";
 import { useUser } from "@auth0/nextjs-auth0";
 
 
@@ -256,7 +256,14 @@ const QaPage: React.FC = () => {
               {error}
             </div>
           )}
-          <TopActionBar onSearch={handleSearch} onCreateNew={handleCreateNew} />
+          <TopActionBar 
+            onSearch={handleSearch} 
+            onCreateNew={handleCreateNew}
+            onUploadClick={() => {
+              // アップロード機能は現在未実装のため、空の関数として定義
+              console.log("アップロード機能（未実装）");
+            }}
+          />
           {isLoading ? (
             <div className="flex justify-center items-center h-64">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-900"></div>
@@ -298,11 +305,11 @@ const QaPage: React.FC = () => {
           isOpen={true}
           role="corporate"
           onClose={() => setSelectedQa(null)}
-          onLike={(id: string) => {
+          onLike={async (id: string) => {
             console.log("いいね", id);
           }}
           onDelete={(id: string) => handleDeleteQa(id)}
-          onSaveEdit={(updatedQa: QA) => {
+          onSaveEdit={async (updatedQa: QA) => {
             console.log("QA更新:", updatedQa);
             setQas((prev) =>
               prev.map((q) => (q.qaId === updatedQa.qaId ? updatedQa : q))

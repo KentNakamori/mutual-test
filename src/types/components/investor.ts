@@ -1,12 +1,91 @@
-import { Company, ProfileData } from '../models';
+import { ReactNode } from 'react';
+import { Company, QA, ProfileData, NotificationSetting } from '../models';
 import { Industry } from '../industry';
+
+/**
+ * 投資家向けホームページ（フロントページ用）
+ * - 企業一覧表示
+ * - 検索機能
+ * - フィルタリング
+ */
+export interface InvestorHomePageProps {
+  children?: ReactNode;
+}
+
+/**
+ * 投資家向け企業詳細ページ（企業詳細表示用）
+ * - 企業情報表示
+ * - Q&A一覧表示
+ * - チャット機能
+ */
+export interface CompanyDetailPageProps {
+  company: Company;
+  qas: QA[];
+}
+
+/**
+ * 投資家向けマイページ（ユーザー設定用）
+ * - プロフィール表示・編集
+ * - 通知設定
+ * - アカウント管理
+ */
+export interface InvestorMyPageProps {
+  user: ProfileData;
+  notificationSetting: NotificationSetting;
+  onUpdateProfile: (profile: ProfileData) => Promise<void>;
+  onUpdateNotification: (setting: NotificationSetting) => Promise<void>;
+  onDeleteAccount: () => Promise<void>;
+}
+
+/**
+ * 投資家向けQ&Aページ（Q&A検索・閲覧用）
+ * - Q&A検索
+ * - Q&A一覧表示
+ * - Q&A詳細表示
+ */
+export interface InvestorQAPageProps {
+  qas: QA[];
+  totalCount: number;
+  currentPage: number;
+  onSearch: (query: string) => void;
+  onFilter: (filters: Record<string, unknown>) => void;
+}
+
+/**
+ * 投資家向けチャット履歴ページ（チャット履歴表示用）
+ * - チャット履歴一覧
+ * - チャット再開
+ * - チャット検索
+ */
+export interface ChatHistoryPageProps {
+  chatLogs: Array<{
+    chatId: string;
+    companyName: string;
+    lastMessage: string;
+    updatedAt: string;
+  }>;
+  onSelectChat: (chatId: string) => void;
+}
+
+/**
+ * フォロー企業一覧ページ（フォロー管理用）
+ * - フォロー企業一覧
+ * - フォロー解除
+ * - 企業詳細への遷移
+ */
+export interface FollowedCompaniesPageProps {
+  followedCompanies: Company[];
+  onUnfollow: (companyId: string) => Promise<void>;
+}
 
 /**
  * 投資家ログインページ（ログイン用）
  * - ログイン表示
  * - ログイン処理
  */
-export interface InvestorLoginPageProps {}
+export interface InvestorLoginPageProps {
+  // ログインページのプロパティを必要に応じて追加
+}
 
 /**
  * ゲストログインボタン（ゲストログイン用）
@@ -21,7 +100,9 @@ export interface GuestLoginButtonProps {
  * サインアップリンク（サインアップ用）
  * - サインアップリンク表示
  */
-export interface LinkToSignupProps {}
+export interface LinkToSignupProps {
+  // サインアップリンクのプロパティを必要に応じて追加
+}
 
 /**
  * トップページ（トップ表示用）
@@ -102,8 +183,13 @@ export interface MyPageProps {
  * - タブ切り替え処理
  */
 export interface MyPageTabMenuProps {
-  activeTab: string;
-  onTabChange: (tab: string) => void;
+  activeTab: "profile" | "password" | "notification" | "delete";
+  onTabChange: (tab: "profile" | "password" | "notification" | "delete") => void;
+  profileData: ProfileData;
+  onSaveProfile: (updatedProfile: ProfileData) => Promise<void>;
+  onChangePassword: (currentPass: string, newPass: string) => Promise<void>;
+  onSaveNotification: (newSetting: NotificationSetting) => Promise<void>;
+  onDeleteAccount: (password: string) => Promise<void>;
 }
 
 /**
@@ -166,4 +252,35 @@ export interface EnhancedSearchBarProps extends SearchBarProps {
   }[];
   initialSortBy?: string;
   onSort?: (sortBy: string) => void;
+}
+
+/**
+ * FAQ項目の型
+ */
+export interface FaqItem {
+  id: string;
+  question: string;
+  answer?: string;
+}
+
+/**
+ * FAQパネルのプロパティ
+ */
+export interface FAQPanelProps {
+  onSelectFAQ: (question: string) => void;
+  faqs?: FaqItem[];
+}
+
+/**
+ * パスワード変更フォームのプロパティ
+ */
+export interface PasswordChangeFormProps {
+  onChangePassword: (currentPassword: string, newPassword: string) => Promise<void>;
+}
+
+/**
+ * アカウント削除フォームのプロパティ
+ */
+export interface AccountDeleteFormProps {
+  onDeleteAccount: (password: string) => Promise<void>;
 } 

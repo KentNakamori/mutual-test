@@ -3,15 +3,14 @@
 
 import React from 'react';
 import QACard from '@/components/ui/QACard';
-import { QA, QAResultItemProps } from '@/types';
+import { QAResultItemProps } from '@/types';
 
-const QAResultItem: React.FC<QAResultItemProps & {
-  getCompanyName?: (companyId: string) => string;
-  formatDate?: (dateStr: string) => string;
-}> = ({ qa, onClickItem, onLike, getCompanyName, formatDate }) => {
+const QAResultItem: React.FC<QAResultItemProps> = ({ qa, onClickItem, onLike }) => {
   // onSelectの呼び出し時に QA 自体も渡す
   const handleSelect = (qaId: string) => {
-    onClickItem && onClickItem(qa, qaId);
+    if (onClickItem) {
+      onClickItem(qa, qaId);
+    }
   };
 
   return (
@@ -21,8 +20,6 @@ const QAResultItem: React.FC<QAResultItemProps & {
       qa={qa}
       onSelect={handleSelect}
       onLike={onLike}
-      getCompanyName={getCompanyName}
-      formatDate={formatDate}
     />
   );
 };

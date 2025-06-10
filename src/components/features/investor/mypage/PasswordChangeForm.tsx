@@ -3,10 +3,11 @@
 
 import React, { useState } from "react";
 import { useUser } from '@auth0/nextjs-auth0';
+import { PasswordChangeFormProps } from "../../../../types";
 import Input from "../../../../components/ui/Input";
 import Button from "../../../../components/ui/Button";
 
-const PasswordChangeForm: React.FC = () => {
+const PasswordChangeForm: React.FC<PasswordChangeFormProps> = ({ onChangePassword }) => {
   const { user, isLoading } = useUser();
   const [isRequesting, setIsRequesting] = useState(false);
   const [message, setMessage] = useState<string>("");

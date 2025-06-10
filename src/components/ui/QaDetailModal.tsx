@@ -1,21 +1,20 @@
 import React, { useState, useEffect } from 'react';
 import Dialog from '@/components/ui/Dialog';
 import ReactMarkdown from 'react-markdown';
-import { QADetailModalProps, QA, TagOption } from '@/types';
+import { QaDetailModalProps, QA, TagOption } from '@/types';
 import {
   INFO_SOURCE_OPTIONS,
   GENRE_OPTIONS,
   QUESTION_ROUTE_OPTIONS,
   getTagColor,
 } from '@/components/ui/tagConfig';
-import { Calendar, Bookmark, X, BookOpen, Plus, Clock, FileText, Tag, Activity, HelpCircle, CheckCircle, Eye, Edit } from 'lucide-react';
-import { updateCorporateQa, deleteCorporateQa, generateCorporateQaAnswer } from '@/lib/api';
+import { Calendar, Bookmark, X, BookOpen, Plus, FileText, Tag, Activity, HelpCircle, CheckCircle, Eye, Edit } from 'lucide-react';
+import { updateCorporateQa, generateCorporateQaAnswer } from '@/lib/api';
 import { useUser } from "@auth0/nextjs-auth0";
 import FiscalPeriodSelect from '@/components/ui/FiscalPeriodSelect';
-import AiGenerateButton from '@/components/features/corporate/qa/AiGenerateButton';
 import GuestRestrictedContent from '@/components/features/investor/common/GuestRestrictedContent';
 
-const QaDetailModal: React.FC<QADetailModalProps> = ({
+const QaDetailModal: React.FC<QaDetailModalProps> = ({
   qa,
   isOpen,
   onClose,
@@ -25,42 +24,57 @@ const QaDetailModal: React.FC<QADetailModalProps> = ({
   onDelete,
   onCancelEdit,
   onSaveEdit,
+  mode = 'view',
 }) => {
+  // Hooksはコンポーネントのトップレベルで呼び出す必要がある
   const { user, isLoading: userLoading } = useUser();
   const token = user?.sub ?? null; 
-  const [editableQA, setEditableQA] = useState<QA>({ ...qa });
+  const [editableQA, setEditableQA] = useState<QA>(qa || {} as QA);
   const [showSourceList, setShowSourceList] = useState(false);
   const [showGenreList, setShowGenreList] = useState(false);
-  const [showTagList, setShowTagList] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [isEditMode, setIsEditMode] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
-  const [isGeneratingAI, setIsGeneratingAI] = useState(false);
+  const [showTagList, setShowTagList] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const [showInvestorPreview, setShowInvestorPreview] = useState(false);
   const [showGuestRestricted, setShowGuestRestricted] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [editableGenre, setEditableGenre] = useState<string[]>(qa?.genre || []);
+  const [editableSource, setEditableSource] = useState<string[]>(qa?.source || []);
+  const [isLoading, setIsLoading] = useState(false);
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+  const [isGeneratingAI, setIsGeneratingAI] = useState(false);
   
   // ゲスト判定
   const isGuest = !user && !userLoading;
 
   useEffect(() => {
-    if (isOpen) {
-      setEditableQA({ ...qa });
-      setHasChanges(false);
+    if (qa) {
+      setEditableQA(qa);
+      setEditableGenre(qa.genre || []);
+      setEditableSource(qa.source || []);
     }
-  }, [qa, isOpen]);
+  }, [qa]);
 
   // 背景スクロール防止
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = 'hidden';
     } else {
-      document.body.style.overflow = '';
+      document.body.style.overflow = 'unset';
     }
+
     return () => {
-      document.body.style.overflow = '';
+      document.body.style.overflow = 'unset';
     };
   }, [isOpen]);
+
+  // qaがnullの場合は何も表示しない（Hooks呼び出し後にチェック）
+  if (!qa) {
+    return null;
+  }
 
   const handleClose = () => {
     if (hasChanges) {
@@ -80,90 +94,79 @@ const QaDetailModal: React.FC<QADetailModalProps> = ({
   };
 
   const handleSave = async () => {
-    if (!token) {
-      setError("認証トークンがありません");
-      return;
-    }
-    if (isSaving) return;
-
-    setIsSaving(true);
-    setError(null);
+    if (!qa) return; // qaがnullの場合は処理しない
 
     try {
-      // ステータスを管理する (大文字に変更)
-      const reviewStatus = editableQA.reviewStatus as QA['reviewStatus']; // 直接 reviewStatus を使用
+      setIsSaving(true);
 
-      // リクエストデータを構築
       const requestData = {
         title: editableQA.title,
         question: editableQA.question,
         answer: editableQA.answer,
-        question_route: editableQA.question_route, // question_route を単一値として送信
-        source: editableQA.source,
-        genre: editableQA.genre,
+        genre: editableGenre,
+        source: editableSource,
         fiscalPeriod: editableQA.fiscalPeriod,
-        reviewStatus: reviewStatus, // reviewStatus をそのまま使用
+        question_route: editableQA.question_route,
+        reviewStatus: editableQA.reviewStatus
       };
-      
-      // デバッグ情報
+
       console.log(`保存リクエスト: ${qa.qaId}`, requestData);
-      
-      // API呼び出し
+
+      // API経由で更新
       await updateCorporateQa(qa.qaId, requestData);
-      
-      // 更新したQAをコールバックで返す
-      const updatedQa: QA = {
-        ...qa, // 元のQAのデータを保持
-        ...editableQA, // 編集したデータで上書き
-        reviewStatus: reviewStatus, // 明示的にreviewStatusを設定
-        updatedAt: new Date().toISOString() // 更新日時を現在時刻に
+
+      // 保存成功時の処理
+      const updatedQa = {
+        ...editableQA,
+        genre: editableGenre,
+        source: editableSource
       };
-      
+
       console.log(`保存成功: ${qa.qaId}`, updatedQa);
-      
-      onSaveEdit && onSaveEdit(updatedQa);
+
+      // 編集モード終了
+      setIsEditing(false);
       setHasChanges(false);
-      onClose();
+
+      if (onSaveEdit) {
+        await onSaveEdit(updatedQa);
+      }
     } catch (error) {
-      console.error("QAの更新に失敗しました:", error);
-      setError("QAの更新に失敗しました。もう一度お試しください。");
+      console.error('QAの更新に失敗しました:', error);
+      alert('QAの更新に失敗しました');
     } finally {
       setIsSaving(false);
     }
   };
 
-  const handleDelete = async () => {
-    if (!token) {
-      setError("認証トークンがありません");
-      return;
-    }
-    if (window.confirm("本当に削除しますか？")) {
+  const handleDelete = () => {
+    if (!qa) return; // qaがnullの場合は処理しない
+    
+    if (window.confirm('この質問を削除しますか？')) {
       try {
-        // デバッグ情報
         console.log(`削除リクエスト: ${qa.qaId}`);
         
-        // 親コンポーネントに削除を委譲
-        onDelete && onDelete(qa.qaId);
+        // onDeleteコールバックを呼び出し
+        if (onDelete) {
+          onDelete(qa.qaId);
+        }
         
-        // モーダルを閉じる (親コンポーネントが閉じるため不要)
-        // onClose();
+        // モーダルを閉じる
+        onClose();
       } catch (error) {
-        console.error("QAの削除に失敗しました:", error);
-        setError("QAの削除に失敗しました");
+        console.error('削除処理でエラーが発生しました:', error);
+        alert('削除に失敗しました');
       }
     }
   };
 
-  const handleLike = () => {
-    // ゲストユーザーの場合はGuestRestrictedContentを表示
-    if (isGuest && role === 'investor') {
-      setShowGuestRestricted(true);
-      return;
-    }
+  const handleLike = async () => {
+    if (!qa || !onLike) return; // qaがnullまたはonLikeがundefinedの場合は処理しない
     
-    // investor側のみブックマーク機能を有効にする
-    if (role === 'investor' && onLike) {
-      onLike(qa.qaId);
+    try {
+      await onLike(qa.qaId);
+    } catch (error) {
+      console.error('いいね処理でエラーが発生しました:', error);
     }
   };
 
@@ -292,7 +295,7 @@ const QaDetailModal: React.FC<QADetailModalProps> = ({
   }
 
   // モーダルのタイトル設定
-  const modalTitle = role === 'investor' 
+  const modalTitle = role === 'corporate' && qa
     ? `QA詳細 (${qa.companyId?.includes('comp') ? getCompanyName(qa.companyId) : qa.companyName || qa.companyId})`
     : 'QA詳細';
 
@@ -422,12 +425,12 @@ const QaDetailModal: React.FC<QADetailModalProps> = ({
                       </h4>
                       <div className="flex flex-wrap gap-2 pl-5">
                         {editableQA.source && editableQA.source.length > 0 ? (
-                          editableQA.source.map((source, index) => {
+                          editableQA.source.map((source: string) => {
                             const sourceOption = INFO_SOURCE_OPTIONS.find(opt => opt.label === source);
                             const colorClass = sourceOption ? sourceOption.color : 'bg-gray-100 text-gray-800';
                             return (
                             <span
-                              key={`source-${index}`}
+                              key={source}
                                 className={`inline-flex items-center ${colorClass} px-3 py-1 rounded-full text-xs font-medium`}
                             >
                               {source}
@@ -448,12 +451,12 @@ const QaDetailModal: React.FC<QADetailModalProps> = ({
                       </h4>
                       <div className="flex flex-wrap gap-2 pl-5">
                         {editableQA.genre && editableQA.genre.length > 0 ? (
-                          editableQA.genre.map((genre, index) => {
+                          editableQA.genre.map((genre: string) => {
                             const genreOption = GENRE_OPTIONS.find(opt => opt.label === genre);
                             const colorClass = genreOption ? genreOption.color : 'bg-gray-100 text-gray-800';
                             return (
                             <span
-                              key={`genre-${index}`}
+                              key={genre}
                                 className={`inline-flex items-center ${colorClass} px-3 py-1 rounded-full text-xs font-medium`}
                             >
                               {genre}
@@ -712,19 +715,14 @@ const QaDetailModal: React.FC<QADetailModalProps> = ({
                     情報ソース
                   </h4>
                   <div className="flex flex-wrap gap-2">
-                    {qa.source && qa.source.length > 0 ? (
-                      qa.source.map((source) => (
-                        <span
-                          key={source}
-                          className="inline-flex items-center bg-white border border-gray-300 text-gray-700 px-2 py-1 rounded text-xs"
-                        >
-                          <BookOpen size={10} className="mr-1" />
-                          {source}
-                        </span>
-                      ))
-                    ) : (
-                      <span className="text-gray-500 text-sm">情報ソースなし</span>
-                    )}
+                    {qa.source.map((source: string) => (
+                      <span 
+                        key={source}
+                        className="px-2 py-1 bg-blue-100 text-blue-800 rounded-md text-sm"
+                      >
+                        {source}
+                      </span>
+                    ))}
                   </div>
                 </div>
                 
@@ -735,18 +733,14 @@ const QaDetailModal: React.FC<QADetailModalProps> = ({
                     カテゴリ
                   </h4>
                   <div className="flex flex-wrap gap-2">
-                    {qa.genre && qa.genre.length > 0 ? (
-                      qa.genre.map((genre) => (
-                        <span
-                          key={genre}
-                          className={`inline-flex items-center ${getTagColor(genre)} px-2 py-1 rounded text-xs font-medium`}
-                        >
-                          {genre}
-                        </span>
-                      ))
-                    ) : (
-                      <span className="text-gray-500 text-sm">カテゴリ未設定</span>
-                    )}
+                    {qa.genre.map((genre: string) => (
+                      <span 
+                        key={genre}
+                        className="px-2 py-1 bg-green-100 text-green-800 rounded-md text-sm"
+                      >
+                        {genre}
+                      </span>
+                    ))}
                   </div>
                 </div>
               </div>

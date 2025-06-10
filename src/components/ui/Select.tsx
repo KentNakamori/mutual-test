@@ -1,6 +1,6 @@
 // components/ui/Select.tsx
 import React from 'react';
-import{ Option, SelectProps} from '@/types';
+import{ SelectProps} from '@/types';
 
 /**
  * Select コンポーネント

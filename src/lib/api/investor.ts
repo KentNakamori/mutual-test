@@ -707,7 +707,7 @@ export async function trackInvestorAction(
  */
 export async function getLatestQAsByCompany(
   token?: string,
-  limit: number = 10
+  limit: number = 5
 ): Promise<{
   results: Array<{
     qaId: string;
@@ -736,5 +736,5 @@ export async function getLatestQAsByCompany(
     ? `${ENDPOINTS.investor.qa.latestByCompany}?${queryString.toString()}`
     : ENDPOINTS.investor.qa.latestByCompany;
     
-  return apiFetch<any>(endpoint, "GET", undefined, token, true);
+  return apiFetch<any>(endpoint, "GET", undefined, token, true, true);
 } 

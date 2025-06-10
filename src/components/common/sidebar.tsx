@@ -2,7 +2,7 @@
 import React, { useState } from 'react';
 import Image from 'next/image';
 import { FaBars, FaAngleDoubleLeft, FaSignOutAlt, FaSignInAlt } from 'react-icons/fa';
-import { SidebarMenuItem, SidebarProps } from '@/types';
+import { SidebarProps } from '@/types';
 import { useRouter } from 'next/navigation';
 import { useUser } from '@auth0/nextjs-auth0';
 

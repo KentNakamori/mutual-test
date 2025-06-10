@@ -1,6 +1,6 @@
 // src/components/features/investor/company/CompanyHeader.tsx
 import React, { useState, useEffect } from 'react';
-import { Company, CompanyHeaderProps } from '../../../../types';
+import { CompanyHeaderProps } from '../../../../types';
 import { getIndustryLabel } from '@/types/industry';
 import { getFullImageUrl } from '@/lib/utils/imageUtils';
 import { X } from 'lucide-react';

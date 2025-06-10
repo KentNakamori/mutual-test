@@ -1,7 +1,7 @@
 // src/components/features/corporate/qa/FileAttachmentSection.tsx
 import React from 'react';
 import Button from '@/components/ui/Button';
-import { FileReference, FileAttachmentSectionProps} from '@/types';
+import { FileAttachmentSectionProps} from '@/types';
 
 
 

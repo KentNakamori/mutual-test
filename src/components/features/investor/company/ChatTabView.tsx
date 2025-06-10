@@ -22,28 +22,7 @@ const ChatTabView: React.FC<ChatTabViewProps> = ({ companyId }) => {
   
   const { user, error: userError, isLoading: userLoading } = useUser();
 
-  // ゲスト判定: ユーザーがいない、ローディングが終了、エラーがない
-  const isGuest = !user && !userLoading && !userError;
-
-  // ゲストまたは認証エラーの場合は制限表示
-  if (isGuest || (userError && !userLoading)) {
-    return (
-      <div className="flex flex-col items-center justify-center h-full py-8">
-        <GuestRestrictedContent featureName="チャット" />
-      </div>
-    );
-  }
-
-  // 認証情報のロード中
-  if (userLoading) {
-    return (
-      <div className="flex flex-col items-center justify-center h-full">
-        <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500 mb-4"></div>
-        <p className="text-gray-600">ログイン情報を確認中...</p>
-      </div>
-    );
-  }
-
+  // すべてのhooksを最上位で定義
   const [chatSessions, setChatSessions] = useState<ChatSession[]>([]);
   const [selectedSessionId, setSelectedSessionId] = useState<string>('');
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -53,6 +32,9 @@ const ChatTabView: React.FC<ChatTabViewProps> = ({ companyId }) => {
 
   // メッセージIDの重複を防ぐためのカウンター
   const messageCounterRef = useRef<number>(0);
+
+  // ゲスト判定: ユーザーがいない、ローディングが終了、エラーがない
+  const isGuest = !user && !userLoading && !userError;
 
   // チャットセッション一覧の取得
   useEffect(() => {
@@ -71,8 +53,8 @@ const ChatTabView: React.FC<ChatTabViewProps> = ({ companyId }) => {
         console.log('投資家チャットログAPIレスポンス:', response);
         
         const convertedSessions: ChatSession[] = response.chatLogs
-          .filter((log: any) => log.chatId) // chatIdが存在するもののみ
-          .map((log: any) => ({
+          .filter((log: { chatId: string }) => log.chatId) // chatIdが存在するもののみ
+          .map((log: { chatId: string; lastMessageSnippet?: string; title?: string; updatedAt: string }) => ({
             sessionId: log.chatId,
             lastMessageSnippet: log.lastMessageSnippet || log.title || '新規チャット',
             lastMessageTimestamp: log.updatedAt
@@ -349,8 +331,8 @@ const ChatTabView: React.FC<ChatTabViewProps> = ({ companyId }) => {
       console.log('投資家チャット履歴更新完了:', sessionsResponse);
       
       const convertedSessions: ChatSession[] = sessionsResponse.chatLogs
-        .filter((log: any) => log.chatId) // chatIdが存在するもののみ
-        .map((log: any) => ({
+        .filter((log: { chatId: string }) => log.chatId) // chatIdが存在するもののみ
+        .map((log: { chatId: string; lastMessageSnippet?: string; title?: string; updatedAt: string }) => ({
           sessionId: log.chatId,
           lastMessageSnippet: log.lastMessageSnippet || log.title || '新規チャット',
           lastMessageTimestamp: log.updatedAt
@@ -385,8 +367,23 @@ const ChatTabView: React.FC<ChatTabViewProps> = ({ companyId }) => {
     setInputValue(question);
   };
 
+  // ゲストまたは認証エラーの場合は制限表示
+  if (isGuest || (userError && !userLoading)) {
+    return (
+      <div className="flex flex-col items-center justify-center h-full py-8">
+        <GuestRestrictedContent featureName="チャット" />
+      </div>
+    );
+  }
+
+  // 認証情報のロード中
   if (userLoading) {
-    return <div className="flex justify-center items-center h-full">認証情報の読み込み中...</div>;
+    return (
+      <div className="flex flex-col items-center justify-center h-full">
+        <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-blue-500 mb-4"></div>
+        <p className="text-gray-600">ログイン情報を確認中...</p>
+      </div>
+    );
   }
 
   if (userError || !user) {

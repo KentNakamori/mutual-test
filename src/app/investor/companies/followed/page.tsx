@@ -1,16 +1,14 @@
 // src/app/investor/companies/followed/page.tsx
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React from "react";
 import { useRouter } from "next/navigation";
 import { useUser } from "@auth0/nextjs-auth0";
 import Sidebar from "@/components/common/sidebar";
 import Footer from "@/components/common/footer";
 import CompanyListing from '@/components/features/investor/companies/CompanyListing';
-import { Company } from "@/types";
 import GuestRestrictedContent from "@/components/features/investor/common/GuestRestrictedContent";
 import { Home, Heart, Search, MessageSquare, User } from 'lucide-react';
-import { getInvestorCompanies } from "@/lib/api";
 
 // APIレスポンスの型定義
 interface CompanyItem {
