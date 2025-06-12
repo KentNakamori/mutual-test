@@ -1,0 +1,30 @@
+# 開発環境用Dockerfile
+FROM node:20-alpine
+
+WORKDIR /app
+
+# 必要なパッケージをインストール
+RUN apk add --no-cache libc6-compat curl
+
+# パッケージファイルをコピーして依存関係をインストール
+COPY package*.json ./
+RUN npm install
+
+# ソースコードをコピー
+COPY . .
+
+# 環境変数設定
+ENV NODE_ENV=development
+ENV NEXT_TELEMETRY_DISABLED=1
+ENV PORT=3000
+ENV HOSTNAME="0.0.0.0"
+
+# ポート3000を公開
+EXPOSE 3000
+
+# ヘルスチェック
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+  CMD curl -f http://localhost:3000/ || exit 1
+
+# 開発サーバーを起動
+CMD ["npm", "run", "dev"] 

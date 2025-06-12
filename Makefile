@@ -1,4 +1,13 @@
-.PHONY: help setup dev dev-docker build test clean lint lint-fix docker-build docker-run docker-dev docker-stop docker-restart docker-logs docker-status docker-network-check tf-init tf-plan tf-apply tf-destroy deploy backup
+.PHONY: help setup lint lint-fix test docker-init docker-build docker-push deploy tf-init tf-plan tf-apply tf-destroy tf-outputs dev-start dev-stop dev-logs dev-status dev-logs-follow compose-up compose-down compose-logs
+
+# ==============================================================================
+# VARIABLES
+# ==============================================================================
+ECR_REPOSITORY_URL ?= $(shell AWS_PROFILE=admin terraform -chdir=./terraform output -raw frontend_ecr_repository_url 2>/dev/null || echo "")
+AWS_REGION ?= ap-northeast-1
+IMAGE_NAME = mutual-frontend
+IMAGE_TAG ?= latest
+DEV_IMAGE_NAME = mutual-frontend-dev
 
 # ==============================================================================
 # HELP
@@ -10,37 +19,38 @@ help:
 	@echo "    make setup           - 依存関係のインストールと.env.localファイルの初期設定を行う"
 	@echo ""
 	@echo "  開発 & テスト:"
-	@echo "    make dev             - Next.js開発サーバーを起動する (ホットリロード)"
-	@echo "    make dev-docker      - Dockerで開発サーバーを起動する (ホットリロード)"
-	@echo "    make build           - 本番用ビルドを実行する"
 	@echo "    make lint            - ESLintを使ってコードの静的解析を実行する"
 	@echo "    make lint-fix        - ESLintの自動修正を実行する"
 	@echo "    make test            - テストを実行する"
-	@echo "    make clean           - ビルドキャッシュをクリーンアップする"
 	@echo ""
-	@echo "  Docker:"
-	@echo "    make docker-build    - Next.jsアプリケーションのDockerイメージをビルドする"
-	@echo "    make docker-run      - mutual-networkでDockerコンテナを起動する"
-	@echo "    make docker-dev      - 開発用Dockerコンテナを起動する (ホットリロード)"
-	@echo "    make docker-stop     - Dockerコンテナを停止・削除する"
-	@echo "    make docker-restart  - Dockerコンテナを再起動する"
-	@echo "    make docker-logs     - フロントエンドコンテナのログを表示する"
-	@echo "    make docker-status   - 開発環境のコンテナ状況を確認する"
-	@echo "    make docker-network-check - バックエンドとの接続をテストする"
+	@echo "  🚀 統合開発環境:"
+	@echo "    make dev-start       - フロントエンド開発環境を起動（バックエンドと連携）"
+	@echo "    make dev-stop        - フロントエンド開発環境を停止・削除"
+	@echo "    make dev-logs        - フロントエンドコンテナのログを表示"
+	@echo "    make dev-logs-follow - フロントエンドコンテナのログを常に監視（Ctrl+Cで終了）"
+	@echo "    make dev-status      - フロントエンドコンテナの状況を確認"
+	@echo ""
+	@echo "  🐳 Docker Compose:"
+	@echo "    make compose-up      - docker-composeで開発環境を起動"
+	@echo "    make compose-down    - docker-composeで開発環境を停止"
+	@echo "    make compose-logs    - docker-composeのログを常に監視（Ctrl+Cで終了）"
+	@echo ""
+	@echo "  📝 開発環境の起動手順:"
+	@echo "    1. バックエンドリポジトリで 'make dev-start' を実行"
+	@echo "    2. このリポジトリで 'make dev-start' を実行"
+	@echo ""
+	@echo "  AWS & デプロイ:"
+	@echo "    make docker-init     - Docker buildxビルダーを初期化する"
+	@echo "    make docker-build    - AWS用Dockerイメージをビルドする"
+	@echo "    make docker-push     - DockerイメージをECRにプッシュする"
+	@echo "    make deploy          - ECRプッシュ + ECS強制デプロイを実行する"
 	@echo ""
 	@echo "  Terraform (インフラ管理):"
 	@echo "    make tf-init         - Terraformを初期化する"
 	@echo "    make tf-plan         - Terraformの実行計画を表示する"
 	@echo "    make tf-apply        - Terraformでインフラを構築・変更する"
 	@echo "    make tf-destroy      - Terraformで作成したインフラを全て削除する"
-	@echo "    make tf-output       - Terraformの出力値を表示する"
-	@echo ""
-	@echo "  デプロイ & 運用:"
-	@echo "    make deploy          - アプリケーションをデプロイする"
-	@echo "    make set-secrets     - AWS Secrets Managerにアプリケーションシークレットを設定する"
-	@echo "    make aws-status      - AWSリソースの状態を確認する"
-	@echo "    make logs            - ECSタスクのログを表示する"
-	@echo "    make backup          - 重要な設定ファイルをバックアップする"
+	@echo "    make tf-outputs      - Terraformの出力値を表示する"
 
 # ==============================================================================
 # SETUP
@@ -73,170 +83,151 @@ setup:
 # ==============================================================================
 # DEVELOPMENT & TESTING
 # ==============================================================================
-dev:
-	@echo "🚀 開発サーバーを起動します (ホットリロード)..."
-	npm run dev
-
-dev-docker:
-	@echo "🚀 Dockerで開発サーバーを起動します (ホットリロード)..."
-	@echo "📡 既存のコンテナがあれば停止・削除します..."
-	docker-compose down --remove-orphans 2>/dev/null || true
-	docker-compose up --build
-
 lint:
 	@echo "🔍 ESLintでコードをチェックします..."
 	npm run lint
 
 lint-fix:
 	@echo "🔧 ESLintの自動修正を実行します..."
-	npx eslint --fix "src/**/*.{ts,tsx}"
+	@echo "1. 未使用のimportを削除します..."
+	npx eslint --fix "src/**/*.{ts,tsx}" --rule "unused-imports/no-unused-imports: error" || true
+	@echo "2. 未使用の変数を修正します..."
+	npx eslint --fix "src/**/*.{ts,tsx}" --rule "unused-imports/no-unused-vars: warn" || true
+	@echo "3. その他の自動修正可能な問題を修正します..."
+	npx eslint --fix "src/**/*.{ts,tsx}" || true
+	@echo "✅ 自動修正が完了しました。残りの警告は手動で修正が必要です。"
 
 test:
 	@echo "🧪 テストを実行します..."
 	npm test
 
-clean:
-	@echo "🧹 ビルドキャッシュをクリーンアップします..."
-	rm -rf .next
-	rm -rf out
-	rm -rf node_modules/.cache
-	rm -f tsconfig.tsbuildinfo
-
 # ==============================================================================
-# DOCKER
+# 統合開発環境
 # ==============================================================================
-docker-build:
-	@echo "🐳 Dockerイメージをビルドします..."
-	docker build -t mutual-frontend:latest .
-
-docker-run:
-	@echo "🚀 Dockerコンテナを起動します (ポート3000)..."
-	@echo "📡 mutual-network ネットワークに接続します..."
-	@echo "停止するには Ctrl+C を押してください。"
-	docker run -d \
+dev-start:
+	@echo "完全な開発環境を起動します（Frontend + Backend連携）..."
+	@echo "開発用Dockerネットワーク 'mutual-network' を作成します..."
+	@docker network inspect mutual-network >/dev/null 2>&1 || docker network create mutual-network
+	@echo "開発用Dockerイメージをビルドします..."
+	@docker build -t $(DEV_IMAGE_NAME):$(IMAGE_TAG) -f Dockerfile.dev .
+	@echo "フロントエンド開発環境を起動します..."
+	@docker rm -f mutual-frontend >/dev/null 2>&1 || true
+	@docker run -d \
 		--name mutual-frontend \
 		--network mutual-network \
 		-p 3000:3000 \
 		--env-file .env.local \
+		-e DOCKER_ENV=true \
 		-e API_BASE_URL=http://mutual-backend:8000 \
-		mutual-frontend:latest
-	@echo "✅ フロントエンドコンテナが起動しました: http://localhost:3000"
+		-v $(PWD)/src:/app/src \
+		-v $(PWD)/public:/app/public \
+		$(DEV_IMAGE_NAME):$(IMAGE_TAG)
+	@echo "✅ フロントエンド開発環境が起動しました！"
+	@echo ""
+	@echo "📋 サービス情報:"
+	@echo "  🔗 Frontend:          http://localhost:3000"
+	@echo "  🔗 Backend API:       http://mutual-backend:8000"
+	@echo ""
+	@echo "📝 バックエンド起動コマンド（バックエンドリポジトリで実行）:"
+	@echo "  make dev-start"
+	@echo ""
+	@echo "📝 ログを常に監視するには:"
+	@echo "  make dev-logs-follow"
 
-docker-dev: dev-docker
+dev-stop:
+	@echo "開発環境のコンテナを停止・削除します..."
+	@docker rm -f mutual-frontend >/dev/null 2>&1 || true
+	@echo "✅ 開発環境のコンテナを停止しました。"
 
-docker-stop:
-	@echo "🛑 docker-composeコンテナを停止・削除します..."
-	docker-compose down --remove-orphans
+dev-logs:
+	@echo "=== Frontend Logs ==="
+	@docker logs mutual-frontend --tail 20 2>/dev/null || echo "Frontend コンテナが見つかりません"
 
-docker-restart: docker-stop docker-run
-	@echo "🔄 Dockerコンテナを再起動しました"
+dev-logs-follow:
+	@echo "🔍 フロントエンドのログを常に監視します（Ctrl+Cで終了）..."
+	@echo "=================================================="
+	@docker logs -f mutual-frontend 2>/dev/null || echo "❌ Frontend コンテナが見つかりません。'make dev-start' でコンテナを起動してください。"
 
-docker-logs:
-	@echo "📋 フロントエンドコンテナのログを表示します..."
-	docker logs mutual-frontend -f
+dev-status:
+	@echo "🔍 開発環境の状況:"
+	@echo ""
+	@docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}" --filter "name=mutual-frontend" || echo "コンテナが見つかりません"
+	@echo ""
+	@echo "🌐 ネットワーク情報:"
+	@docker network inspect mutual-network --format "{{range .Containers}}{{.Name}}: {{.IPv4Address}}\n{{end}}" 2>/dev/null || echo "mutual-network が見つかりません"
 
-docker-status:
-	@echo "📊 開発環境の状況を確認します..."
-	@echo "\n🐳 アクティブなコンテナ:"
-	@docker ps --filter "name=mutual-frontend" --filter "name=mutual-backend" --filter "name=mongodb" --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}" || echo "コンテナが見つかりません"
-	@echo "\n🌐 mutual-network の状況:"
-	@docker network inspect mutual-network --format "{{range .Containers}}{{.Name}}: {{.IPv4Address}}\n{{end}}" 2>/dev/null || echo "⚠️  mutual-network が見つかりません。バックエンドで 'make dev-start' を実行してください"
+# ==============================================================================
+# AWS & DEPLOYMENT
+# ==============================================================================
+docker-init:
+	@echo "Docker buildxビルダーを初期化します..."
+	@docker buildx inspect multiplatform-builder >/dev/null 2>&1 || \
+	docker buildx create --name multiplatform-builder --platform linux/amd64,linux/arm64
+	@docker buildx use multiplatform-builder
+	@docker buildx inspect --bootstrap
 
-docker-network-check:
-	@echo "🔍 ネットワーク接続をテストします..."
-	@if docker network ls | grep -q mutual-network; then \
-		echo "✅ mutual-network が存在します"; \
-		if docker ps | grep -q mutual-backend; then \
-			echo "✅ mutual-backend コンテナが起動中です"; \
-			if docker ps | grep -q mutual-frontend; then \
-				echo "🧪 フロントエンド→バックエンド接続テスト:"; \
-				docker exec mutual-frontend curl -s -o /dev/null -w "%{http_code}" http://mutual-backend:8000/ 2>/dev/null | grep -q 200 && echo "✅ 接続成功" || echo "❌ 接続失敗"; \
-			else \
-				echo "⚠️  mutual-frontend コンテナが起動していません"; \
-			fi; \
-		else \
-			echo "❌ mutual-backend コンテナが起動していません"; \
-		fi; \
-	else \
-		echo "❌ mutual-network が存在しません。バックエンドで 'make dev-start' を実行してください"; \
+docker-build:
+	@echo "AWS用Dockerイメージをビルドします..."
+	@if [ -z "$(ECR_REPOSITORY_URL)" ]; then \
+		echo "❌ ECR_REPOSITORY_URLが設定されていません。"; \
+		echo "   terraform outputから取得するか、手動で設定してください:"; \
+		echo "   make ECR_REPOSITORY_URL=your-ecr-url docker-build"; \
+		exit 1; \
 	fi
+	docker buildx build --platform linux/amd64 -t $(ECR_REPOSITORY_URL):$(IMAGE_TAG) -f Dockerfile . --push
+
+docker-push: docker-init docker-build
+	@echo "✅ DockerイメージをECRにプッシュしました: $(ECR_REPOSITORY_URL):$(IMAGE_TAG)"
+
+deploy: docker-push
+	@echo "ECSサービスを強制再デプロイします..."
+	AWS_PROFILE=admin aws ecs update-service \
+		--cluster mutual-app-cluster \
+		--service mutual-app-frontend-service \
+		--force-new-deployment
+	@echo "✅ デプロイが開始されました。AWSコンソールで進行状況を確認してください。"
 
 # ==============================================================================
 # TERRAFORM
 # ==============================================================================
 tf-init:
-	@echo "🏗️ Terraformを初期化します..."
+	@echo "Terraformを初期化します..."
 	AWS_PROFILE=admin terraform -chdir=./terraform init
 
 tf-plan:
-	@echo "📋 Terraformの実行計画を作成します..."
+	@echo "Terraformの実行計画を作成します..."
 	AWS_PROFILE=admin terraform -chdir=./terraform plan
 
 tf-apply:
-	@echo "🚀 Terraformでインフラを適用します..."
-	AWS_PROFILE=admin terraform -chdir=./terraform apply --auto-approve
+	@echo "Terraformでインフラを適用します..."
+	AWS_PROFILE=admin terraform -chdir=./terraform apply -auto-approve
 
 tf-destroy:
-	@echo "🗑️ Terraformでインフラを破棄します..."
+	@echo "Terraformでインフラを破棄します..."
 	@echo "⚠️  この操作は全てのAWSリソースを削除します。本当に実行しますか？"
 	@read -p "続行するには 'yes' と入力してください: " confirm && [ "$$confirm" = "yes" ]
 	AWS_PROFILE=admin terraform -chdir=./terraform destroy
 
-tf-output:
-	@echo "�� Terraformの出力値を表示します..."
+tf-outputs:
+	@echo "Terraformの出力値を表示します..."
 	AWS_PROFILE=admin terraform -chdir=./terraform output
 
 # ==============================================================================
-# DEPLOYMENT & OPERATIONS
+# Docker Compose
 # ==============================================================================
-deploy: build
-	@echo "🚀 アプリケーションをデプロイします..."
-	git add .
-	git commit -m "Deploy: $$(date '+%Y-%m-%d %H:%M:%S')" || echo "変更がありません"
-	git push origin main
+compose-up:
+	@echo "docker-composeで開発環境を起動します..."
+	docker-compose up -d
+	@echo "✅ docker-composeで開発環境を起動しました！"
 
-set-secrets:
-	@echo "🔐 アプリケーションシークレットを設定します..."
-	@echo "注意: terraform applyでシークレットリソースを作成済みである必要があります"
-	@SECRET_NAME=$$(AWS_PROFILE=admin terraform -chdir=./terraform output -raw app_secrets_name 2>/dev/null) && \
-	if [ -z "$$SECRET_NAME" ]; then \
-		echo "❌ Terraformの出力からシークレット名を取得できません。先にterraform applyを実行してください"; \
-		exit 1; \
-	fi && \
-	echo "シークレット名: $$SECRET_NAME" && \
-	echo "以下のコマンドを実行してシークレット値を設定してください:" && \
-	echo "AWS_PROFILE=admin aws secretsmanager put-secret-value --secret-id $$SECRET_NAME --secret-string '{\"AUTH0_SECRET\":\"your-secret\", \"AUTH0_DOMAIN\":\"your-domain\", \"AUTH0_CLIENT_ID\":\"your-client-id\", \"AUTH0_CLIENT_SECRET\":\"your-client-secret\"}'"
+compose-down:
+	@echo "docker-composeで開発環境を停止します..."
+	docker-compose down
+	@echo "✅ docker-composeで開発環境を停止しました。"
 
-aws-status:
-	@echo "☁️ AWS リソースの状態を確認します..."
-	@echo "\n📦 ECR Repository:"
-	@AWS_PROFILE=admin aws ecr describe-repositories \
-		--repository-names mutual-test-repo \
-		--query 'repositories[0].{Name:repositoryName,URI:repositoryUri,CreatedAt:createdAt}' \
-		--output table 2>/dev/null || echo "リポジトリが見つかりません"
-	@echo "\n🌐 CloudFront Distribution:"
-	@AWS_PROFILE=admin aws cloudfront list-distributions \
-		--query 'DistributionList.Items[?Comment==`mutual-test CloudFront Distribution`].{Id:Id,DomainName:DomainName,Status:Status}' \
-		--output table 2>/dev/null || echo "ディストリビューションが見つかりません"
-	@echo "\n🏗️ ECS Service:"
-	@AWS_PROFILE=admin aws ecs describe-services \
-		--cluster mutual-test-cluster \
-		--services mutual-test-service \
-		--query 'services[0].{Name:serviceName,Status:status,RunningCount:runningCount,DesiredCount:desiredCount}' \
-		--output table 2>/dev/null || echo "ECSサービスが見つかりません"
-
-logs:
-	@echo "📋 ECSタスクのログを表示します..."
-	@AWS_PROFILE=admin aws logs tail /ecs/mutual-test --follow --since 10m 2>/dev/null || echo "ログが見つかりません。先にデプロイを実行してください"
-
-backup:
-	@echo "💾 設定ファイルをバックアップします..."
-	@mkdir -p backup/$$(date +%Y%m%d)
-	@cp -r terraform backup/$$(date +%Y%m%d)/ 2>/dev/null || true
-	@cp package.json backup/$$(date +%Y%m%d)/ 2>/dev/null || true
-	@cp next.config.js backup/$$(date +%Y%m%d)/ 2>/dev/null || true
-	@cp Dockerfile backup/$$(date +%Y%m%d)/ 2>/dev/null || true
-	@cp .env.local backup/$$(date +%Y%m%d)/env.local.backup 2>/dev/null || true
-	@echo "✅ バックアップが完了しました: backup/$$(date +%Y%m%d)/"
+compose-logs:
+	@echo "docker-composeのログを常に監視します（Ctrl+Cで終了）..."
+	@echo "=================================================="
+	@docker-compose logs -f
 
 .DEFAULT_GOAL := help 
