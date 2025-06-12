@@ -567,58 +567,41 @@ const QaDetailModal: React.FC<QaDetailModalProps> = ({
                       {editableQA.source.map((source) => (
                         <div key={source} className="inline-flex items-center bg-gray-100 text-gray-600 px-2 py-1 rounded-md text-xs">
                           <BookOpen size={12} className="mr-1" />
-                          {source}
+                          <span className="truncate max-w-[120px]">{source}</span>
                           <button
                             onClick={() => handleRemoveSource(source)}
-                            className="ml-1 text-gray-600 hover:text-gray-800"
+                            className="ml-1 text-gray-600 hover:text-gray-800 flex-shrink-0"
                           >
                             <X size={12} />
                           </button>
                         </div>
                       ))}
                     </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">情報ソース</label>
-                      <div className="flex flex-wrap gap-2 mb-2">
-                        {editableQA.source.map((source) => (
-                          <div key={source} className="inline-flex items-center bg-gray-100 text-gray-600 px-2 py-1 rounded-md text-xs">
-                            <BookOpen size={12} className="mr-1" />
-                            <span className="truncate max-w-[120px]">{source}</span>
-                            <button
-                              onClick={() => handleRemoveSource(source)}
-                              className="ml-1 text-gray-600 hover:text-gray-800 flex-shrink-0"
-                            >
-                              <X size={12} />
-                            </button>
-                          </div>
-                        ))}
-                      </div>
-                      <div className="relative">
-                        <button
-                          onClick={() => setShowSourceList(!showSourceList)}
-                          className="flex items-center text-sm px-2 py-1 rounded border bg-white hover:bg-gray-50"
-                        >
-                          <Plus size={14} className="mr-1" />
-                          ソースを追加
-                        </button>
-                        {showSourceList && (
-                          <div className="absolute z-10 mt-1 w-full max-w-64 bg-white rounded-md shadow-lg border py-1 max-h-48 overflow-y-auto">
-                            {INFO_SOURCE_OPTIONS.filter(option => !editableQA.source.includes(option.label))
-                              .map((option) => (
-                                <button
-                                  key={option.label}
-                                  onClick={() => {
-                                    handleAddSource(option);
-                                    setShowSourceList(false);
-                                  }}
-                                  className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100 truncate"
-                                >
-                                  {option.label}
-                                </button>
-                              ))}
-                          </div>
-                        )}
-                      </div>
+                    <div className="relative">
+                      <button
+                        onClick={() => setShowSourceList(!showSourceList)}
+                        className="flex items-center text-sm px-2 py-1 rounded border bg-white hover:bg-gray-50"
+                      >
+                        <Plus size={14} className="mr-1" />
+                        ソースを追加
+                      </button>
+                      {showSourceList && (
+                        <div className="absolute z-10 mt-1 w-full max-w-64 bg-white rounded-md shadow-lg border py-1 max-h-48 overflow-y-auto">
+                          {INFO_SOURCE_OPTIONS.filter(option => !editableQA.source.includes(option.label))
+                            .map((option) => (
+                              <button
+                                key={option.label}
+                                onClick={() => {
+                                  handleAddSource(option);
+                                  setShowSourceList(false);
+                                }}
+                                className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100 truncate"
+                              >
+                                {option.label}
+                              </button>
+                            ))}
+                        </div>
+                      )}
                     </div>
                   </div>
                   <div>

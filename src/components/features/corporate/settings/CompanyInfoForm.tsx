@@ -58,7 +58,7 @@ const CompanyInfoForm: React.FC<CompanyInfoFormProps> = ({ initialData, onSaveSu
             >
               <option value="">業界を選択してください</option>
               {INDUSTRY_OPTIONS.map(option => (
-                <option key={option.value} value={option.value}>
+                <option key={option.value} value={option.label}>
                   {option.label}
                 </option>
               ))}

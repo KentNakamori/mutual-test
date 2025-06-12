@@ -1,5 +1,5 @@
 // components/ui/SearchBar.tsx
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Search, Filter, ChevronDown } from 'lucide-react';
 import { EnhancedSearchBarProps } from '@/types';
 import { getTagColor } from '@/components/ui/tagConfig';
@@ -29,6 +29,35 @@ const SearchBar: React.FC<EnhancedSearchBarProps> = ({
   const [selectedFilters, setSelectedFilters] = useState<Record<string, any>>(initialFilters);
   const [activeFilters, setActiveFilters] = useState<Record<string, any>>(initialFilters);
   const [selectedSort, setSelectedSort] = useState(initialSortBy);
+
+  // フィルター要素のref
+  const filterRef = useRef<HTMLDivElement>(null);
+  const sortRef = useRef<HTMLDivElement>(null);
+
+  // フィルター外クリックでフィルターを閉じる
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Node;
+      
+      // フィルターの外側をクリックした場合
+      if (showFilters && filterRef.current && !filterRef.current.contains(target)) {
+        setShowFilters(false);
+      }
+      
+      // ソートの外側をクリックした場合
+      if (showSortOptions && sortRef.current && !sortRef.current.contains(target)) {
+        setShowSortOptions(false);
+      }
+    };
+
+    // ドキュメントにイベントリスナーを追加
+    document.addEventListener('click', handleClickOutside);
+    
+    // クリーンアップ関数
+    return () => {
+      document.removeEventListener('click', handleClickOutside);
+    };
+  }, [showFilters, showSortOptions]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -146,7 +175,7 @@ const SearchBar: React.FC<EnhancedSearchBarProps> = ({
 
         <div className="flex ml-4 space-x-2">
           {showFilterButton && (
-            <div className="relative">
+            <div className="relative" ref={filterRef}>
               <button 
                 type="button"
                 onClick={() => {
@@ -163,7 +192,12 @@ const SearchBar: React.FC<EnhancedSearchBarProps> = ({
               </button>
               
               {showFilters && (
-                <div className="absolute left-0 mt-2 w-96 bg-white rounded-lg shadow-lg border border-gray-200 z-10">
+                <div 
+                  className="absolute left-0 mt-2 w-96 bg-white rounded-lg shadow-lg border border-gray-200 z-[60]"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                  }}
+                >
                   <div className="p-4">
                     <h3 className="text-sm font-medium mb-3">フィルター設定</h3>
                     
@@ -300,7 +334,7 @@ const SearchBar: React.FC<EnhancedSearchBarProps> = ({
             </div>
           )}
           
-          <div className="relative">
+          <div className="relative" ref={sortRef}>
             <button 
               type="button"
               onClick={() => {
@@ -314,7 +348,12 @@ const SearchBar: React.FC<EnhancedSearchBarProps> = ({
             </button>
 
             {showSortOptions && sortOptions.length > 0 && (
-              <div className="absolute left-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-10">
+              <div 
+                className="absolute left-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-gray-200 z-[60]"
+                onClick={(e) => {
+                  e.stopPropagation();
+                }}
+              >
                 <div className="py-1">
                   {sortOptions.map(option => (
                     <button

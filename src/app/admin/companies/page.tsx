@@ -4,6 +4,7 @@ import React from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { companySchema, CompanyInput } from "../../../lib/companySchema";
+import { INDUSTRY_OPTIONS } from "../../../types/industry";
 import { useState } from "react";
 import { useRouter } from 'next/navigation';
 
@@ -28,8 +29,9 @@ export default function CompanyCreatePage() {
       // データを適切な型に変換
       const submitData = {
         ...data,
-        capital: data.capital ? Number(data.capital) : undefined,
-        employeeCount: data.employeeCount ? Number(data.employeeCount) : undefined,
+        // employeeCountは数値として送信
+        employeeCount: data.employeeCount ? Number(data.employeeCount) : null,
+        // その他のフィールドはそのまま送信（capitalは文字列のまま）
       };
       
       console.log('変換後データ:', submitData); // デバッグ用
@@ -104,17 +106,27 @@ export default function CompanyCreatePage() {
                 )}
               </div>
 
-              {/* --- 任意フィールド --- */}
-              <div>
+              <div className="md:col-span-2">
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  業種
+                  業種 *
                 </label>
-                <input 
+                <select 
                   className="mt-1 block w-full border border-gray-300 rounded p-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500" 
                   {...register("industry")} 
-                />
+                >
+                  <option value="">業種を選択してください</option>
+                  {INDUSTRY_OPTIONS.map((option) => (
+                    <option key={option.value} value={option.value}>
+                      {option.label}
+                    </option>
+                  ))}
+                </select>
+                {errors.industry && (
+                  <p className="text-red-600 text-sm mt-1">{errors.industry.message}</p>
+                )}
               </div>
 
+              {/* --- 任意フィールド --- */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
                   証券コード
@@ -132,12 +144,39 @@ export default function CompanyCreatePage() {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  設立日
+                  市場区分
+                </label>
+                <select 
+                  className="mt-1 block w-full border border-gray-300 rounded p-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500" 
+                  {...register("marketSegment")} 
+                >
+                  <option value="">選択してください</option>
+                  <option value="東証プライム">東証プライム</option>
+                  <option value="東証スタンダード">東証スタンダード</option>
+                  <option value="東証グロース">東証グロース</option>
+                  <option value="未上場">未上場</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  設立日（年月）
+                </label>
+                <input
+                  type="month"
+                  className="mt-1 block w-full border border-gray-300 rounded p-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  {...register("establishedDate")}
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  上場日
                 </label>
                 <input
                   type="date"
                   className="mt-1 block w-full border border-gray-300 rounded p-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                  {...register("establishedDate")}
+                  {...register("listingDate")}
                 />
               </div>
 
@@ -148,6 +187,17 @@ export default function CompanyCreatePage() {
                 <input 
                   className="mt-1 block w-full border border-gray-300 rounded p-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500" 
                   {...register("ceo")} 
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  電話番号
+                </label>
+                <input 
+                  type="tel"
+                  className="mt-1 block w-full border border-gray-300 rounded p-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500" 
+                  {...register("phone")} 
                 />
               </div>
 
@@ -167,11 +217,11 @@ export default function CompanyCreatePage() {
 
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
-                  資本金（円）
+                  資本金
                 </label>
                 <input
-                  type="number"
-                  step="0.01"
+                  type="text"
+                  placeholder="例: 10億円"
                   className="mt-1 block w-full border border-gray-300 rounded p-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   {...register("capital")}
                 />

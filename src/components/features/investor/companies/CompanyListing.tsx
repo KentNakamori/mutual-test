@@ -1,5 +1,5 @@
 // src/components/features/investor/companies/CompanyListing.tsx
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Filter, Search, Grid, List, ChevronDown } from 'lucide-react';
 import { usePathname } from 'next/navigation';
 import { Industry, INDUSTRY_OPTIONS, getIndustryLabel } from '@/types/industry';
@@ -40,6 +40,10 @@ const CompanyListing: React.FC<CompanyListingProps> = ({ isFollowedOnly = false,
   const isGuest = !user && !userLoading;
   const token = user?.sub; // user.subをトークンとして使用
 
+  // フィルター要素のref
+  const industryFilterRef = useRef<HTMLDivElement>(null);
+  const exchangeFilterRef = useRef<HTMLDivElement>(null);
+  const sortFilterRef = useRef<HTMLDivElement>(null);
   
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   const [showIndustryFilter, setShowIndustryFilter] = useState(false);
@@ -53,6 +57,58 @@ const CompanyListing: React.FC<CompanyListingProps> = ({ isFollowedOnly = false,
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showGuestPopup, setShowGuestPopup] = useState(false);
+  
+  // フィルター外クリックでフィルターを閉じる
+  useEffect(() => {
+    console.log('useEffect実行 - イベントリスナー設定:', {
+      showIndustryFilter,
+      showExchangeFilter,
+      showSortOptions
+    });
+
+    const handleClickOutside = (event: MouseEvent) => {
+      console.log('=== クリックイベント発生 ===');
+      const target = event.target as Node;
+      
+      console.log('外部クリック検知:', {
+        showIndustryFilter,
+        showExchangeFilter,
+        showSortOptions,
+        targetElement: target,
+        clickedElement: (target as Element)?.tagName,
+        clickedClass: (target as Element)?.className,
+        eventType: event.type
+      });
+      
+      // 業界フィルターの外側をクリックした場合
+      if (showIndustryFilter && industryFilterRef.current && !industryFilterRef.current.contains(target)) {
+        console.log('業界フィルターを閉じます');
+        setShowIndustryFilter(false);
+      }
+      
+      // 取引所フィルターの外側をクリックした場合
+      if (showExchangeFilter && exchangeFilterRef.current && !exchangeFilterRef.current.contains(target)) {
+        console.log('取引所フィルターを閉じます');
+        setShowExchangeFilter(false);
+      }
+      
+      // ソートフィルターの外側をクリックした場合
+      if (showSortOptions && sortFilterRef.current && !sortFilterRef.current.contains(target)) {
+        console.log('ソートフィルターを閉じます');
+        setShowSortOptions(false);
+      }
+    };
+
+    // ドキュメントにイベントリスナーを追加
+    console.log('イベントリスナーを追加します');
+    document.addEventListener('click', handleClickOutside);
+    
+    // クリーンアップ関数
+    return () => {
+      console.log('イベントリスナーを削除します');
+      document.removeEventListener('click', handleClickOutside);
+    };
+  }, [showIndustryFilter, showExchangeFilter, showSortOptions]);
   
   // APIからデータ取得
   useEffect(() => {
@@ -101,6 +157,22 @@ const CompanyListing: React.FC<CompanyListingProps> = ({ isFollowedOnly = false,
   // フィルター適用とソート処理
   const getFilteredAndSortedCompanies = () => {
     let filtered = [...companies];
+    
+    // キーワード検索フィルター
+    if (keyword.trim()) {
+      filtered = filtered.filter(company => 
+        company.companyName.toLowerCase().includes(keyword.toLowerCase()) ||
+        (company.businessDescription && company.businessDescription.toLowerCase().includes(keyword.toLowerCase()))
+      );
+    }
+    
+    // 業界フィルター
+    if (activeIndustry !== 'すべて') {
+      const targetIndustryLabel = getIndustryLabel(activeIndustry); // Enum値を日本語ラベルに変換
+      filtered = filtered.filter(company => {
+        return company.industry === targetIndustryLabel;
+      });
+    }
     
     // 主要取引所フィルター（ローカルフィルタリング）
     if (activeExchange !== 'すべて') {
@@ -204,7 +276,7 @@ const CompanyListing: React.FC<CompanyListingProps> = ({ isFollowedOnly = false,
         </form>
         
         {/* 業界フィルター */}
-        <div className="relative">
+        <div className="relative" ref={industryFilterRef}>
           <button 
             onClick={() => {
               setShowIndustryFilter(!showIndustryFilter);
@@ -218,7 +290,12 @@ const CompanyListing: React.FC<CompanyListingProps> = ({ isFollowedOnly = false,
           </button>
       
           {showIndustryFilter && (
-            <div className="absolute z-10 mt-1 w-48 bg-white rounded-md shadow-lg border border-gray-200 py-1 max-h-60 overflow-y-auto">
+            <div 
+              className="absolute z-[60] mt-1 w-48 bg-white rounded-md shadow-lg border border-gray-200 py-1 max-h-60 overflow-y-auto"
+              onClick={(e) => {
+                e.stopPropagation();
+              }}
+            >
               <button
                 onClick={() => {
                   setActiveIndustry('すべて');
@@ -249,7 +326,7 @@ const CompanyListing: React.FC<CompanyListingProps> = ({ isFollowedOnly = false,
         </div>
     
         {/* 主要取引所フィルター */}
-        <div className="relative">
+        <div className="relative" ref={exchangeFilterRef}>
           <button 
             onClick={() => {
               setShowExchangeFilter(!showExchangeFilter);
@@ -263,7 +340,12 @@ const CompanyListing: React.FC<CompanyListingProps> = ({ isFollowedOnly = false,
           </button>
       
           {showExchangeFilter && (
-            <div className="absolute z-10 mt-1 w-48 bg-white rounded-md shadow-lg border border-gray-200 py-1">
+            <div 
+              className="absolute z-[60] mt-1 w-48 bg-white rounded-md shadow-lg border border-gray-200 py-1"
+              onClick={(e) => {
+                e.stopPropagation();
+              }}
+            >
               {exchanges.map((exchange) => (
                 <button
                   key={exchange}
@@ -283,7 +365,7 @@ const CompanyListing: React.FC<CompanyListingProps> = ({ isFollowedOnly = false,
         </div>
           
         {/* 並び替え */}
-        <div className="relative">
+        <div className="relative" ref={sortFilterRef}>
           <button 
             onClick={() => {
               setShowSortOptions(!showSortOptions);
@@ -297,7 +379,12 @@ const CompanyListing: React.FC<CompanyListingProps> = ({ isFollowedOnly = false,
           </button>
             
           {showSortOptions && (
-            <div className="absolute z-10 mt-1 w-48 bg-white rounded-md shadow-lg border border-gray-200 py-1">
+            <div 
+              className="absolute z-[60] mt-1 w-48 bg-white rounded-md shadow-lg border border-gray-200 py-1"
+              onClick={(e) => {
+                e.stopPropagation();
+              }}
+            >
               {sortOptions.map((option) => (
                 <button
                   key={option}
