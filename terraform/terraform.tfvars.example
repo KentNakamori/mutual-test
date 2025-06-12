@@ -1,0 +1,28 @@
+# terraform.tfvars.example
+# このファイルをコピーしてterraform.tfvarsとして使用してください
+# terraform.tfvarsは.gitignoreに追加することを推奨します
+
+# ドメイン設定（オプション）
+# domain_name = "example.com"  # 独自ドメインがある場合は設定
+domain_name = ""  # 空文字の場合はCloudFrontの自動ドメインを使用（無料）
+
+# オプション設定（必要に応じて変更）
+region = "ap-northeast-1"
+project_name = "mutual-app"  # バックエンドと統一
+environment = "production"
+
+# Auth0設定（必要に応じて変更）
+auth0_issuer_base_url = "https://dev-ldw81lf4gyh8azw6.jp.auth0.com/"
+auth0_domain = "dev-ldw81lf4gyh8azw6.jp.auth0.com"
+auth0_client_id = "Y5p4Fn2rllKLs4M2zoIShqIhn4JdKZzP"
+auth0_audience = "https://api.local.dev"
+
+# API設定（バックエンドAPIのURL）
+# バックエンドと同じVPCを使用する設定済み
+# 
+# 利用可能なエンドポイント:
+# 1. CloudFront経由（推奨）:
+api_base_url = "https://d20rzkwelg7jzp.cloudfront.net"
+# 
+# 2. ALB直接接続（オプション）:
+#    api_base_url = "https://mutual-app-alb-v2-684193640.ap-northeast-1.elb.amazonaws.com" 

@@ -94,8 +94,8 @@ data "aws_route_table" "all_tables" {
 # ------------------------------------------------------------------------------
 # ECR (Elastic Container Registry)
 # ------------------------------------------------------------------------------
-resource "aws_ecr_repository" "main" {
-  name                 = "${var.project_name}-repo"
+resource "aws_ecr_repository" "frontend" {
+  name                 = "${var.project_name}-frontend-repo"
   image_tag_mutability = "MUTABLE"
 
   image_scanning_configuration {
@@ -103,7 +103,7 @@ resource "aws_ecr_repository" "main" {
   }
 
   tags = {
-    Name = "${var.project_name}-repo"
+    Name = "${var.project_name}-frontend-repo"
   }
 }
 
@@ -133,7 +133,7 @@ data "aws_iam_policy_document" "ecs_task_assume_role" {
 }
 
 resource "aws_iam_role" "ecs_task_execution_role" {
-  name               = "${var.project_name}-ecs-exec-role"
+  name               = "${var.project_name}-frontend-ecs-exec-role"
   assume_role_policy = data.aws_iam_policy_document.ecs_task_assume_role.json
 }
 
@@ -143,7 +143,7 @@ resource "aws_iam_role_policy_attachment" "ecs_task_execution_role_policy" {
 }
 
 resource "aws_iam_role" "ecs_task_role" {
-  name               = "${var.project_name}-ecs-task-role"
+  name               = "${var.project_name}-frontend-ecs-task-role"
   assume_role_policy = data.aws_iam_policy_document.ecs_task_assume_role.json
 }
 
@@ -166,8 +166,8 @@ resource "aws_iam_role_policy" "secrets_manager_access" {
 # Secrets Manager
 # ------------------------------------------------------------------------------
 resource "aws_secretsmanager_secret" "app_secrets" {
-  name        = "${var.project_name}-app-secrets"
-  description = "Application secrets for ${var.project_name}"
+  name        = "${var.project_name}/frontend/app-secrets"
+  description = "Application secrets for ${var.project_name} frontend"
 }
 
 resource "aws_secretsmanager_secret_version" "app_secrets" {
@@ -206,7 +206,7 @@ resource "aws_security_group" "lb" {
 }
 
 resource "aws_security_group" "ecs_tasks" {
-  name        = "${var.project_name}-ecs-tasks-sg"
+  name        = "${var.project_name}-frontend-ecs-tasks-sg"
   description = "Allow traffic from ALB to ECS tasks"
   vpc_id      = data.aws_vpc.existing.id
 
@@ -247,7 +247,7 @@ resource "aws_lb_target_group" "main" {
     enabled             = true
     healthy_threshold   = 2
     interval            = 30
-    matcher             = "200"
+    matcher             = "200,307"
     path                = "/"
     port                = "traffic-port"
     protocol            = "HTTP"
@@ -286,7 +286,7 @@ resource "aws_ecs_task_definition" "main" {
   container_definitions = jsonencode([
     {
       name      = "${var.project_name}-container"
-      image     = "${aws_ecr_repository.main.repository_url}:latest"
+      image     = "${aws_ecr_repository.frontend.repository_url}:latest"
       essential = true
       portMappings = [
         {
@@ -312,7 +312,7 @@ resource "aws_ecs_task_definition" "main" {
       ]
       environment = [
         { name = "NODE_ENV", value = "production" },
-        { name = "API_BASE_URL", value = "https://d9dahhwcea92g.cloudfront.net" },
+        { name = "API_BASE_URL", value = var.api_base_url },
         { name = "AUTH0_BASE_URL", value = "https://${aws_cloudfront_distribution.main.domain_name}" },
         { name = "APP_BASE_URL", value = "https://${aws_cloudfront_distribution.main.domain_name}" }
       ]

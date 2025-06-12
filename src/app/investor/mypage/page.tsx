@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import Sidebar from "@/components/common/sidebar";
 import Footer from "@/components/common/footer";
 import MyPageTabMenu from "@/components/features/investor/mypage/MyPageTabMenu";
-import { ProfileData } from "@/types";
+import { ProfileData, NotificationSetting } from "@/types";
 import { Home, Heart, Search, MessageSquare, User } from 'lucide-react';
 import { getInvestorUser, updateInvestorUser } from "@/lib/api";
 import GuestRestrictedContent from '@/components/features/investor/common/GuestRestrictedContent';
@@ -119,6 +119,30 @@ const MyPage = () => {
       return Promise.resolve();
     } catch (err) {
       console.error('パスワード変更エラー:', err);
+      throw err;
+    }
+  };
+
+  const handleSaveNotification = async (newSetting: NotificationSetting) => {
+    try {
+      // 通知設定の保存処理を実装
+      console.log('通知設定保存:', newSetting);
+      // TODO: 実際のAPI呼び出しを実装
+      return Promise.resolve();
+    } catch (err) {
+      console.error('通知設定保存エラー:', err);
+      throw err;
+    }
+  };
+
+  const handleDeleteAccount = async (password: string) => {
+    try {
+      // アカウント削除処理を実装
+      console.log('アカウント削除:', password);
+      // TODO: 実際のAPI呼び出しを実装
+      return Promise.resolve();
+    } catch (err) {
+      console.error('アカウント削除エラー:', err);
       throw err;
     }
   };
@@ -260,6 +284,8 @@ const MyPage = () => {
             profileData={profile}
             onSaveProfile={handleSaveProfile}
             onChangePassword={handleChangePassword}
+            onSaveNotification={handleSaveNotification}
+            onDeleteAccount={handleDeleteAccount}
           />
         </main>
       </div>

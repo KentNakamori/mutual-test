@@ -1,9 +1,11 @@
-.PHONY: help setup lint lint-fix test docker-init docker-build docker-push deploy tf-init tf-plan tf-apply tf-destroy tf-outputs dev-start dev-stop dev-logs dev-status dev-logs-follow compose-up compose-down compose-logs
+.PHONY: help setup lint lint-fix test docker-init docker-build docker-push deploy tf-init tf-plan tf-apply tf-destroy tf-outputs dev-start dev-stop dev-logs dev-status dev-logs-follow compose-up compose-down compose-logs api-info
 
 # ==============================================================================
 # VARIABLES
 # ==============================================================================
-ECR_REPOSITORY_URL ?= $(shell AWS_PROFILE=admin terraform -chdir=./terraform output -raw frontend_ecr_repository_url 2>/dev/null || echo "")
+ECR_REPOSITORY_URL ?= $(shell cd terraform && terraform output -raw ecr_repository_url 2>/dev/null || echo "")
+ECS_CLUSTER_NAME ?= $(shell cd terraform && terraform output -raw ecs_cluster_name 2>/dev/null || echo "")
+ECS_SERVICE_NAME ?= $(shell cd terraform && terraform output -raw ecs_service_name 2>/dev/null || echo "")
 AWS_REGION ?= ap-northeast-1
 IMAGE_NAME = mutual-frontend
 IMAGE_TAG ?= latest
@@ -44,6 +46,8 @@ help:
 	@echo "    make docker-build    - AWS用Dockerイメージをビルドする"
 	@echo "    make docker-push     - DockerイメージをECRにプッシュする"
 	@echo "    make deploy          - ECRプッシュ + ECS強制デプロイを実行する"
+	@echo "    make deploy-full     - インフラ構築 + 機密情報設定 + アプリデプロイの全自動実行"
+	@echo "    make deploy-check    - デプロイ設定の確認"
 	@echo ""
 	@echo "  Terraform (インフラ管理):"
 	@echo "    make tf-init         - Terraformを初期化する"
@@ -51,6 +55,7 @@ help:
 	@echo "    make tf-apply        - Terraformでインフラを構築・変更する"
 	@echo "    make tf-destroy      - Terraformで作成したインフラを全て削除する"
 	@echo "    make tf-outputs      - Terraformの出力値を表示する"
+	@echo "    make api-info        - API接続情報を表示する"
 
 # ==============================================================================
 # SETUP
@@ -181,36 +186,105 @@ docker-push: docker-init docker-build
 
 deploy: docker-push
 	@echo "ECSサービスを強制再デプロイします..."
+	@if [ -z "$(ECS_CLUSTER_NAME)" ] || [ -z "$(ECS_SERVICE_NAME)" ]; then \
+		echo "❌ ECSクラスター名またはサービス名が取得できません。"; \
+		echo "   terraform apply を先に実行してください"; \
+		exit 1; \
+	fi
 	AWS_PROFILE=admin aws ecs update-service \
-		--cluster mutual-app-cluster \
-		--service mutual-app-frontend-service \
+		--cluster $(ECS_CLUSTER_NAME) \
+		--service $(ECS_SERVICE_NAME) \
 		--force-new-deployment
 	@echo "✅ デプロイが開始されました。AWSコンソールで進行状況を確認してください。"
+
+deploy-check:
+	@echo "🔍 デプロイ設定の確認..."
+	@echo ""
+	@echo "📋 環境変数:"
+	@echo "  AWS_REGION: $(AWS_REGION)"
+	@echo "  ECR_REPOSITORY_URL: $(ECR_REPOSITORY_URL)"
+	@echo "  ECS_CLUSTER_NAME: $(ECS_CLUSTER_NAME)"
+	@echo "  ECS_SERVICE_NAME: $(ECS_SERVICE_NAME)"
+	@echo ""
+	@echo "🔧 必要なツール:"
+	@command -v terraform >/dev/null 2>&1 && echo "  ✅ Terraform: インストール済み" || echo "  ❌ Terraform: 未インストール"
+	@command -v docker >/dev/null 2>&1 && echo "  ✅ Docker: インストール済み" || echo "  ❌ Docker: 未インストール"
+	@command -v aws >/dev/null 2>&1 && echo "  ✅ AWS CLI: インストール済み" || echo "  ❌ AWS CLI: 未インストール"
+	@echo ""
+	@echo "🔐 AWS認証:"
+	@AWS_PROFILE=admin aws sts get-caller-identity >/dev/null 2>&1 && echo "  ✅ AWS認証: 正常" || echo "  ❌ AWS認証: 失敗"
+	@echo ""
+	@echo "📁 ファイル確認:"
+	@[ -f terraform/terraform.tfvars ] && echo "  ✅ terraform.tfvars: 存在" || echo "  ⚠️  terraform.tfvars: 未作成"
+	@[ -f .env.local ] && echo "  ✅ .env.local: 存在" || echo "  ⚠️  .env.local: 未作成"
+
+deploy-full:
+	@echo "🚀 フル自動デプロイを開始します..."
+	@echo ""
+	@echo "⚠️  この操作では以下が実行されます:"
+	@echo "   1. Terraformでインフラを構築"
+	@echo "   2. 機密情報設定スクリプトを実行"
+	@echo "   3. Dockerイメージをビルド・プッシュ"
+	@echo "   4. ECSサービスを更新"
+	@echo ""
+	@read -p "続行しますか？ (y/N): " confirm && [ "$$confirm" = "y" ]
+	@echo ""
+	@echo "ステップ1: インフラ構築..."
+	@$(MAKE) tf-apply
+	@echo ""
+	@echo "ステップ2: 機密情報設定..."
+	@echo "（次の画面でAuth0の情報を入力してください）"
+	@./scripts/update-secrets.sh
+	@echo ""
+	@echo "ステップ3: アプリケーションデプロイ..."
+	@$(MAKE) deploy
+	@echo ""
+	@echo "ステップ4: アクセスURL確認..."
+	@cd terraform && AWS_PROFILE=admin terraform output application_url
+	@echo ""
+	@echo "🎉 デプロイが完了しました！"
 
 # ==============================================================================
 # TERRAFORM
 # ==============================================================================
 tf-init:
 	@echo "Terraformを初期化します..."
-	AWS_PROFILE=admin terraform -chdir=./terraform init
+	cd terraform && AWS_PROFILE=admin terraform init
 
 tf-plan:
 	@echo "Terraformの実行計画を作成します..."
-	AWS_PROFILE=admin terraform -chdir=./terraform plan
+	cd terraform && AWS_PROFILE=admin terraform plan
 
 tf-apply:
 	@echo "Terraformでインフラを適用します..."
-	AWS_PROFILE=admin terraform -chdir=./terraform apply -auto-approve
+	cd terraform && AWS_PROFILE=admin terraform apply -auto-approve
 
 tf-destroy:
 	@echo "Terraformでインフラを破棄します..."
 	@echo "⚠️  この操作は全てのAWSリソースを削除します。本当に実行しますか？"
 	@read -p "続行するには 'yes' と入力してください: " confirm && [ "$$confirm" = "yes" ]
-	AWS_PROFILE=admin terraform -chdir=./terraform destroy
+	cd terraform && AWS_PROFILE=admin terraform destroy
 
 tf-outputs:
-	@echo "Terraformの出力値を表示します..."
-	AWS_PROFILE=admin terraform -chdir=./terraform output
+	@echo "📊 Terraform出力情報:"
+	@echo "========================="
+	cd terraform && terraform output
+
+# API接続情報の表示
+api-info:
+	@echo "🌐 API接続情報:"
+	@echo "========================="
+	@echo "ALB DNS名:"
+	@cd terraform && terraform output -raw alb_dns_name
+	@echo ""
+	@echo "CloudFront DNS名:"
+	@cd terraform && terraform output -raw cloudfront_domain_name
+	@echo ""
+	@echo "推奨API_BASE_URL (CloudFront経由):"
+	@cd terraform && terraform output -raw api_endpoint_cloudfront
+	@echo ""
+	@echo "代替API_BASE_URL (ALB直接):"
+	@cd terraform && terraform output -raw api_endpoint_alb
 
 # ==============================================================================
 # Docker Compose

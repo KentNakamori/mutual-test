@@ -90,14 +90,7 @@ const nextConfig = {
   },
   
   // ビルド時のメモリ使用量を制限
-  env: {
-    // Auth0エラーを回避するため、デフォルト値を設定
-    AUTH0_SECRET: process.env.AUTH0_SECRET || 'development-secret-key',
-    AUTH0_BASE_URL: process.env.AUTH0_BASE_URL || 'http://localhost:3000',
-    AUTH0_ISSUER_BASE_URL: process.env.AUTH0_ISSUER_BASE_URL || 'https://dev-ldw81lf4gyh8azw6.jp.auth0.com/',
-    AUTH0_CLIENT_ID: process.env.AUTH0_CLIENT_ID || 'development-client-id',
-    AUTH0_CLIENT_SECRET: process.env.AUTH0_CLIENT_SECRET || 'development-client-secret',
-  },
+  // 注意: envセクションは使用しない - 実行時の環境変数を使用するため
 }
 
 module.exports = nextConfig
