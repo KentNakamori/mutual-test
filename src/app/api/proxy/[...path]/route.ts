@@ -129,6 +129,13 @@ async function handler(
         const responseHeaders = new Headers(res.headers);
         // セキュリティ上の理由や不要なヘッダーを削除または上書きすることも可能
         // responseHeaders.delete('x-powered-by');
+        
+        // Content-Encodingヘッダーを削除（Next.jsが自動的に圧縮を処理するため）
+        responseHeaders.delete('content-encoding');
+        // Transfer-Encodingヘッダーも削除（Next.jsが自動的に処理するため）
+        responseHeaders.delete('transfer-encoding');
+        // Content-Lengthヘッダーも削除（Next.jsが再計算するため）
+        responseHeaders.delete('content-length');
 
         const responseContentType = res.headers.get('Content-Type');
         console.log(`[PROXY ${req.method}] Response Content-Type:`, responseContentType);
