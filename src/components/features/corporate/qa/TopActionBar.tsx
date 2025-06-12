@@ -3,7 +3,7 @@ import React from 'react';
 import SearchBar from '@/components/ui/SearchBar';
 import Button from '@/components/ui/Button';
 import { TopActionBarProps } from '@/types';
-import { GENRE_OPTIONS, QUESTION_ROUTE_OPTIONS } from '@/components/ui/tagConfig';
+import { CATEGORY_OPTION, QUESTION_ROUTE_OPTIONS } from '@/components/ui/tagConfig';
 import { FilterOption } from '@/types';
 
 interface TopActionBarWithCreateProps extends TopActionBarProps {
@@ -37,10 +37,10 @@ const TopActionBar: React.FC<TopActionBarWithCreateProps> = ({ onSearch, onCreat
       }))
     },
     {
-      id: 'genre',
-      label: 'ジャンル',
+      id: 'category',
+      label: 'カテゴリ',
       type: 'select',
-      options: GENRE_OPTIONS.map(option => ({
+      options: CATEGORY_OPTION.map(option => ({
         value: option.label,
         label: option.label
       }))
@@ -64,16 +64,16 @@ const TopActionBar: React.FC<TopActionBarWithCreateProps> = ({ onSearch, onCreat
     
     // 1. フィルターの処理 - すべて明示的に処理する
     
-    // ジャンルの処理 (配列または文字列を適切に処理)
-    let genreArray: string[] | undefined = undefined;
-    if (filters.genre) {
-      if (Array.isArray(filters.genre)) {
-        const validGenres = filters.genre.filter((g: string) => g && g.trim() !== '');
-        if (validGenres.length > 0) {
-          genreArray = validGenres;
+    // カテゴリの処理 (配列または文字列を適切に処理)
+    let categoryArray: string[] | undefined = undefined;
+    if (filters.category) {
+      if (Array.isArray(filters.category)) {
+        const validCategories = filters.category.filter((g: string) => g && g.trim() !== '');
+        if (validCategories.length > 0) {
+          categoryArray = validCategories;
         }
-      } else if (typeof filters.genre === 'string' && filters.genre.trim() !== '') {
-        genreArray = [filters.genre];
+      } else if (typeof filters.category === 'string' && filters.category.trim() !== '') {
+        categoryArray = [filters.category];
       }
     }
     
@@ -132,7 +132,7 @@ const TopActionBar: React.FC<TopActionBarWithCreateProps> = ({ onSearch, onCreat
     const searchParams = {
       query: keyword || '',
       question_route: questionRoute,
-      genre: genreArray,
+      category: categoryArray,
       fiscalPeriod: fiscalPeriodArray,
       sort: sortKey,
       order: sortOrder

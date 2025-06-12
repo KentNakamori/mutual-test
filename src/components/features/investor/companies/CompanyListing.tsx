@@ -6,6 +6,7 @@ import { Industry, INDUSTRY_OPTIONS, getIndustryLabel } from '@/types/industry';
 import { useUser } from '@auth0/nextjs-auth0';
 import { getFullImageUrl } from '@/lib/utils/imageUtils';//画像のURLを取得する関数仮
 import { getInvestorCompanies } from '@/lib/api/investor'; // getInvestorCompaniesをインポート
+import GuestRestrictedContent from '@/components/features/investor/common/GuestRestrictedContent';
 
 // APIレスポンスの型定義
 interface CompanyItem {
@@ -35,14 +36,15 @@ interface CompanyListingProps {
 
 const CompanyListing: React.FC<CompanyListingProps> = ({ isFollowedOnly = false, onCompaniesLoaded }) => {
   const { user, error: userError, isLoading: userLoading } = useUser();
-  // ゲスト判定: ユーザーがいない、ローディングが終了、エラーがない
-  const isGuest = !user && !userLoading && !userError;
+  // ゲスト判定: ユーザーがいない、ローディングが終了
+  const isGuest = !user && !userLoading;
   const token = user?.sub; // user.subをトークンとして使用
+
   
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
-  const [showGenreFilter, setShowGenreFilter] = useState(false);
+  const [showIndustryFilter, setShowIndustryFilter] = useState(false);
   const [showSortOptions, setShowSortOptions] = useState(false);
-  const [activeGenre, setActiveGenre] = useState<Industry | 'すべて'>('すべて');
+  const [activeIndustry, setActiveIndustry] = useState<Industry | 'すべて'>('すべて');
   const [activeSortOption, setActiveSortOption] = useState('新着順');
   const [showExchangeFilter, setShowExchangeFilter] = useState(false);
   const [activeExchange, setActiveExchange] = useState('すべて');
@@ -50,6 +52,7 @@ const CompanyListing: React.FC<CompanyListingProps> = ({ isFollowedOnly = false,
   const [companies, setCompanies] = useState<CompanyItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [showGuestPopup, setShowGuestPopup] = useState(false);
   
   // APIからデータ取得
   useEffect(() => {
@@ -91,7 +94,7 @@ const CompanyListing: React.FC<CompanyListingProps> = ({ isFollowedOnly = false,
   }, [isFollowedOnly, onCompaniesLoaded, userLoading, token]); // 依存配列にuserLoadingとtokenを追加
   
   // フィルターとソートのオプション
-  const genres = ['すべて', ...INDUSTRY_OPTIONS.map(option => option.value)];
+  const industries = ['すべて', ...INDUSTRY_OPTIONS.map(option => option.value)];
   const exchanges = ['すべて', '東証プライム', '東証スタンダード', '東証グロース'];
   const sortOptions = ['新着順', '名前順 (A-Z)', '名前順 (Z-A)'];
   
@@ -129,7 +132,7 @@ const CompanyListing: React.FC<CompanyListingProps> = ({ isFollowedOnly = false,
   // フォロー切り替え処理
   const handleFollowToggle = async (companyId: string, currentFollowStatus: boolean) => {
     if (isGuest) {
-      window.location.assign('/investor/login');
+      setShowGuestPopup(true);
       return;
     }
 
@@ -176,7 +179,7 @@ const CompanyListing: React.FC<CompanyListingProps> = ({ isFollowedOnly = false,
   
   // フィルターリセット
   const handleResetFilters = () => {
-    setActiveGenre('すべて');
+    setActiveIndustry('すべて');
     setActiveExchange('すべて');
     setActiveSortOption('新着順');
     setKeyword('');
@@ -204,25 +207,25 @@ const CompanyListing: React.FC<CompanyListingProps> = ({ isFollowedOnly = false,
         <div className="relative">
           <button 
             onClick={() => {
-              setShowGenreFilter(!showGenreFilter);
+              setShowIndustryFilter(!showIndustryFilter);
               if (showExchangeFilter) setShowExchangeFilter(false);
               if (showSortOptions) setShowSortOptions(false);
             }}
             className="flex items-center justify-between w-48 px-4 py-2 bg-white border border-gray-300 rounded-lg shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
-            <span>業界: {activeGenre === 'すべて' ? 'すべて' : getIndustryLabel(activeGenre)}</span>
+            <span>業界: {activeIndustry === 'すべて' ? 'すべて' : getIndustryLabel(activeIndustry)}</span>
             <ChevronDown size={16} className="ml-2 text-gray-500" />
           </button>
       
-          {showGenreFilter && (
+          {showIndustryFilter && (
             <div className="absolute z-10 mt-1 w-48 bg-white rounded-md shadow-lg border border-gray-200 py-1 max-h-60 overflow-y-auto">
               <button
                 onClick={() => {
-                  setActiveGenre('すべて');
-                  setShowGenreFilter(false);
+                  setActiveIndustry('すべて');
+                  setShowIndustryFilter(false);
                 }}
                 className={`block w-full px-4 py-2 text-sm text-left hover:bg-gray-100 ${
-                  activeGenre === 'すべて' ? 'bg-blue-50 text-blue-700 font-medium' : 'text-gray-700'
+                  activeIndustry === 'すべて' ? 'bg-blue-50 text-blue-700 font-medium' : 'text-gray-700'
                 }`}
               >
                 すべて
@@ -231,11 +234,11 @@ const CompanyListing: React.FC<CompanyListingProps> = ({ isFollowedOnly = false,
                 <button
                   key={option.value}
                   onClick={() => {
-                    setActiveGenre(option.value);
-                    setShowGenreFilter(false);
+                    setActiveIndustry(option.value);
+                    setShowIndustryFilter(false);
                   }}
                   className={`block w-full px-4 py-2 text-sm text-left hover:bg-gray-100 ${
-                    activeGenre === option.value ? 'bg-blue-50 text-blue-700 font-medium' : 'text-gray-700'
+                    activeIndustry === option.value ? 'bg-blue-50 text-blue-700 font-medium' : 'text-gray-700'
                   }`}
                 >
                   {option.label}
@@ -250,7 +253,7 @@ const CompanyListing: React.FC<CompanyListingProps> = ({ isFollowedOnly = false,
           <button 
             onClick={() => {
               setShowExchangeFilter(!showExchangeFilter);
-              if (showGenreFilter) setShowGenreFilter(false);
+              if (showIndustryFilter) setShowIndustryFilter(false);
               if (showSortOptions) setShowSortOptions(false);
             }}
             className="flex items-center justify-between w-48 px-4 py-2 bg-white border border-gray-300 rounded-lg shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -284,7 +287,7 @@ const CompanyListing: React.FC<CompanyListingProps> = ({ isFollowedOnly = false,
           <button 
             onClick={() => {
               setShowSortOptions(!showSortOptions);
-              if (showGenreFilter) setShowGenreFilter(false);
+              if (showIndustryFilter) setShowIndustryFilter(false);
               if (showExchangeFilter) setShowExchangeFilter(false);
             }}
             className="flex items-center justify-between w-48 px-4 py-2 bg-white border border-gray-300 rounded-lg shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -314,7 +317,7 @@ const CompanyListing: React.FC<CompanyListingProps> = ({ isFollowedOnly = false,
         </div>
         
         {/* フィルターリセットボタン */}
-        {(activeGenre !== 'すべて' || activeExchange !== 'すべて' || activeSortOption !== '新着順' || keyword) && (
+        {(activeIndustry !== 'すべて' || activeExchange !== 'すべて' || activeSortOption !== '新着順' || keyword) && (
           <button
             onClick={handleResetFilters}
             className="px-3 py-2 text-sm text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded-lg border border-gray-300"
@@ -342,7 +345,7 @@ const CompanyListing: React.FC<CompanyListingProps> = ({ isFollowedOnly = false,
       </div>
       
       {/* アクティブフィルターの表示 */}
-      {(activeGenre !== 'すべて' || activeExchange !== 'すべて' || keyword) && (
+      {(activeIndustry !== 'すべて' || activeExchange !== 'すべて' || keyword) && (
         <div className="mb-4 flex flex-wrap items-center gap-2">
           <span className="text-sm text-gray-600 mr-2">アクティブフィルター:</span>
           {keyword && (
@@ -353,10 +356,10 @@ const CompanyListing: React.FC<CompanyListingProps> = ({ isFollowedOnly = false,
               </button>
             </span>
           )}
-          {activeGenre !== 'すべて' && (
+          {activeIndustry !== 'すべて' && (
             <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-              業界: {getIndustryLabel(activeGenre)}
-              <button onClick={() => setActiveGenre('すべて')} className="ml-1 text-green-600 hover:text-green-800 focus:outline-none">
+              業界: {getIndustryLabel(activeIndustry)}
+              <button onClick={() => setActiveIndustry('すべて')} className="ml-1 text-green-600 hover:text-green-800 focus:outline-none">
                 ×
               </button>
             </span>
@@ -412,7 +415,8 @@ const CompanyListing: React.FC<CompanyListingProps> = ({ isFollowedOnly = false,
                 key={company.companyId} 
                 company={company} 
                 isGuest={isGuest}
-                onFollowToggle={handleFollowToggle} 
+                onFollowToggle={handleFollowToggle}
+                onShowGuestPopup={() => setShowGuestPopup(true)}
               />
             ))}
           </div>
@@ -423,7 +427,8 @@ const CompanyListing: React.FC<CompanyListingProps> = ({ isFollowedOnly = false,
                 key={company.companyId} 
                 company={company} 
                 isGuest={isGuest}
-                onFollowToggle={handleFollowToggle} 
+                onFollowToggle={handleFollowToggle}
+                onShowGuestPopup={() => setShowGuestPopup(true)}
               />
             ))}
           </div>
@@ -435,7 +440,7 @@ const CompanyListing: React.FC<CompanyListingProps> = ({ isFollowedOnly = false,
         <div className="text-center py-8">
           <p className="text-gray-500">該当する企業が見つかりませんでした。</p>
           <p className="text-gray-500 mt-1">検索条件を変更してお試しください。</p>
-          {(activeGenre !== 'すべて' || activeExchange !== 'すべて' || keyword) && (
+          {(activeIndustry !== 'すべて' || activeExchange !== 'すべて' || keyword) && (
             <button
               onClick={handleResetFilters}
               className="mt-3 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 text-sm"
@@ -445,6 +450,15 @@ const CompanyListing: React.FC<CompanyListingProps> = ({ isFollowedOnly = false,
           )}
         </div>
       )}
+      
+      {/* ゲスト制限ポップアップ */}
+      {showGuestPopup && (
+        <GuestRestrictedContent 
+          featureName="フォロー機能" 
+          isPopup={true}
+          onClose={() => setShowGuestPopup(false)}
+        />
+      )}
     </div>
   );
 };
@@ -453,9 +467,10 @@ interface CompanyCardProps {
   company: CompanyItem;
   isGuest: boolean;
   onFollowToggle: (companyId: string, currentFollowStatus: boolean) => void;
+  onShowGuestPopup: () => void;
 }
 
-const CompanyGridCard = ({ company, isGuest, onFollowToggle }: CompanyCardProps) => {
+const CompanyGridCard = ({ company, isGuest, onFollowToggle, onShowGuestPopup }: CompanyCardProps) => {
   const pathname = usePathname();
   
   const handleCardClick = async () => {
@@ -507,7 +522,7 @@ const CompanyGridCard = ({ company, isGuest, onFollowToggle }: CompanyCardProps)
               <button
                 onClick={(e) => {
                   e.stopPropagation();
-                  window.location.assign('/investor/login');
+                  onShowGuestPopup();
                 }}
                 className="px-2 py-1 rounded-md text-xs font-medium bg-gray-200 text-gray-700 hover:bg-gray-300 flex-shrink-0"
               >
@@ -533,7 +548,7 @@ const CompanyGridCard = ({ company, isGuest, onFollowToggle }: CompanyCardProps)
   );
 };
 
-const CompanyListCard = ({ company, isGuest, onFollowToggle }: CompanyCardProps) => {
+const CompanyListCard = ({ company, isGuest, onFollowToggle, onShowGuestPopup }: CompanyCardProps) => {
   const pathname = usePathname();
   
   const handleCardClick = async () => {
@@ -580,7 +595,7 @@ const CompanyListCard = ({ company, isGuest, onFollowToggle }: CompanyCardProps)
           <button
             onClick={(e) => {
               e.stopPropagation();
-              window.location.assign('/investor/login');
+              onShowGuestPopup();
             }}
             className="ml-4 px-2 py-1 rounded-md text-sm font-medium bg-gray-200 text-gray-700 hover:bg-gray-300 flex-shrink-0"
           >

@@ -99,8 +99,8 @@ const SearchBar: React.FC<EnhancedSearchBarProps> = ({
     setShowFilters(false);
     const cleanFilters = Object.entries(selectedFilters).reduce((acc, [key, value]) => {
       if (value) {
-        // ジャンルのみ配列として扱う
-        if (key === 'genre') {
+        //カテゴリのみ配列として扱う
+        if (key === 'category') {
           acc[key] = Array.isArray(value) ? value : [value];
         } else if (key === 'reviewStatus') {
           // ステータスフィルタを適切に処理
@@ -173,13 +173,13 @@ const SearchBar: React.FC<EnhancedSearchBarProps> = ({
                       <div className="space-y-4">
                         {filterOptions
                           .sort((a, b) => {
-                            // ジャンルを最初に表示
-                            if (a.id === 'genre') return -1;
-                            if (b.id === 'genre') return 1;
+                            // カテゴリを最初に表示
+                            if (a.id === 'category') return -1;
+                            if (b.id === 'category') return 1;
                             return 0;
                           })
                           .map(option => {
-                            const isMultiSelect = option.id === 'genre';
+                            const isMultiSelect = option.id === 'category';
                             const isSingleSelect = option.id === 'tag' || option.id === 'fiscalPeriod';
                             
                             return (

@@ -9,7 +9,7 @@ import { QA, TagOption } from '@/types';
 import { createCorporateQa, generateCorporateQaAnswer } from '@/lib/api';
 import {
   INFO_SOURCE_OPTIONS,
-  GENRE_OPTIONS,
+  CATEGORY_OPTION,
   QUESTION_ROUTE_OPTIONS,
   getTagColor,
 } from '@/components/ui/tagConfig';
@@ -28,13 +28,13 @@ const QaCreateModal: React.FC<QaCreateModalProps> = ({ isOpen, onClose, onCreate
   const [fiscalPeriod, setFiscalPeriod] = useState('');
   const [questionRoute, setQuestionRoute] = useState('');
   const [source, setSource] = useState<string[]>([]);
-  const [genre, setGenre] = useState<string[]>([]);
+  const [category, setCategory] = useState<string[]>([]);
   const [reviewStatus, setReviewStatus] = useState<QA['reviewStatus']>('DRAFT');
   const [isGeneratingAI, setIsGeneratingAI] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [showSourceList, setShowSourceList] = useState(false);
-  const [showGenreList, setShowGenreList] = useState(false);
+  const [showCategoryList, setShowCategoryList] = useState(false);
   const [showInvestorPreview, setShowInvestorPreview] = useState(false);
 
   const handleGenerateAI = async () => {
@@ -91,7 +91,7 @@ const QaCreateModal: React.FC<QaCreateModalProps> = ({ isOpen, onClose, onCreate
         fiscalPeriod,
         question_route: questionRoute,
         source,
-        genre,
+        category,
         reviewStatus,
       });
 
@@ -104,7 +104,7 @@ const QaCreateModal: React.FC<QaCreateModalProps> = ({ isOpen, onClose, onCreate
         fiscalPeriod,
         question_route: questionRoute,
         source,
-        genre,
+        category,
         reviewStatus,
         status: 'draft',
         likeCount: 0,
@@ -134,14 +134,14 @@ const QaCreateModal: React.FC<QaCreateModalProps> = ({ isOpen, onClose, onCreate
     setSource(source.filter((s) => s !== label));
   };
 
-  const handleAddGenre = (option: TagOption) => {
-    if (!genre.includes(option.label)) {
-      setGenre([...genre, option.label]);
+  const handleAddCategory = (option: TagOption) => {
+    if (!category.includes(option.label)) {
+      setCategory([...category, option.label]);
     }
   };
 
-  const handleRemoveGenre = (label: string) => {
-    setGenre(genre.filter((g) => g !== label));
+  const handleRemoveCategory = (label: string) => {
+    setCategory(category.filter((g) => g !== label));
   };
 
   const formatDate = (dateStr: string) => {
@@ -280,15 +280,15 @@ const QaCreateModal: React.FC<QaCreateModalProps> = ({ isOpen, onClose, onCreate
                   </div>
                 </div>
                 
-                {/* ジャンル */}
+                {/* カテゴリ */}
                 <div className="p-4 bg-gray-50 rounded-lg">
                   <h4 className="text-sm font-medium text-gray-700 mb-2 flex items-center">
                     <Activity size={14} className="mr-2 text-gray-600" />
                     カテゴリ
                   </h4>
                   <div className="flex flex-wrap gap-2">
-                    {genre && genre.length > 0 ? (
-                      genre.map((g) => (
+                    {category && category.length > 0 ? (
+                      category.map((g) => (
                         <span
                           key={g}
                           className={`inline-flex items-center ${getTagColor(g)} px-2 py-1 rounded text-xs font-medium`}
@@ -413,11 +413,11 @@ const QaCreateModal: React.FC<QaCreateModalProps> = ({ isOpen, onClose, onCreate
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">カテゴリ</label>
                   <div className="flex flex-wrap gap-2 mb-2">
-                    {genre.map((g) => (
+                    {category.map((g) => (
                       <div key={g} className={`inline-flex items-center ${getTagColor(g)} px-2 py-1 rounded-md text-xs`}>
                         <span className="truncate max-w-[120px]">{g}</span>
                         <button
-                          onClick={() => handleRemoveGenre(g)}
+                          onClick={() => handleRemoveCategory(g)}
                           className="ml-1 text-gray-600 hover:text-gray-800 flex-shrink-0"
                         >
                           <X size={12} />
@@ -427,21 +427,21 @@ const QaCreateModal: React.FC<QaCreateModalProps> = ({ isOpen, onClose, onCreate
                   </div>
                   <div className="relative">
                     <button
-                      onClick={() => setShowGenreList(!showGenreList)}
+                      onClick={() => setShowCategoryList(!showCategoryList)}
                       className="flex items-center text-sm px-2 py-1 rounded border bg-white hover:bg-gray-50"
                     >
                       <Plus size={14} className="mr-1" />
                       カテゴリを追加
                     </button>
-                    {showGenreList && (
+                    {showCategoryList && (
                       <div className="absolute z-10 mt-1 w-full max-w-64 bg-white rounded-md shadow-lg border py-1 max-h-48 overflow-y-auto">
-                        {GENRE_OPTIONS.filter(option => !genre.includes(option.label))
+                        {CATEGORY_OPTION.filter(option => !category.includes(option.label))
                           .map((option) => (
                             <button
                               key={option.label}
                               onClick={() => {
-                                handleAddGenre(option);
-                                setShowGenreList(false);
+                                handleAddCategory(option);
+                                setShowCategoryList(false);
                               }}
                               className="block w-full text-left px-4 py-2 text-sm hover:bg-gray-100 truncate"
                             >

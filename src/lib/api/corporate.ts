@@ -46,7 +46,7 @@ export async function getCorporateDashboard(query: { period: string }): Promise<
  * - query.keyword: 検索キーワード
  * - query.review_status: レビューステータス
  * - query.question_route: 質問ルート
- * - query.genre: ジャンル配列
+ * - query.category: カテゴリ配列
  * - query.fiscalPeriod: 会計期間配列
  * - query.sort: ソート項目
  * - query.order: ソート順
@@ -63,7 +63,7 @@ export async function searchCorporateQa(
     keyword?: string;
     review_status?: 'DRAFT' | 'PENDING' | 'PUBLISHED';
     question_route?: string;
-    genre?: string[];
+    category?: string[];
     fiscalPeriod?: string[];
     sort?: 'createdAt' | 'likeCount';
     order?: 'asc' | 'desc';
@@ -86,9 +86,9 @@ export async function searchCorporateQa(
     queryString.append('question_route', query.question_route);
   }
   
-  if (query.genre && Array.isArray(query.genre) && query.genre.length > 0) {
-    const validGenres = query.genre.filter(g => g && g.trim() !== '');
-    validGenres.forEach(g => queryString.append('genre', g));
+  if (query.category && Array.isArray(query.category) && query.category.length > 0) {
+    const validCategories = query.category.filter(g => g && g.trim() !== '');
+    validCategories.forEach(g => queryString.append('category', g));
   }
   if (query.fiscalPeriod && Array.isArray(query.fiscalPeriod) && query.fiscalPeriod.length > 0) {
     const validPeriods = query.fiscalPeriod.filter(fp => fp && fp.trim() !== '');
@@ -118,7 +118,7 @@ export async function searchCorporateQa(
  * - data.answer: 回答
  * - data.question_route: 質問ルート
  * - data.source: ソース配列
- * - data.genre: ジャンル配列
+ * - data.category: カテゴリ配列
  * - data.fiscalPeriod: 会計期間
  * - data.reviewStatus: レビューステータス
  * 
@@ -132,7 +132,7 @@ export async function createCorporateQa(
     answer: string;
     question_route?: string;
     source?: string[];
-    genre?: string[];
+    category?: string[];
     fiscalPeriod?: string;
     reviewStatus: QA['reviewStatus'];
   }
@@ -159,7 +159,7 @@ export async function updateCorporateQa(
     answer?: string;
     question_route?: string;
     source?: string[];
-    genre?: string[];
+    category?: string[];
     fiscalPeriod?: string;
     reviewStatus?: QA['reviewStatus'];
   }

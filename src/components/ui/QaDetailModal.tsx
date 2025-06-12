@@ -4,7 +4,7 @@ import ReactMarkdown from 'react-markdown';
 import { QaDetailModalProps, QA, TagOption } from '@/types';
 import {
   INFO_SOURCE_OPTIONS,
-  GENRE_OPTIONS,
+  CATEGORY_OPTION,
   QUESTION_ROUTE_OPTIONS,
   getTagColor,
 } from '@/components/ui/tagConfig';
@@ -41,11 +41,12 @@ const QaDetailModal: React.FC<QaDetailModalProps> = ({
   const [showGuestRestricted, setShowGuestRestricted] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  const [editableGenre, setEditableGenre] = useState<string[]>(qa?.genre || []);
+  const [editableCategory, setEditableCategory] = useState<string[]>(qa?.category || []);
   const [editableSource, setEditableSource] = useState<string[]>(qa?.source || []);
   const [isLoading, setIsLoading] = useState(false);
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [isGeneratingAI, setIsGeneratingAI] = useState(false);
+  const [showGuestPopup, setShowGuestPopup] = useState(false);
   
   // ゲスト判定
   const isGuest = !user && !userLoading;
@@ -53,7 +54,7 @@ const QaDetailModal: React.FC<QaDetailModalProps> = ({
   useEffect(() => {
     if (qa) {
       setEditableQA(qa);
-      setEditableGenre(qa.genre || []);
+      setEditableCategory(qa.category || []);
       setEditableSource(qa.source || []);
     }
   }, [qa]);
@@ -103,7 +104,7 @@ const QaDetailModal: React.FC<QaDetailModalProps> = ({
         title: editableQA.title,
         question: editableQA.question,
         answer: editableQA.answer,
-        genre: editableGenre,
+        category: editableCategory,
         source: editableSource,
         fiscalPeriod: editableQA.fiscalPeriod,
         question_route: editableQA.question_route,
@@ -118,7 +119,7 @@ const QaDetailModal: React.FC<QaDetailModalProps> = ({
       // 保存成功時の処理
       const updatedQa = {
         ...editableQA,
-        genre: editableGenre,
+        category: editableCategory,
         source: editableSource
       };
 
@@ -162,6 +163,12 @@ const QaDetailModal: React.FC<QaDetailModalProps> = ({
 
   const handleLike = async () => {
     if (!qa || !onLike) return; // qaがnullまたはonLikeがundefinedの場合は処理しない
+    
+    // ゲストユーザーの場合はポップアップを表示
+    if (isGuest) {
+      setShowGuestPopup(true);
+      return;
+    }
     
     try {
       await onLike(qa.qaId);
@@ -221,10 +228,10 @@ const QaDetailModal: React.FC<QaDetailModalProps> = ({
 
   // 操作（ジャンル）
   const handleAddGenre = (option: TagOption) => {
-    if (!editableQA.genre.includes(option.label)) {
+    if (!editableQA.category.includes(option.label)) {
       setEditableQA({
         ...editableQA,
-        genre: [...editableQA.genre, option.label],
+        category: [...editableQA.category, option.label],
       });
       setHasChanges(true);
     }
@@ -232,7 +239,7 @@ const QaDetailModal: React.FC<QaDetailModalProps> = ({
   const handleRemoveGenre = (label: string) => {
     setEditableQA({
       ...editableQA,
-      genre: editableQA.genre.filter((g) => g !== label),
+      category: editableQA.category.filter((g) => g !== label),
     });
     setHasChanges(true);
   };
@@ -306,6 +313,15 @@ const QaDetailModal: React.FC<QaDetailModalProps> = ({
           featureName="ブックマーク" 
           isPopup={true}
           onClose={() => setShowGuestRestricted(false)}
+        />
+      )}
+
+      {/* ゲスト制限ポップアップ */}
+      {showGuestPopup && (
+        <GuestRestrictedContent 
+          featureName="ブックマーク" 
+          isPopup={true}
+          onClose={() => setShowGuestPopup(false)}
         />
       )}
 
@@ -450,9 +466,9 @@ const QaDetailModal: React.FC<QaDetailModalProps> = ({
                         カテゴリ
                       </h4>
                       <div className="flex flex-wrap gap-2 pl-5">
-                        {editableQA.genre && editableQA.genre.length > 0 ? (
-                          editableQA.genre.map((genre: string) => {
-                            const genreOption = GENRE_OPTIONS.find(opt => opt.label === genre);
+                        {editableQA.category && editableQA.category.length > 0 ? (
+                          editableQA.category.map((genre: string) => {
+                            const genreOption = CATEGORY_OPTION.find(opt => opt.label === genre);
                             const colorClass = genreOption ? genreOption.color : 'bg-gray-100 text-gray-800';
                             return (
                             <span
@@ -608,7 +624,7 @@ const QaDetailModal: React.FC<QaDetailModalProps> = ({
                   <div>
                       <label className="block text-sm font-medium text-gray-700 mb-1">カテゴリ</label>
                       <div className="flex flex-wrap gap-2 mb-2">
-                        {editableQA.genre.map((g) => (
+                        {editableQA.category.map((g) => (
                           <div key={g} className={`inline-flex items-center ${getTagColor(g)} px-2 py-1 rounded-md text-xs`}>
                             <span className="truncate max-w-[120px]">{g}</span>
                             <button
@@ -630,7 +646,7 @@ const QaDetailModal: React.FC<QaDetailModalProps> = ({
                         </button>
                         {showGenreList && (
                           <div className="absolute z-10 mt-1 w-full max-w-64 bg-white rounded-md shadow-lg border py-1 max-h-48 overflow-y-auto">
-                            {GENRE_OPTIONS.filter(option => !editableQA.genre.includes(option.label))
+                            {CATEGORY_OPTION.filter(option => !editableQA.category.includes(option.label))
                               .map((option) => (
                                 <button
                                   key={option.label}
@@ -733,7 +749,7 @@ const QaDetailModal: React.FC<QaDetailModalProps> = ({
                     カテゴリ
                   </h4>
                   <div className="flex flex-wrap gap-2">
-                    {qa.genre.map((genre: string) => (
+                    {qa.category.map((genre: string) => (
                       <span 
                         key={genre}
                         className="px-2 py-1 bg-green-100 text-green-800 rounded-md text-sm"

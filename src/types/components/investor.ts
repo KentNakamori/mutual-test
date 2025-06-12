@@ -233,7 +233,7 @@ export interface SearchBarProps {
   filterComponent?: React.ReactNode;
   onSearch: (keyword: string, filters: {
     question_route?: string;
-    genre?: string[];
+    category?: string[];
     fiscalPeriod?: string;
     sort?: string;
     order?: 'asc' | 'desc';

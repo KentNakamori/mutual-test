@@ -8,8 +8,6 @@ import Sidebar from '@/components/common/sidebar';
 import Footer from '@/components/common/footer';
 import NewQAList from '@/components/features/investor/companies/NewQAList';
 import CompanyListing from '@/components/features/investor/companies/CompanyListing';
-import QaDetailModal from '@/components/ui/QaDetailModal';
-import { QA } from '@/types';
 import { Home, Heart, Search, MessageSquare, User } from 'lucide-react';
 
 const menuItems = [
@@ -26,9 +24,6 @@ const CompaniesPage: React.FC = () => {
   
   // Auth0のuseUserフックを使用して認証状態を取得
   const { user, isLoading: userLoading, error: userError } = useUser();
-  
-  // QA詳細モーダル表示用の状態
-  const [selectedQA, setSelectedQA] = useState<QA | null>(null);
   
   // CompanyListingから企業データを受け取るコールバック
   const handleCompaniesLoaded = useCallback((companies: Array<{ companyId: string }>) => {
@@ -55,23 +50,11 @@ const CompaniesPage: React.FC = () => {
         />
         <main className="flex-1 container mx-auto p-4 bg-gray-50">
           {/* 新着QAリスト：クリックすると QA 詳細モーダルが表示される */}
-          <NewQAList
-            onRowClick={(qa) => setSelectedQA(qa)}
-          />
+          <NewQAList />
           <h1 className="text-2xl font-semibold mb-2">企業一覧</h1>
           <CompanyListing 
             onCompaniesLoaded={handleCompaniesLoaded}
           />
-          {/* QA詳細モーダルの表示 */}
-          {selectedQA && (
-            <QaDetailModal
-              qa={selectedQA}
-              role="investor"
-              isOpen={true}
-              onClose={() => setSelectedQA(null)}
-              onLike={async (id: string) => console.log("いいね:", id)}
-            />
-          )}
         </main>
       </div>
       <Footer

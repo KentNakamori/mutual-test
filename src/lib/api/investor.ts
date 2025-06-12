@@ -184,7 +184,7 @@ export async function followInvestorCompany(
  * - query: 検索クエリ
  *   - keyword: 検索キーワード
  *   - question_route: 質問ルート
- *   - genre: ジャンル配列
+ *   - category: カテゴリ配列
  *   - fiscalPeriod: 会計期間配列
  *   - companyId: 企業ID
  *   - companyName: 企業名
@@ -203,7 +203,7 @@ export async function searchInvestorQa(
   query: {
     keyword?: string;
     question_route?: string;
-    genre?: string[];
+    category?: string[];
     fiscalPeriod?: string[];
     companyId?: string;
     companyName?: string;
@@ -228,9 +228,9 @@ export async function searchInvestorQa(
     queryString.append('question_route', query.question_route);
   }
   
-  if (query.genre && Array.isArray(query.genre)) {
-    query.genre.forEach(g => {
-      if (g && g.trim()) queryString.append('genre', g);
+  if (query.category && Array.isArray(query.category)) {
+    query.category.forEach(g => {
+      if (g && g.trim()) queryString.append('category', g);
     });
   }
   
@@ -257,7 +257,7 @@ export async function searchInvestorQa(
  * - query: 検索クエリ
  *   - keyword: 検索キーワード
  *   - question_route: 質問ルート
- *   - genre: ジャンル配列
+ *   - category: カテゴリ配列
  *   - fiscalPeriod: 会計期間
  *   - is_faq: FAQフラグ
  *   - sort: ソート項目（createdAt/likeCount）
@@ -276,7 +276,7 @@ export async function searchInvestorCompanyQa(
   query: {
     keyword?: string;
     question_route?: string;
-    genre?: string[];
+    category?: string[];
     fiscalPeriod?: string;
     is_faq?: boolean;
     sort?: 'createdAt' | 'likeCount';
@@ -300,9 +300,9 @@ export async function searchInvestorCompanyQa(
     queryString.append('question_route', query.question_route);
   }
   
-  if (query.genre && Array.isArray(query.genre)) {
-    query.genre.forEach(g => {
-      if (g && g.trim()) queryString.append('genre', g);
+  if (query.category && Array.isArray(query.category)) {
+    query.category.forEach(g => {
+      if (g && g.trim()) queryString.append('category', g);
     });
   }
   
@@ -696,7 +696,7 @@ export async function trackInvestorAction(
  *   - likeCount: いいね数
  *   - question_route: 質問ルート（オプション）
  *   - source: ソース配列
- *   - genre: ジャンル配列
+ *   - categories: カテゴリ配列（バックエンドの実際のフィールド名）
  *   - fiscalPeriod: 会計期間（オプション）
  *   - reviewStatus: レビューステータス
  *   - status: ステータス
@@ -719,7 +719,7 @@ export async function getLatestQAsByCompany(
     likeCount: number;
     question_route?: string;
     source: string[];
-    genre: string[];
+    categories: string[];
     fiscalPeriod?: string;
     reviewStatus: 'DRAFT' | 'PENDING' | 'PUBLISHED';
     status: 'draft' | 'published' | 'archived';

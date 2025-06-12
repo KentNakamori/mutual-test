@@ -15,6 +15,8 @@ export async function middleware(req: NextRequest) {
       '/investor/companies',
       '/investor/company',
       '/investor/qa',
+      '/investor/chat-logs',
+      '/investor/mypage',
       '/investor/login',
       '/investor/onboarding',  // 投資家初回オンボーディングページ
       '/admin/login',  // 管理者ログインページは公開

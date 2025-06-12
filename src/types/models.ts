@@ -69,7 +69,7 @@ export interface QA {
   likeCount: number;
   question_route?: string;
   source: string[];
-  genre: string[];
+  category: string[];
   fiscalPeriod?: string;
   status: 'draft' | 'published' | 'archived';
   createdAt: DateString;

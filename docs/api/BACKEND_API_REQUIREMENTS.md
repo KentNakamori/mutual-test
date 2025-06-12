@@ -39,7 +39,7 @@ GET /investor/qa/latest-by-company
       "likeCount": 0,
       "question_route": "string",
       "source": ["string"],
-      "genre": ["string"],
+      "category": ["string"],
       "fiscalPeriod": "string",
       "reviewStatus": "PUBLISHED",
       "status": "published",
