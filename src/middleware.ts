@@ -252,42 +252,67 @@ async function handleInvestorRouteAuth(req: NextRequest, authRes: NextResponse):
  */
 async function handleInvestorOnboardingCheck(req: NextRequest, authRes: NextResponse): Promise<NextResponse> {
   try {
+    console.log('[MIDDLEWARE] handleInvestorOnboardingCheck called for:', req.nextUrl.pathname);
+    
     // Auth0セッションを取得
     const session = await auth0.getSession();
     
     // セッションが存在しない場合はゲストとして通常のアクセスを許可
     if (!session?.user) {
+      console.log('[MIDDLEWARE] No session found - allowing guest access');
       return authRes;
     }
+
+    console.log('[MIDDLEWARE] Session found for user:', {
+      sub: session.user.sub,
+      email: session.user.email,
+      name: session.user.name
+    });
 
     // 認証済みユーザーのDB存在確認
     try {
       const baseUrl = req.nextUrl.origin;
-      const checkResponse = await fetch(`${baseUrl}/api/investor/user/exists`, {
+      const checkUrl = `${baseUrl}/api/investor/user/exists`;
+      
+      console.log('[MIDDLEWARE] Checking user existence at:', checkUrl);
+      
+      const checkResponse = await fetch(checkUrl, {
         method: 'GET',
         headers: {
           'Cookie': req.headers.get('cookie') || '',
         },
       });
 
+      console.log('[MIDDLEWARE] User exists check response status:', checkResponse.status);
+
       if (checkResponse.ok) {
         const checkData = await checkResponse.json();
+        console.log('[MIDDLEWARE] User exists check response data:', checkData);
         
         if (!checkData.exists) {
           // DBに存在しない場合は情報入力画面にリダイレクト
+          console.log('[MIDDLEWARE] User does not exist in DB - redirecting to onboarding');
           return NextResponse.redirect(new URL('/investor/onboarding', req.url));
         }
         
+        console.log('[MIDDLEWARE] User exists in DB - allowing access');
+      } else {
+        console.log('[MIDDLEWARE] User exists check failed with status:', checkResponse.status);
       }
     } catch (dbError) {
       // DB確認エラーの場合は通常のアクセスを許可（安全側に倒す）
+      console.error('[MIDDLEWARE] DB check error:', dbError);
+      console.log('[MIDDLEWARE] DB check error - allowing access (fail-safe)');
     }
 
     // 認証済みユーザーで問題なければ通常のアクセスを許可
+    console.log('[MIDDLEWARE] Allowing access to authenticated user');
     return authRes;
 
   } catch (error) {
     // エラーが発生した場合は通常のアクセスを許可（安全側に倒す）
+    console.error('[MIDDLEWARE] Error in investor onboarding check:', error);
+    console.log('[MIDDLEWARE] Error occurred - allowing access (fail-safe)');
     return authRes;
   }
 }

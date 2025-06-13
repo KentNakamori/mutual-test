@@ -684,62 +684,80 @@ const QaDetailModal: React.FC<QaDetailModalProps> = ({
               </div>
               
               {/* 質問エリア */}
-              <div className="mb-6 p-4 bg-blue-50 rounded-lg border-l-4 border-blue-400">
-                <h3 className="text-sm font-medium text-blue-800 mb-2 flex items-center">
-                  <HelpCircle size={16} className="mr-2" />
+              <div className="mb-6">
+                <h3 className="text-sm font-medium text-gray-700 mb-2 flex items-center">
+                  <HelpCircle size={16} className="mr-2 text-blue-600" />
                   質問
                 </h3>
-                <p className="text-gray-800 leading-relaxed">{qa.question}</p>
+                <p className="text-gray-800 leading-relaxed pl-6">{qa.question}</p>
               </div>
               
               {/* 回答エリア */}
-              <div className="mb-6 p-4 bg-green-50 rounded-lg border-l-4 border-green-400">
-                <h3 className="text-sm font-medium text-green-800 mb-2 flex items-center">
-                  <CheckCircle size={16} className="mr-2" />
+              <div className="mb-6">
+                <h3 className="text-sm font-medium text-gray-700 mb-2 flex items-center">
+                  <CheckCircle size={16} className="mr-2 text-green-600" />
                   回答
                 </h3>
-                <div className="text-gray-800 leading-relaxed prose prose-sm max-w-none">
-                  <ReactMarkdown>
-                    {qa.answer}
-                  </ReactMarkdown>
+                <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 ml-6">
+                  <div className="text-gray-800 leading-relaxed prose prose-sm max-w-none">
+                    <ReactMarkdown>
+                      {qa.answer}
+                    </ReactMarkdown>
+                  </div>
                 </div>
               </div>
               
               {/* メタデータエリア */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+              <div className="space-y-4 mb-6">
                 {/* 情報ソース */}
-                <div className="p-4 bg-gray-50 rounded-lg">
+                <div>
                   <h4 className="text-sm font-medium text-gray-700 mb-2 flex items-center">
                     <BookOpen size={14} className="mr-2 text-gray-600" />
                     情報ソース
                   </h4>
-                  <div className="flex flex-wrap gap-2">
-                    {qa.source.map((source: string) => (
-                      <span 
-                        key={source}
-                        className="px-2 py-1 bg-blue-100 text-blue-800 rounded-md text-sm"
-                      >
-                        {source}
-                      </span>
-                    ))}
+                  <div className="flex flex-wrap gap-2 pl-5">
+                    {qa.source && qa.source.length > 0 ? (
+                      qa.source.map((source: string) => {
+                        const sourceOption = INFO_SOURCE_OPTIONS.find(opt => opt.label === source);
+                        const colorClass = sourceOption ? sourceOption.color : 'bg-gray-100 text-gray-800';
+                        return (
+                        <span
+                          key={source}
+                            className={`inline-flex items-center ${colorClass} px-3 py-1 rounded-full text-xs font-medium`}
+                        >
+                          {source}
+                        </span>
+                        );
+                      })
+                    ) : (
+                      <span className="text-gray-500 text-sm">情報ソースなし</span>
+                    )}
                   </div>
                 </div>
                 
                 {/* カテゴリ */}
-                <div className="p-4 bg-gray-50 rounded-lg">
+                <div>
                   <h4 className="text-sm font-medium text-gray-700 mb-2 flex items-center">
                     <Activity size={14} className="mr-2 text-gray-600" />
                     カテゴリ
                   </h4>
-                  <div className="flex flex-wrap gap-2">
-                    {qa.category.map((genre: string) => (
-                      <span 
-                        key={genre}
-                        className="px-2 py-1 bg-green-100 text-green-800 rounded-md text-sm"
-                      >
-                        {genre}
-                      </span>
-                    ))}
+                  <div className="flex flex-wrap gap-2 pl-5">
+                    {qa.category && qa.category.length > 0 ? (
+                      qa.category.map((genre: string) => {
+                        const genreOption = CATEGORY_OPTION.find(opt => opt.label === genre);
+                        const colorClass = genreOption ? genreOption.color : 'bg-gray-100 text-gray-800';
+                        return (
+                        <span
+                          key={genre}
+                            className={`inline-flex items-center ${colorClass} px-3 py-1 rounded-full text-xs font-medium`}
+                        >
+                          {genre}
+                        </span>
+                        );
+                      })
+                    ) : (
+                      <span className="text-gray-500 text-sm">カテゴリ未設定</span>
+                    )}
                   </div>
                 </div>
               </div>

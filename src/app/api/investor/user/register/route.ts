@@ -66,7 +66,13 @@ export async function POST(request: Request) {
 
     // プロキシ経由でバックエンドAPIを呼び出し（エンドポイント修正）
     const backendUrl = process.env.API_BASE_URL || 'http://localhost:8000';
-    const response = await fetch(`${backendUrl}/investor/user/register`, {
+    const apiUrl = `${backendUrl}/investor/users/register`;
+    
+    console.log('[USER_REGISTER] Calling backend API:', apiUrl);
+    console.log('[USER_REGISTER] Registration data:', registrationData);
+    console.log('[USER_REGISTER] Access token length:', accessToken.length);
+    
+    const response = await fetch(apiUrl, {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${accessToken}`,
@@ -75,12 +81,23 @@ export async function POST(request: Request) {
       body: JSON.stringify(registrationData),
     });
 
+    console.log('[USER_REGISTER] Backend response status:', response.status);
+    console.log('[USER_REGISTER] Backend response headers:', Object.fromEntries(response.headers.entries()));
+
     if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
-      throw new Error(errorData.message || `Backend API error: ${response.status}`);
+      const errorText = await response.text();
+      console.error('[USER_REGISTER] Backend API error:', {
+        status: response.status,
+        statusText: response.statusText,
+        body: errorText
+      });
+      
+      const errorData = JSON.parse(errorText || '{}').catch(() => ({}));
+      throw new Error(errorData.message || `Backend API error: ${response.status} - ${errorText}`);
     }
 
     const newUser = await response.json();
+    console.log('[USER_REGISTER] Registration successful:', newUser);
     return NextResponse.json({ user: newUser });
     
   } catch (error) {
