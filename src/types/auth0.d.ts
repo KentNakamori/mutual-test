@@ -41,9 +41,9 @@ declare module '@auth0/nextjs-auth0' {
     sub: string;
     
     // カスタムプロパティ
-    'mutual-test/role'?: string;
-    'mutual-test/company_id'?: string;
-    'mutual-test/permissions'?: string[];
+    'https://salt2.dev/role'?: string;
+    'https://salt2.dev/company_id'?: string;
+    'https://salt2.dev/permissions'?: string[];
   }
   
   interface Session {

@@ -12,6 +12,7 @@ import { useUser } from "@auth0/nextjs-auth0";
 import { searchInvestorQa } from '@/lib/api';
 import QaDetailModal from '@/components/ui/QaDetailModal';
 import { useQALike } from '@/hooks/useQA';
+import GuestRestrictedContent from '@/components/features/investor/common/GuestRestrictedContent';
 import { Home, Heart, Search, MessageSquare, User } from 'lucide-react';
 
 // 企業ID -> 企業名 を取得するマッピング用
@@ -47,6 +48,10 @@ const QASearchPage: React.FC = () => {
   const [totalCount, setTotalCount] = useState<number>(0);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<Error | null>(null);
+  const [showGuestPopup, setShowGuestPopup] = useState(false);
+  
+  // ゲスト判定
+  const isGuest = !user && !userLoading;
   
   const itemsPerPage = 10;
 
@@ -73,7 +78,7 @@ const QASearchPage: React.FC = () => {
           ? { dateFrom: filters.dateRange.from || '', dateTo: filters.dateRange.to || '' }
           : {}),
         ...(filters.question_route ? { question_route: filters.question_route } : {}),
-        ...(filters.genre && filters.genre.length > 0 ? { genre: filters.genre } : {}),
+        ...(filters.category && filters.category.length > 0 ? { category: filters.category } : {}),
         ...(filters.fiscalPeriod && filters.fiscalPeriod.length > 0 ? { fiscalPeriod: filters.fiscalPeriod } : {}),
         ...(filters.sort ? { sort: filters.sort } : {}),
         ...(filters.order ? { order: filters.order } : {}),
@@ -133,7 +138,13 @@ const QASearchPage: React.FC = () => {
 
   // いいね操作
   const handleLike = useCallback(async (qaId: string) => {
-    // ゲストユーザーの場合はAuth0のログイン画面にリダイレクト
+    // ゲストユーザーの場合はポップアップを表示
+    if (isGuest) {
+      setShowGuestPopup(true);
+      return;
+    }
+
+    // 認証済みユーザーの場合の処理
     if (!user) {
       const returnTo = typeof window !== 'undefined' ? window.location.pathname : '/investor/qa';
       router.push(`/api/auth/investor-login?returnTo=${encodeURIComponent(returnTo)}`);
@@ -180,7 +191,7 @@ const QASearchPage: React.FC = () => {
       console.error('いいね操作エラー:', error);
       setError(error instanceof Error ? error : new Error('いいね操作に失敗しました'));
     }
-  }, [qaItems, selectedQA, toggleLike, user, router]);
+  }, [qaItems, selectedQA, toggleLike, isGuest, user, router]);
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -263,6 +274,15 @@ const QASearchPage: React.FC = () => {
               isOpen={true}
               onClose={handleCloseModal}
               onLike={handleLike}
+            />
+          )}
+
+          {/* ゲスト制限ポップアップ */}
+          {showGuestPopup && (
+            <GuestRestrictedContent 
+              featureName="ブックマーク" 
+              isPopup={true}
+              onClose={() => setShowGuestPopup(false)}
             />
           )}
         </main>

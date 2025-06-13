@@ -3,7 +3,7 @@
 import React from 'react';
 import { FilterOption, QaSearchBarProps } from '@/types';
 import SearchBar from '@/components/ui/SearchBar';
-import { GENRE_OPTIONS, QUESTION_ROUTE_OPTIONS } from '@/components/ui/tagConfig';
+import { CATEGORY_OPTION, QUESTION_ROUTE_OPTIONS } from '@/components/ui/tagConfig';
 
 /**
  * 企業ページ用QASearchBar コンポーネント
@@ -27,10 +27,10 @@ const QASearchBar: React.FC<QaSearchBarProps> = ({
       }))
     },
     {
-      id: 'genre',
-      label: 'ジャンル',
+      id: 'category',
+      label: 'カテゴリ',
       type: 'multiSelect',
-      options: GENRE_OPTIONS.map(option => ({
+      options: CATEGORY_OPTION.map(option => ({
         value: option.label,
         label: option.label
       }))
@@ -55,16 +55,16 @@ const QASearchBar: React.FC<QaSearchBarProps> = ({
     
     // フィルターの処理
     
-    // ジャンルの処理 (配列として処理)
-    let genreArray: string[] | undefined = undefined;
-    if (filters.genre) {
-      if (Array.isArray(filters.genre)) {
-        const validGenres = filters.genre.filter((g: string) => g && g.trim() !== '');
-        if (validGenres.length > 0) {
-          genreArray = validGenres;
+    // カテゴリの処理 (配列として処理)
+    let categoryArray: string[] | undefined = undefined;
+    if (filters.category) {
+      if (Array.isArray(filters.category)) {
+        const validCategories = filters.category.filter((g: string) => g && g.trim() !== '');
+        if (validCategories.length > 0) {
+          categoryArray = validCategories;
         }
-      } else if (typeof filters.genre === 'string' && filters.genre.trim() !== '') {
-        genreArray = [filters.genre];
+      } else if (typeof filters.category === 'string' && filters.category.trim() !== '') {
+        categoryArray = [filters.category];
       }
     }
     
@@ -116,7 +116,7 @@ const QASearchBar: React.FC<QaSearchBarProps> = ({
     const searchParams = {
       keyword: keyword || '',
       question_route: questionRoute,
-      genre: genreArray,
+      category: categoryArray,
       fiscalPeriod: fiscalPeriodArray,
       sort: sortKey,
       order: sortOrder

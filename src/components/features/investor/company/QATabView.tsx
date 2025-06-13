@@ -43,10 +43,10 @@ const QATabView: React.FC<QATabViewProps> = ({ companyId, companyName }) => {
           queryParams.append('question_route', searchFilters.question_route);
         }
         
-        // ジャンル（配列）
-        if (searchFilters.genre && Array.isArray(searchFilters.genre)) {
-          searchFilters.genre.forEach((g) => {
-            if (g) queryParams.append('genre', g);
+        // カテゴリ（配列）
+        if (searchFilters.category && Array.isArray(searchFilters.category)) {
+          searchFilters.category.forEach((g) => {
+            if (g) queryParams.append('category', g);
           });
         }
         

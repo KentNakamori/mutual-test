@@ -7,9 +7,36 @@ export const GET = async () => {
 
   // ログイン済みで企業ユーザーの場合は直接ダッシュボードにリダイレクト
   if (session?.user) {
-    const userRole = session.user['https://salt2.dev/role'];
-    if (userRole === 'corporate') {
+    // IDトークンからカスタムクレームを取得
+    let userRoles = session.user['https://salt2.dev/roles'];
+    
+    // IDトークンが存在する場合、デコードしてカスタムクレームを取得
+    if (session.tokenSet?.idToken) {
+      try {
+        // IDトークンをデコード（Base64デコード）
+        const tokenParts = session.tokenSet.idToken.split('.');
+        const payload = JSON.parse(Buffer.from(tokenParts[1], 'base64').toString());
+        console.log('[CORPORATE-LOGIN] ID Token payload:', payload);
+        
+        // カスタムクレームを取得
+        userRoles = payload['https://salt2.dev/roles'];
+        console.log('[CORPORATE-LOGIN] Custom claim roles from ID token:', userRoles);
+      } catch (decodeError) {
+        console.error('[CORPORATE-LOGIN] Failed to decode ID token:', decodeError);
+      }
+    }
+    
+    console.log('[CORPORATE-LOGIN] Final user roles:', userRoles);
+    console.log('[CORPORATE-LOGIN] User email:', session.user.email);
+    console.log('[CORPORATE-LOGIN] User sub:', session.user.sub);
+    
+    // 企業権限チェック（配列の場合は最初の要素をチェック）
+    const finalRole = Array.isArray(userRoles) ? userRoles[0] : userRoles;
+    if (finalRole === 'corporate') {
+      console.log('[CORPORATE-LOGIN] Corporate role confirmed, redirecting to dashboard');
       return NextResponse.redirect(new URL('/corporate/dashboard', process.env.APP_BASE_URL || 'http://localhost:3000'));
+    } else {
+      console.log('[CORPORATE-LOGIN] User role is not corporate:', finalRole);
     }
   }
 

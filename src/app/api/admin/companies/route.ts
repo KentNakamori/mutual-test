@@ -56,9 +56,9 @@ export async function GET(_req: NextRequest) {
 
 /**
  * POST /api/admin/companies
- *  └─ FastAPI /admin/company/register へプロキシして企業を登録
+ *  └─ FastAPI /admin/companies/register へプロキシして企業を登録
  *     バックエンド: app/routers/admin/company.py の register エンドポイント
- *     リクエスト: CompanyCreateRequest（企業名、業界、ロゴURL、証券コード等）
+ *     リクエスト: CompanyCreateRequest（企業詳細情報）
  *     レスポンス: CompanyCreateResponse（企業ID、メッセージ）
  */
 export async function POST(req: NextRequest) {
@@ -75,27 +75,82 @@ export async function POST(req: NextRequest) {
   try {
     const body = await req.json();
     
+    // 必須フィールドのバリデーション
+    const requiredFields = ['companyName', 'industry'];
+    for (const field of requiredFields) {
+      if (!body[field]) {
+        return NextResponse.json(
+          { error: `${field}は必須項目です` }, 
+          { status: 400 }
+        );
+      }
+    }
+
+    // 企業登録データの構造化
+    const companyData = {
+      companyName: body.companyName,
+      securitiesCode: body.securitiesCode || null,
+      establishedDate: body.establishedDate || null, // YYYY-MM形式
+      listingDate: body.listingDate || null, // YYYY-MM-DD形式
+      marketSegment: body.marketSegment || null, // 東証プライム、東証スタンダード等
+      address: body.address || null,
+      phone: body.phone || null,
+      ceo: body.ceo || null,
+      industry: body.industry, // 必須
+      businessDescription: body.businessDescription || null,
+      capital: body.capital || null, // 資本金
+      employeeCount: body.employeeCount || null,
+      websiteUrl: body.websiteUrl || null,
+      contactEmail: body.contactEmail || null,
+      logoUrl: body.logoUrl || null,
+      // createdAt, updatedAtはバックエンドで自動設定
+    };
+
+    console.log('企業登録データ:', JSON.stringify(companyData, null, 2));
+    
     const resp = await fetch(`${backendUrl}/admin/companies/register`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
+      body: JSON.stringify(companyData),
     });
 
     if (!resp.ok) {
       const errorText = await resp.text();
       console.error('企業登録エラー:', errorText);
+      
+      // エラーメッセージの詳細化
+      let errorMessage = '企業登録に失敗しました';
+      try {
+        const errorData = JSON.parse(errorText);
+        if (errorData.detail) {
+          errorMessage = errorData.detail;
+        } else if (errorData.message) {
+          errorMessage = errorData.message;
+        }
+      } catch (parseError) {
+        // JSON解析に失敗した場合はそのままのテキストを使用
+        errorMessage = errorText || errorMessage;
+      }
+      
       return NextResponse.json(
-        { error: errorText || '企業登録に失敗しました' }, 
+        { error: errorMessage }, 
         { status: resp.status }
       );
     }
 
     const data = await resp.json();
-    return NextResponse.json(data, { status: 201 });
+    console.log('企業登録成功:', data);
+    
+    return NextResponse.json({
+      message: '企業が正常に登録されました',
+      companyId: data.companyId || data.company_id || data.id,
+      ...data
+    }, { status: 201 });
+    
   } catch (error) {
     console.error('企業登録エラー:', error);
     return NextResponse.json(
-      { error: '企業登録に失敗しました' }, 
+      { error: '企業登録処理中にエラーが発生しました' }, 
       { status: 500 }
     );
   }

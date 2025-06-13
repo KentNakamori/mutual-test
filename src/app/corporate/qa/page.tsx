@@ -40,7 +40,7 @@ const QaPage: React.FC = () => {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [searchParams, setSearchParams] = useState<{
     keyword: string;
-    genre: string[];
+    category: string[];
     source: string[];
     question_route?: string;
     fiscalPeriod?: string[];
@@ -51,7 +51,7 @@ const QaPage: React.FC = () => {
     review_status?: 'DRAFT' | 'PENDING' | 'PUBLISHED';
   }>({
     keyword: '',
-    genre: [],
+    category: [],
     source: [],
     question_route: '',
     sort: 'createdAt',
@@ -69,7 +69,7 @@ const QaPage: React.FC = () => {
         
         const apiParams = {
           keyword: searchParams.keyword || undefined,
-          genre: searchParams.genre?.length > 0 ? searchParams.genre : undefined,
+          category: searchParams.category?.length > 0 ? searchParams.category : undefined,
           fiscalPeriod: searchParams.fiscalPeriod && searchParams.fiscalPeriod.length > 0 
             ? searchParams.fiscalPeriod 
             : undefined,
@@ -84,7 +84,7 @@ const QaPage: React.FC = () => {
         console.log('=== APIリクエスト直前のパラメータ（完全版） ===');
         console.log('検索パラメータ:', {
           ...apiParams,
-          genre: Array.isArray(apiParams.genre) ? apiParams.genre : undefined,
+          category: Array.isArray(apiParams.category) ? apiParams.category : undefined,
           fiscalPeriod: Array.isArray(apiParams.fiscalPeriod) ? apiParams.fiscalPeriod : undefined
         });
         console.log('=== APIリクエスト直前のパラメータ ===');
@@ -106,7 +106,7 @@ const QaPage: React.FC = () => {
   }, [
     isAuthenticated,
     searchParams.keyword, 
-    searchParams.genre, 
+    searchParams.category, 
     searchParams.question_route, 
     searchParams.fiscalPeriod, 
     searchParams.sort, 
@@ -118,7 +118,7 @@ const QaPage: React.FC = () => {
 
   const handleSearch = useCallback((params: { 
     query: string; 
-    genre?: string[]; 
+    category?: string[]; 
     question_route?: string;
     fiscalPeriod?: string[];
     sort?: 'createdAt' | 'likeCount';
@@ -130,7 +130,7 @@ const QaPage: React.FC = () => {
     setSearchParams(prev => ({
       ...prev,
       keyword: params.query || '',
-      genre: params.genre || [],
+      category: params.category || [],
       question_route: params.question_route || '',
       fiscalPeriod: params.fiscalPeriod || undefined,
       sort: params.sort || 'createdAt',
@@ -142,7 +142,7 @@ const QaPage: React.FC = () => {
 
   const handleFilterChange = useCallback((newFilters: {
     question_route?: string;
-    genre?: string[];
+    category?: string[];
     fiscalPeriod?: string[];
     sort?: 'createdAt' | 'likeCount';
     order?: 'asc' | 'desc';
@@ -157,7 +157,7 @@ const QaPage: React.FC = () => {
       const updated = {
         ...prev,
         question_route: newFilters.question_route || '',
-        genre: newFilters.genre || [],
+        category: newFilters.category || [],
         fiscalPeriod: newFilters.fiscalPeriod || undefined,
         page: newFilters.page || 1,
         limit: newFilters.limit || prev.limit,
@@ -276,7 +276,7 @@ const QaPage: React.FC = () => {
               onDelete={handleDeleteQa}
               filters={{
                 question_route: searchParams.question_route,
-                genre: searchParams.genre,
+                category: searchParams.category,
                 fiscalPeriod: searchParams.fiscalPeriod,
                 sort: searchParams.sort,
                 order: searchParams.order,

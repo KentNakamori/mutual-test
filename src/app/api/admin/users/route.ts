@@ -79,7 +79,7 @@ export async function POST(req: NextRequest) {
     AUTH0_DOMAIN: process.env.AUTH0_DOMAIN,
     AUTH0_M2M_CLIENT_ID: process.env.AUTH0_M2M_CLIENT_ID,
     AUTH0_M2M_CLIENT_SECRET: process.env.AUTH0_M2M_CLIENT_SECRET,
-    AUTH0_CONNECTION_NAME: process.env.AUTH0_DB_CONNECTION || 'Username-Password-Authentication'
+    AUTH0_CONNECTION_NAME: process.env.AUTH0_DB_CONNECTION || 'Corporate-DB'
   };
 
   for (const [key, value] of Object.entries(requiredEnvVars)) {

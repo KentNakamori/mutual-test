@@ -100,15 +100,15 @@ const QACard: React.FC<QACardProps> = ({
                   </div>
                 )}
 
-                {qa.genre && qa.genre.length > 0 && (
+                {qa.category && qa.category.length > 0 && (
                   <div className="flex items-center gap-1">
                     <Activity size={14} className="text-amber-600" />
-                    {qa.genre.map((genre, index) => (
+                    {qa.category.map((category, index) => (
                       <span 
-                        key={`genre-${index}`} 
-                        className={`px-2 py-1 rounded-full text-xs font-medium ${getTagColor(genre)}`}
+                        key={`category-${index}`} 
+                        className={`px-2 py-1 rounded-full text-xs font-medium ${getTagColor(category)}`}
                       >
-                        {genre}
+                        {category}
                       </span>
                     ))}
                   </div>
