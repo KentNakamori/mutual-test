@@ -7,7 +7,7 @@ import Sidebar from "@/components/common/sidebar";
 import Footer from "@/components/common/footer";
 import MyPageTabMenu from "@/components/features/investor/mypage/MyPageTabMenu";
 import { ProfileData, NotificationSetting } from "@/types";
-import { Home, Heart, Search, Logs, User, MessageSquare } from 'lucide-react';
+import { Home, Heart, Search, Logs, User } from 'lucide-react';
 import { getInvestorUser, updateInvestorUser } from "@/lib/api";
 import GuestRestrictedContent from '@/components/features/investor/common/GuestRestrictedContent';
 

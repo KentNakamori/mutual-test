@@ -13,7 +13,7 @@ import { searchInvestorQa } from '@/lib/api';
 import QaDetailModal from '@/components/ui/QaDetailModal';
 import { useQALike } from '@/hooks/useQA';
 import GuestRestrictedContent from '@/components/features/investor/common/GuestRestrictedContent';
-import { Home, Heart, Search, Logs, User, MessageSquare } from 'lucide-react';
+import { Home, Heart, Search, Logs, User } from 'lucide-react';
 
 // 企業ID -> 企業名 を取得するマッピング用
 function getCompanyName(companyId: string): string {

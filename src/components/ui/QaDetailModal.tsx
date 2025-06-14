@@ -8,7 +8,7 @@ import {
   QUESTION_ROUTE_OPTIONS,
   getTagColor,
 } from '@/components/ui/tagConfig';
-import { Calendar, Bookmark, X, BookOpen, Plus, FileText, Tag, Activity, HelpCircle, CheckCircle, Eye, Edit, Route, Users } from 'lucide-react';
+import { Calendar, Bookmark, X, BookOpen, Plus, FileText, Activity, HelpCircle, CheckCircle, Eye, Edit, Route, Users } from 'lucide-react';
 import { updateCorporateQa, generateCorporateQaAnswer } from '@/lib/api';
 import { useUser } from "@auth0/nextjs-auth0";
 import FiscalPeriodSelect from '@/components/ui/FiscalPeriodSelect';
