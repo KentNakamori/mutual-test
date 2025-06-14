@@ -17,33 +17,20 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: '投資家種別は必須です' }, { status: 400 });
     }
 
+    if (!userData.asset_scale) {
+      return NextResponse.json({ error: '資産運用規模は必須です' }, { status: 400 });
+    }
+
     if (!userData.email || !/\S+@\S+\.\S+/.test(userData.email)) {
       return NextResponse.json({ error: '有効なメールアドレスを入力してください' }, { status: 400 });
     }
 
-    // 投資家種別を日本語に変換
-    const investorTypeMap: Record<string, string> = {
-      'institutional': '機関投資家',
-      'individual': '個人投資家',
-      'analyst': 'アナリスト',
-      'other': 'その他',
-    };
-
-    // 資産規模を日本語に変換
-    const assetScaleMap: Record<string, string> = {
-      'under_5m': '500万円未満',
-      '5m_to_10m': '500万～1000万円',
-      '10m_to_30m': '1000万～3000万円',
-      'over_30m': '3000万円以上',
-      'other': 'その他',
-    };
-
-    // バックエンドAPIに送信するデータを準備
+    // バックエンドAPIに送信するデータを準備（変換不要）
     const registrationData = {
-      email: userData.email, // フロントエンドから送られてきたemailをそのまま使用
+      email: userData.email,
       display_name: userData.display_name || null,
-      investor_type: investorTypeMap[userData.investor_type] || userData.investor_type,
-      asset_scale: userData.asset_scale ? assetScaleMap[userData.asset_scale] : 'その他',
+      investor_type: userData.investor_type,
+      asset_scale: userData.asset_scale,
       bio: userData.bio || null,
     };
 

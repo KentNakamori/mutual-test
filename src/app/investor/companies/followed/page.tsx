@@ -8,7 +8,7 @@ import Sidebar from "@/components/common/sidebar";
 import Footer from "@/components/common/footer";
 import CompanyListing from '@/components/features/investor/companies/CompanyListing';
 import GuestRestrictedContent from "@/components/features/investor/common/GuestRestrictedContent";
-import { Home, Heart, Search, MessageSquare, User } from 'lucide-react';
+import { Home, Heart, Search, Logs, User } from 'lucide-react';
 
 // APIレスポンスの型定義
 interface CompanyItem {
@@ -40,7 +40,7 @@ const FollowedCompaniesPage: React.FC = () => {
               { label: 'トップページ', link: '/investor/companies', icon: <Home size={20} /> },
               { label: "フォロー済み企業", link: "/investor/companies/followed", icon: <Heart size={20} /> },
               { label: 'Q&A検索', link: '/investor/qa', icon: <Search size={20} /> },
-              { label: 'チャットログ', link: '/investor/chat-logs', icon: <MessageSquare size={20} /> },
+              { label: 'チャットログ', link: '/investor/chat-logs', icon: <Logs size={20} /> },
               { label: 'マイページ', link: '/investor/mypage', icon: <User size={20} /> },
             ]}
             isCollapsible
@@ -64,7 +64,7 @@ const FollowedCompaniesPage: React.FC = () => {
             { label: 'トップページ', link: '/investor/companies', icon: <Home size={20} /> },
             { label: "フォロー済み企業", link: "/investor/companies/followed", icon: <Heart size={20} /> },
             { label: 'Q&A検索', link: '/investor/qa', icon: <Search size={20} /> },
-            { label: 'チャットログ', link: '/investor/chat-logs', icon: <MessageSquare size={20} /> },
+            { label: 'チャットログ', link: '/investor/chat-logs', icon: <Logs size={20} /> },
             { label: 'マイページ', link: '/investor/mypage', icon: <User size={20} /> },
           ]}
           isCollapsible

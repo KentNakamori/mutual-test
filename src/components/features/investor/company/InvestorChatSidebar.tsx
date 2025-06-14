@@ -2,7 +2,7 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import { Search, Plus, MessageSquare, HelpCircle } from 'lucide-react';
+import { Search, Plus, Logs, HelpCircle } from 'lucide-react';
 import { ChatSession } from '@/types';
 
 interface InvestorChatSidebarProps {
@@ -127,7 +127,7 @@ const InvestorChatSidebar: React.FC<InvestorChatSidebarProps> = ({
                     }`}
                   >
                     <div className="flex items-center">
-                      <MessageSquare size={14} className={`mr-1 ${selectedSessionId === session.sessionId ? 'text-blue-600' : 'text-gray-500'}`} />
+                      <Logs size={14} className={`mr-1 ${selectedSessionId === session.sessionId ? 'text-blue-600' : 'text-gray-500'}`} />
                       <div className="flex-1 truncate">
                         <div className="text-sm">{session.lastMessageSnippet || '新規チャット'}</div>
                         <div className="text-xs text-gray-500">

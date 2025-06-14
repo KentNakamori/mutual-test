@@ -29,7 +29,7 @@ const LoginPage: React.FC = () => {
             <h1 className="text-2xl font-bold text-gray-800">企業ユーザーログイン</h1>
             <p className="mt-2 text-sm text-gray-600">アカウントにアクセスして企業情報を管理</p>
           </div>
-          <Button label="Auth0でログイン" onClick={handleLogin} className="w-full" />
+          <Button label="ログイン" onClick={handleLogin} className="w-full" />
           <div className="text-center text-xs text-gray-500">
             ログインすることで、利用規約とプライバシーポリシーに同意したことになります。
           </div>

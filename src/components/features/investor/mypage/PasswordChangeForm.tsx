@@ -75,7 +75,7 @@ const PasswordChangeForm: React.FC<PasswordChangeFormProps> = ({ onChangePasswor
     <div className="space-y-6">
       <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
         <h3 className="text-lg font-medium text-blue-800 mb-2">
-          Auth0パスワード変更について
+          パスワード変更について
         </h3>
         <p className="text-blue-700 text-sm mb-3">
           セキュリティのため、パスワード変更はメール経由で行います。

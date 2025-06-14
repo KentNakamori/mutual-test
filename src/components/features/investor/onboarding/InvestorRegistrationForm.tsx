@@ -12,8 +12,8 @@ const InvestorRegistrationForm: React.FC = () => {
   const [formData, setFormData] = useState<InvestorRegistrationData>({
     display_name: '',
     email: user?.email || '',
-    investor_type: 'individual',
-    asset_scale: 'other',
+    investor_type: '個人投資家',
+    asset_scale: '500万円未満',
     bio: '',
   });
   
@@ -21,18 +21,19 @@ const InvestorRegistrationForm: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const investorTypeOptions = [
-    { value: 'institutional', label: '機関投資家' },
-    { value: 'individual', label: '個人投資家' },
-    { value: 'analyst', label: 'アナリスト' },
-    { value: 'other', label: 'その他' },
+    { value: '機関投資家', label: '機関投資家' },
+    { value: '個人投資家', label: '個人投資家' },
+    { value: 'セルサイドアナリスト', label: 'セルサイドアナリスト' },
+    { value: 'その他', label: 'その他' },
   ];
 
   const assetScaleOptions = [
-    { value: 'under_5m', label: '500万円未満' },
-    { value: '5m_to_10m', label: '500万～1000万円' },
-    { value: '10m_to_30m', label: '1000万～3000万円' },
-    { value: 'over_30m', label: '3000万円以上' },
-    { value: 'other', label: 'その他' },
+    { value: '500万円未満', label: '500万円未満' },
+    { value: '500万円～1000万円', label: '500万円～1000万円' },
+    { value: '1000万円～5000万円', label: '1000万円～5000万円' },
+    { value: '5000万円～1億円', label: '5000万円～1億円' },
+    { value: '1億円以上', label: '1億円以上' },
+    { value: '非開示', label: '非開示' },
   ];
 
   const validateForm = (data: InvestorRegistrationData) => {
@@ -109,8 +110,8 @@ const InvestorRegistrationForm: React.FC = () => {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      {/* 表示名 */}
-      <div>
+      {/* 表示名 - 一旦非表示 */}
+      {/* <div>
         <label htmlFor="display_name" className="block text-sm font-medium text-gray-700">
           表示名（任意）
         </label>
@@ -125,7 +126,7 @@ const InvestorRegistrationForm: React.FC = () => {
         {errors.display_name && (
           <p className="mt-1 text-sm text-red-600">{errors.display_name}</p>
         )}
-      </div>
+      </div> */}
 
       {/* メールアドレス */}
       <div>
@@ -171,7 +172,7 @@ const InvestorRegistrationForm: React.FC = () => {
       {/* 資産運用規模 */}
       <div>
         <label htmlFor="asset_scale" className="block text-sm font-medium text-gray-700">
-          資産運用規模（任意）
+          資産運用規模 <span className="text-red-500">*</span>
         </label>
         <select
           id="asset_scale"
@@ -179,7 +180,6 @@ const InvestorRegistrationForm: React.FC = () => {
           onChange={(e) => handleInputChange('asset_scale', e.target.value as any)}
           className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
         >
-          <option value="">選択してください</option>
           {assetScaleOptions.map(option => (
             <option key={option.value} value={option.value}>
               {option.label}
@@ -191,8 +191,8 @@ const InvestorRegistrationForm: React.FC = () => {
         )}
       </div>
 
-      {/* 自己紹介 */}
-      <div>
+      {/* 自己紹介 - 一旦非表示 */}
+      {/* <div>
         <label htmlFor="bio" className="block text-sm font-medium text-gray-700">
           自己紹介（任意）
         </label>
@@ -210,7 +210,7 @@ const InvestorRegistrationForm: React.FC = () => {
         {errors.bio && (
           <p className="mt-1 text-sm text-red-600">{errors.bio}</p>
         )}
-      </div>
+      </div> */}
 
       {/* エラーメッセージ */}
       {errors.submit && (

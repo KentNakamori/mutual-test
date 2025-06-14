@@ -8,7 +8,7 @@ import {
   QUESTION_ROUTE_OPTIONS,
   getTagColor,
 } from '@/components/ui/tagConfig';
-import { Calendar, Bookmark, X, BookOpen, Plus, FileText, Tag, Activity, HelpCircle, CheckCircle, Eye, Edit } from 'lucide-react';
+import { Calendar, Bookmark, X, BookOpen, Plus, FileText, Tag, Activity, HelpCircle, CheckCircle, Eye, Edit, Route, Users } from 'lucide-react';
 import { updateCorporateQa, generateCorporateQaAnswer } from '@/lib/api';
 import { useUser } from "@auth0/nextjs-auth0";
 import FiscalPeriodSelect from '@/components/ui/FiscalPeriodSelect';
@@ -391,6 +391,10 @@ const QaDetailModal: React.FC<QaDetailModalProps> = ({
                     <h2 className="text-2xl font-semibold text-gray-900 mb-3">{editableQA.title}</h2>
                     <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600">
                       <div className="flex items-center">
+                        <Users size={16} className="mr-2 text-gray-500" />
+                        <span className="font-medium">{qa.companyName || getCompanyName(qa.companyId || '')}</span>
+                      </div>
+                      <div className="flex items-center">
                         <Calendar size={16} className="mr-2 text-gray-500" />
                         <span>{formatDate(qa.createdAt)}</span>
                       </div>
@@ -398,19 +402,13 @@ const QaDetailModal: React.FC<QaDetailModalProps> = ({
                         <FileText size={16} className="mr-2 text-gray-500" />
                         <span>{editableQA.fiscalPeriod}</span>
                       </div>
-                      {editableQA.question_route && (
-                        <div className="flex items-center">
-                          <Tag size={16} className="mr-2 text-gray-500" />
-                          <span>{editableQA.question_route}</span>
-                        </div>
-                      )}
                     </div>
                   </div>
                   
                   {/* 質問エリア */}
                   <div className="mb-6">
-                    <h3 className="text-sm font-medium text-gray-700 mb-2 flex items-center">
-                      <HelpCircle size={16} className="mr-2 text-blue-600" />
+                    <h3 className="text-lg font-medium text-blue-600 mb-2 flex items-center">
+                      <HelpCircle size={24} className="mr-2 text-blue-600" />
                       質問
                     </h3>
                     <p className="text-gray-800 leading-relaxed pl-6">{editableQA.question}</p>
@@ -418,11 +416,11 @@ const QaDetailModal: React.FC<QaDetailModalProps> = ({
                   
                   {/* 回答エリア */}
                   <div className="mb-6">
-                    <h3 className="text-sm font-medium text-gray-700 mb-2 flex items-center">
-                      <CheckCircle size={16} className="mr-2 text-green-600" />
+                    <h3 className="text-lg font-medium text-green-600 mb-2 flex items-center">
+                      <CheckCircle size={24} className="mr-2 text-green-600" />
                       回答
                     </h3>
-                    <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 ml-6">
+                    <div className="ml-6">
                       <div className="text-gray-800 leading-relaxed prose prose-sm max-w-none">
                         <ReactMarkdown>
                           {editableQA.answer || '*回答内容を入力してください*'}
@@ -433,28 +431,27 @@ const QaDetailModal: React.FC<QaDetailModalProps> = ({
                   
                   {/* メタデータエリア */}
                   <div className="space-y-4 mb-6">
-                    {/* 情報ソース */}
+                    {/* 質問ルート */}
                     <div>
                       <h4 className="text-sm font-medium text-gray-700 mb-2 flex items-center">
-                        <BookOpen size={14} className="mr-2 text-gray-600" />
-                        情報ソース
+                        <Route size={14} className="mr-2 text-indigo-600" />
+                        質問ルート
                       </h4>
                       <div className="flex flex-wrap gap-2 pl-5">
-                        {editableQA.source && editableQA.source.length > 0 ? (
-                          editableQA.source.map((source: string) => {
-                            const sourceOption = INFO_SOURCE_OPTIONS.find(opt => opt.label === source);
-                            const colorClass = sourceOption ? sourceOption.color : 'bg-gray-100 text-gray-800';
+                        {editableQA.question_route ? (
+                          (() => {
+                            const routeOption = QUESTION_ROUTE_OPTIONS.find(opt => opt.label === editableQA.question_route);
+                            const colorClass = routeOption ? routeOption.color : 'bg-gray-100 text-gray-800';
                             return (
-                            <span
-                              key={source}
+                              <span
                                 className={`inline-flex items-center ${colorClass} px-3 py-1 rounded-full text-xs font-medium`}
-                            >
-                              {source}
-                            </span>
+                              >
+                                {editableQA.question_route}
+                              </span>
                             );
-                          })
+                          })()
                         ) : (
-                          <span className="text-gray-500 text-sm">情報ソースなし</span>
+                          <span className="text-gray-500 text-sm">質問ルート未設定</span>
                         )}
                       </div>
                     </div>
@@ -462,7 +459,7 @@ const QaDetailModal: React.FC<QaDetailModalProps> = ({
                     {/* カテゴリ */}
                     <div>
                       <h4 className="text-sm font-medium text-gray-700 mb-2 flex items-center">
-                        <Activity size={14} className="mr-2 text-gray-600" />
+                        <Activity size={14} className="mr-2 text-amber-600" />
                         カテゴリ
                       </h4>
                       <div className="flex flex-wrap gap-2 pl-5">
@@ -647,6 +644,71 @@ const QaDetailModal: React.FC<QaDetailModalProps> = ({
                       </div>
                     </div>
                   </div>
+
+                  {/* 右側：質問・回答編集 */}
+                  <div className="lg:col-span-3 space-y-5 min-w-0">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">質問内容</label>
+                      <textarea
+                        name="question"
+                        value={editableQA.question}
+                        onChange={handleChangeQuestion}
+                        rows={4}
+                        className="w-full min-w-0 px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-y"
+                        placeholder="質問内容を入力してください"
+                      />
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-1">回答内容</label>
+                      <textarea
+                        name="answer"
+                        value={editableQA.answer}
+                        onChange={handleChangeAnswer}
+                        rows={8}
+                        className="w-full min-w-0 px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-y"
+                        placeholder="回答内容を入力してください"
+                      />
+                      {(() => {
+                        const { disabled, tooltip } = getAIButtonStatus();
+                        return (
+                          <div className="flex justify-start mt-2">
+                            <div className="relative">
+                              <button
+                                onClick={handleGenerateAI}
+                                disabled={disabled || isGeneratingAI}
+                                className={`flex items-center px-3 py-2 text-sm rounded-md transition-colors ${
+                                  disabled || isGeneratingAI
+                                    ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                                    : 'bg-gradient-to-r from-[#1CB5E0] to-[#9967EE] text-white hover:opacity-90'
+                                }`}
+                                title={tooltip}
+                              >
+                                {isGeneratingAI ? (
+                                  <>
+                                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                                    AIで回答を生成中...
+                                  </>
+                                ) : (
+                                  <>
+                                    <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+                                    </svg>
+                                    AIで回答を生成
+                                  </>
+                                )}
+                              </button>
+                              {tooltip && disabled && !isGeneratingAI && (
+                                <div className="absolute bottom-full left-0 mb-2 px-2 py-1 text-xs text-white bg-gray-800 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap">
+                                  {tooltip}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })()}
+                    </div>
+                  </div>
                 </div>
               )}
             </div>
@@ -667,6 +729,10 @@ const QaDetailModal: React.FC<QaDetailModalProps> = ({
                 <h2 className="text-2xl font-semibold text-gray-900 mb-3">{qa.title}</h2>
                 <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600">
                   <div className="flex items-center">
+                    <Users size={16} className="mr-2 text-gray-500" />
+                    <span className="font-medium">{qa.companyName || getCompanyName(qa.companyId || '')}</span>
+                  </div>
+                  <div className="flex items-center">
                     <Calendar size={16} className="mr-2 text-gray-500" />
                     <span>{formatDate(qa.createdAt)}</span>
                   </div>
@@ -674,19 +740,13 @@ const QaDetailModal: React.FC<QaDetailModalProps> = ({
                     <FileText size={16} className="mr-2 text-gray-500" />
                     <span>{qa.fiscalPeriod}</span>
                   </div>
-                  {qa.question_route && (
-                    <div className="flex items-center">
-                      <Tag size={16} className="mr-2 text-gray-500" />
-                      <span>{qa.question_route}</span>
-                    </div>
-                  )}
                 </div>
               </div>
               
               {/* 質問エリア */}
               <div className="mb-6">
-                <h3 className="text-sm font-medium text-gray-700 mb-2 flex items-center">
-                  <HelpCircle size={16} className="mr-2 text-blue-600" />
+                <h3 className="text-lg font-medium text-blue-600 mb-2 flex items-center">
+                  <HelpCircle size={24} className="mr-2 text-blue-600" />
                   質問
                 </h3>
                 <p className="text-gray-800 leading-relaxed pl-6">{qa.question}</p>
@@ -694,11 +754,11 @@ const QaDetailModal: React.FC<QaDetailModalProps> = ({
               
               {/* 回答エリア */}
               <div className="mb-6">
-                <h3 className="text-sm font-medium text-gray-700 mb-2 flex items-center">
-                  <CheckCircle size={16} className="mr-2 text-green-600" />
+                <h3 className="text-lg font-medium text-green-600 mb-2 flex items-center">
+                  <CheckCircle size={24} className="mr-2 text-green-600" />
                   回答
                 </h3>
-                <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 ml-6">
+                <div className="ml-6">
                   <div className="text-gray-800 leading-relaxed prose prose-sm max-w-none">
                     <ReactMarkdown>
                       {qa.answer}
@@ -709,28 +769,27 @@ const QaDetailModal: React.FC<QaDetailModalProps> = ({
               
               {/* メタデータエリア */}
               <div className="space-y-4 mb-6">
-                {/* 情報ソース */}
+                {/* 質問ルート */}
                 <div>
                   <h4 className="text-sm font-medium text-gray-700 mb-2 flex items-center">
-                    <BookOpen size={14} className="mr-2 text-gray-600" />
-                    情報ソース
+                    <Route size={14} className="mr-2 text-indigo-600" />
+                    質問ルート
                   </h4>
                   <div className="flex flex-wrap gap-2 pl-5">
-                    {qa.source && qa.source.length > 0 ? (
-                      qa.source.map((source: string) => {
-                        const sourceOption = INFO_SOURCE_OPTIONS.find(opt => opt.label === source);
-                        const colorClass = sourceOption ? sourceOption.color : 'bg-gray-100 text-gray-800';
+                    {qa.question_route ? (
+                      (() => {
+                        const routeOption = QUESTION_ROUTE_OPTIONS.find(opt => opt.label === qa.question_route);
+                        const colorClass = routeOption ? routeOption.color : 'bg-gray-100 text-gray-800';
                         return (
-                        <span
-                          key={source}
+                          <span
                             className={`inline-flex items-center ${colorClass} px-3 py-1 rounded-full text-xs font-medium`}
-                        >
-                          {source}
-                        </span>
+                          >
+                            {qa.question_route}
+                          </span>
                         );
-                      })
+                      })()
                     ) : (
-                      <span className="text-gray-500 text-sm">情報ソースなし</span>
+                      <span className="text-gray-500 text-sm">質問ルート未設定</span>
                     )}
                   </div>
                 </div>
@@ -738,7 +797,7 @@ const QaDetailModal: React.FC<QaDetailModalProps> = ({
                 {/* カテゴリ */}
                 <div>
                   <h4 className="text-sm font-medium text-gray-700 mb-2 flex items-center">
-                    <Activity size={14} className="mr-2 text-gray-600" />
+                    <Activity size={14} className="mr-2 text-amber-600" />
                     カテゴリ
                   </h4>
                   <div className="flex flex-wrap gap-2 pl-5">

@@ -92,7 +92,7 @@ const QACard: React.FC<QACardProps> = ({
               {/* 質問ルート・カテゴリ（左詰め） */}
               <div className="flex items-center gap-4 min-w-0">
                 {qa.question_route && (
-                  <div className="flex items-center w-28">
+                  <div className="flex items-center w-32 ml-32">
                     <Route size={14} className="text-indigo-600 mr-1" />
                     <span className={`px-2 py-1 rounded-full text-xs font-medium ${getTagColor(qa.question_route)}`}>
                       {qa.question_route}

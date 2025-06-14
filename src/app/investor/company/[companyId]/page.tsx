@@ -10,14 +10,14 @@ import TabSwitcher from '@/components/features/investor/company/TabSwitcher';
 import ChatTabView from '@/components/features/investor/company/ChatTabView';
 import QATabView from '@/components/features/investor/company/QATabView';
 import { Company } from '@/types';
-import { Home, Heart, Search, MessageSquare, User } from 'lucide-react';
+import { Home, Heart, Search, Logs, User } from 'lucide-react';
 import { getInvestorCompanyDetail } from '@/lib/api';
 
 const menuItems = [
   { label: 'トップページ', link: '/investor/companies', icon: <Home size={20} /> },
   { label: "フォロー済み企業", link: "/investor/companies/followed", icon: <Heart size={20} /> },
   { label: 'Q&A検索', link: '/investor/qa', icon: <Search size={20} /> },
-  { label: 'チャットログ', link: '/investor/chat-logs', icon: <MessageSquare size={20} /> },
+  { label: 'チャットログ', link: '/investor/chat-logs', icon: <Logs size={20} /> },
   { label: 'マイページ', link: '/investor/mypage', icon: <User size={20} /> },
 ];
 

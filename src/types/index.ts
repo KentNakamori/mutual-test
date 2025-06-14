@@ -14,8 +14,8 @@ export * from './components';
 export interface InvestorRegistrationData {
   display_name?: string;
   email: string;
-  investor_type: 'institutional' | 'individual' | 'analyst' | 'other';
-  asset_scale?: 'under_5m' | '5m_to_10m' | '10m_to_30m' | 'over_30m' | 'other';
+  investor_type: '個人投資家' | '機関投資家' | 'セルサイドアナリスト' | 'その他';
+  asset_scale?: '500万円未満' | '500万円～1000万円' | '1000万円～5000万円' | '5000万円～1億円' | '1億円以上' | '非開示';
   bio?: string;
 }
 

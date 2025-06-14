@@ -1,6 +1,6 @@
 // src/components/features/investor/companies/CompanyListing.tsx
 import React, { useState, useEffect, useRef } from 'react';
-import { Filter, Search, Grid, List, ChevronDown } from 'lucide-react';
+import { Filter, Search, Grid, List, ChevronDown, Lock } from 'lucide-react';
 import { usePathname } from 'next/navigation';
 import { Industry, INDUSTRY_OPTIONS, getIndustryLabel } from '@/types/industry';
 import { useUser } from '@auth0/nextjs-auth0';
@@ -413,22 +413,6 @@ const CompanyListing: React.FC<CompanyListingProps> = ({ isFollowedOnly = false,
             リセット
           </button>
         )}
-          
-        {/* 表示切替 */}
-        <div className="ml-auto flex items-center bg-white rounded-lg border shadow-sm p-1">
-          <button 
-            onClick={() => setViewMode('grid')} 
-            className={`p-1.5 rounded-md ${viewMode === 'grid' ? 'bg-blue-100 text-blue-600' : 'text-gray-500 hover:bg-gray-100'}`}
-          >
-            <Grid size={18} />
-          </button>
-          <button 
-            onClick={() => setViewMode('list')} 
-            className={`p-1.5 rounded-md ${viewMode === 'list' ? 'bg-blue-100 text-blue-600' : 'text-gray-500 hover:bg-gray-100'}`}
-          >
-            <List size={18} />
-          </button>
-        </div>
       </div>
       
       {/* アクティブフィルターの表示 */}
@@ -495,31 +479,17 @@ const CompanyListing: React.FC<CompanyListingProps> = ({ isFollowedOnly = false,
       
       {/* データ表示 */}
       {!loading && !userLoading && !error && (
-        viewMode === 'grid' ? (
-          <div className="grid grid-cols-2 gap-6">
-            {filteredCompanies.map(company => (
-              <CompanyGridCard 
-                key={company.companyId} 
-                company={company} 
-                isGuest={isGuest}
-                onFollowToggle={handleFollowToggle}
-                onShowGuestPopup={() => setShowGuestPopup(true)}
-              />
-            ))}
-          </div>
-        ) : (
-          <div className="space-y-4">
-            {filteredCompanies.map(company => (
-              <CompanyListCard 
-                key={company.companyId} 
-                company={company} 
-                isGuest={isGuest}
-                onFollowToggle={handleFollowToggle}
-                onShowGuestPopup={() => setShowGuestPopup(true)}
-              />
-            ))}
-          </div>
-        )
+        <div className="grid grid-cols-2 gap-6">
+          {filteredCompanies.map(company => (
+            <CompanyGridCard 
+              key={company.companyId} 
+              company={company} 
+              isGuest={isGuest}
+              onFollowToggle={handleFollowToggle}
+              onShowGuestPopup={() => setShowGuestPopup(true)}
+            />
+          ))}
+        </div>
       )}
       
       {/* データが空の場合 */}
@@ -574,9 +544,9 @@ const CompanyGridCard = ({ company, isGuest, onFollowToggle, onShowGuestPopup }:
         {/* ロゴ部分 - 縦幅いっぱい */}
         <div className="flex-shrink-0 mr-4">
           {company.logoUrl ? (
-            <img src={getFullImageUrl(company.logoUrl)} alt={`${company.companyName} logo`} className="w-28 h-full rounded-md object-cover bg-gray-100" />
+            <img src={getFullImageUrl(company.logoUrl)} alt={`${company.companyName} logo`} className="w-32 h-full rounded-md object-cover bg-gray-100" />
           ) : (
-            <div className="w-28 h-full rounded-md bg-gray-100 flex items-center justify-center text-2xl font-bold text-gray-500">
+            <div className="w-32 h-full rounded-md bg-gray-100 flex items-center justify-center text-2xl font-bold text-gray-500">
               {company.companyName.charAt(0)}
             </div>
           )}
@@ -584,17 +554,15 @@ const CompanyGridCard = ({ company, isGuest, onFollowToggle, onShowGuestPopup }:
         
         {/* 右側のコンテンツ */}
         <div className="flex-1 flex flex-col justify-between min-w-0">
-          {/* 上部：企業名と証券コード */}
-          <div className="mb-3">
+          {/* 上部：企業名、証券コード、タグ */}
+          <div className="mb-2">
             <h3 className="font-medium text-gray-800 truncate">{company.companyName}</h3>
-            {company.securitiesCode && (
-              <p className="text-xs text-gray-400 mt-1">証券コード: {company.securitiesCode}</p>
-            )}
-          </div>
-          
-          {/* 下部：タグとフォローボタン */}
-          <div className="flex items-end justify-between gap-2">
-            <div className="flex flex-wrap gap-1 flex-1">
+            <div className="flex items-center gap-2 mt-2 flex-wrap">
+              {company.securitiesCode && (
+                <span className="inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-medium bg-gray-50 text-gray-600 border border-gray-200">
+                  証券コード: {company.securitiesCode}
+                </span>
+              )}
               <span className="inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-medium bg-blue-50 text-blue-700 border border-blue-100">
                 {getIndustryLabel(company.industry)}
               </span>
@@ -604,6 +572,19 @@ const CompanyGridCard = ({ company, isGuest, onFollowToggle, onShowGuestPopup }:
                 </span>
               )}
             </div>
+          </div>
+          
+          {/* 下部：事業説明とフォローボタン */}
+          <div className="flex items-end justify-between gap-2">
+            <div className="flex-1 min-w-0">
+              {company.businessDescription ? (
+                <p className="text-xs text-gray-600 line-clamp-2 leading-relaxed">
+                  {company.businessDescription}
+                </p>
+              ) : (
+                <p className="text-xs text-gray-400 italic">-</p>
+              )}
+            </div>
             
             {isGuest ? (
               <button
@@ -611,9 +592,10 @@ const CompanyGridCard = ({ company, isGuest, onFollowToggle, onShowGuestPopup }:
                   e.stopPropagation();
                   onShowGuestPopup();
                 }}
-                className="px-2 py-1 rounded-md text-xs font-medium bg-gray-200 text-gray-700 hover:bg-gray-300 flex-shrink-0"
+                className="px-2 py-1 rounded-md text-xs font-medium bg-blue-600 text-white hover:bg-blue-700 flex-shrink-0 flex items-center gap-1"
               >
-                ログイン必要
+                フォロー
+                <Lock size={12} />
               </button>
             ) : (
               <button
@@ -661,9 +643,11 @@ const CompanyListCard = ({ company, isGuest, onFollowToggle, onShowGuestPopup }:
           <div className="flex flex-wrap justify-between items-start">
             <div className="flex-1 min-w-0 mr-4">
               <h3 className="font-medium text-gray-800">{company.companyName}</h3>
-              <div className="flex items-center gap-2 mt-1 flex-wrap">
+              <div className="flex items-center gap-2 mt-0.5 flex-wrap">
                 {company.securitiesCode && (
-                  <span className="text-xs text-gray-500">証券コード: {company.securitiesCode}</span>
+                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-medium bg-gray-50 text-gray-600 border border-gray-200">
+                    証券コード: {company.securitiesCode}
+                  </span>
                 )}
                 <span className="inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-medium bg-blue-50 text-blue-700 border border-blue-100">
                   {getIndustryLabel(company.industry)}
@@ -672,6 +656,16 @@ const CompanyListCard = ({ company, isGuest, onFollowToggle, onShowGuestPopup }:
                   <span className="inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-medium bg-green-50 text-green-700 border border-green-100">
                     {company.majorStockExchange}
                   </span>
+                )}
+              </div>
+              {/* 事業説明 */}
+              <div className="mt-2">
+                {company.businessDescription ? (
+                  <p className="text-sm text-gray-600 line-clamp-1">
+                    {company.businessDescription}
+                  </p>
+                ) : (
+                  <p className="text-sm text-gray-400 italic">-</p>
                 )}
               </div>
             </div>
