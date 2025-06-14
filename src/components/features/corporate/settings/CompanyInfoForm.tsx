@@ -10,6 +10,7 @@ const CompanyInfoForm: React.FC<CompanyInfoFormProps> = ({ initialData, onSaveSu
   const [formData, setFormData] = useState<CompanyInfo>(initialData);
   const [isSaving, setIsSaving] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   // 型安全に各フィールドの更新を行うため、キーは keyof CompanyInfo にします。
   const handleChange = (field: keyof CompanyInfo, value: string) => {
@@ -19,14 +20,19 @@ const CompanyInfoForm: React.FC<CompanyInfoFormProps> = ({ initialData, onSaveSu
     } else {
       setFormData({ ...formData, [field]: value });
     }
+    // エラーや成功メッセージをクリア
+    setErrorMsg('');
+    setSuccessMessage(null);
   };
 
   const handleSubmit = async () => {
     setIsSaving(true);
     setErrorMsg('');
+    setSuccessMessage(null);
     try {
       // API経由で企業情報更新（PUT /corporate/settings/company）
       await updateCorporateCompanySettings(formData);
+      setSuccessMessage('企業情報が正常に更新されました');
       // 更新成功後、親コンポーネントへ再取得を依頼
       onSaveSuccess();
     } catch (error: any) {
@@ -39,6 +45,14 @@ const CompanyInfoForm: React.FC<CompanyInfoFormProps> = ({ initialData, onSaveSu
   return (
     <div className="max-w-4xl mx-auto">
       <h2 className="text-2xl font-semibold mb-6">企業情報の更新</h2>
+      
+      {/* 成功メッセージ */}
+      {successMessage && (
+        <div className="bg-green-50 border border-green-400 text-green-700 px-4 py-3 rounded mb-6">
+          {successMessage}
+        </div>
+      )}
+
       <div className="space-y-6">
         <div className="grid grid-cols-2 gap-6">
           <div>
@@ -47,7 +61,9 @@ const CompanyInfoForm: React.FC<CompanyInfoFormProps> = ({ initialData, onSaveSu
               value={formData.companyName || ''} 
               onChange={(value: string) => handleChange('companyName', value)} 
               placeholder="企業名を入力" 
+              disabled={true} // 企業名は変更不可に設定
             />
+            <p className="text-xs text-gray-500 mt-1">企業名は変更できません</p>
           </div>
           <div>
             <label className="block text-sm font-medium mb-1">業界</label>
@@ -154,6 +170,18 @@ const CompanyInfoForm: React.FC<CompanyInfoFormProps> = ({ initialData, onSaveSu
             onChange={(value: string) => handleChange('businessDescription', value)} 
             placeholder="事業内容を入力" 
           />
+          <div className="flex justify-between items-center mt-1">
+            <p className="text-xs text-gray-500">
+              事業内容は30文字程度での入力を推奨します
+            </p>
+            <p className={`text-xs ${
+              (formData.businessDescription || '').length > 30 
+                ? 'text-orange-500' 
+                : 'text-gray-500'
+            }`}>
+              {formData.businessDescription?.length || 0}文字
+            </p>
+          </div>
         </div>
 
         {errorMsg && <div className="text-red-600 text-sm mt-4">{errorMsg}</div>}

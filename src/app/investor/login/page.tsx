@@ -30,7 +30,7 @@ const InvestorLoginPage: React.FC = () => {
             <h1 className="text-2xl font-bold mb-2">投資家ログイン</h1>
             <p className="text-gray-600">アカウントをお持ちの方はログインしてください</p>
           </div>
-          <Button label="Auth0でログイン" onClick={handleAuth0Login} className="w-full" />
+          <Button label="ログイン" onClick={handleAuth0Login} className="w-full" />
           <div className="relative my-4">
             <div className="absolute inset-0 flex items-center">
               <div className="w-full border-t border-gray-300" />

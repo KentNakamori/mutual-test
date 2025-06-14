@@ -10,14 +10,14 @@ import { ChatLog, FilterType } from '@/types';
 import { useUser } from "@auth0/nextjs-auth0";
 import GuestRestrictedContent from '@/components/features/investor/common/GuestRestrictedContent';
 import { getInvestorChatLogs, deleteInvestorChat } from '@/lib/api';
-import { Home, Heart, Search, MessageSquare, User } from 'lucide-react';
+import { Home, Heart, Search, Logs, User } from 'lucide-react';
 
 // サイドバーのメニュー項目
 const menuItems = [
   { label: 'トップページ', link: '/investor/companies', icon: <Home size={20} /> },
   { label: "フォロー済み企業", link: "/investor/companies/followed", icon: <Heart size={20} /> },
   { label: 'Q&A検索', link: '/investor/qa', icon: <Search size={20} /> },
-  { label: 'チャットログ', link: '/investor/chat-logs', icon: <MessageSquare size={20} /> },
+  { label: 'チャットログ', link: '/investor/chat-logs', icon: <Logs size={20} /> },
   { label: 'マイページ', link: '/investor/mypage', icon: <User size={20} /> },
 ];
 

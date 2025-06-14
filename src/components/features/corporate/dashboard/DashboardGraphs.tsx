@@ -36,7 +36,19 @@ const DashboardGraphs: React.FC<DashboardGraphsProps> = ({ graphData }) => {
         >
           <CartesianGrid strokeDasharray="3 3" vertical={true} horizontal={true} />
           <XAxis dataKey="date" />
-          <YAxis />
+          <YAxis 
+            yAxisId="left"
+            orientation="left"
+            tick={{ fill: '#2e8b57' }}
+            axisLine={{ stroke: '#2e8b57' }}
+            allowDecimals={false}
+          />
+          <YAxis 
+            yAxisId="right"
+            orientation="right"
+            tick={{ fill: '#6a5acd' }}
+            axisLine={{ stroke: '#6a5acd' }}
+          />
           <Tooltip />
           <Legend />
           <Line
@@ -46,6 +58,7 @@ const DashboardGraphs: React.FC<DashboardGraphsProps> = ({ graphData }) => {
             stroke="#6a5acd"
             strokeWidth={2.5}
             activeDot={{ r: 8 }}
+            yAxisId="right"
           />
           <Line
             type="monotone"
@@ -53,6 +66,7 @@ const DashboardGraphs: React.FC<DashboardGraphsProps> = ({ graphData }) => {
             name="チャット質問数"
             stroke="#2e8b57"
             strokeWidth={2.5}
+            yAxisId="left"
           />
         </LineChart>
       </ResponsiveContainer>

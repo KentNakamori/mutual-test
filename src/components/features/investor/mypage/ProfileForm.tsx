@@ -12,38 +12,33 @@ import { ProfileFormProps } from "@/types";
 const investorTypeOptions = [
   { label: '機関投資家', value: '機関投資家' },
   { label: '個人投資家', value: '個人投資家' },
-  { label: 'アナリスト', value: 'アナリスト' },
+  { label: 'セルサイドアナリスト', value: 'セルサイドアナリスト' },
   { label: 'その他', value: 'その他' },
 ];
 
 // 資産管理規模のオプション
 const assetScaleOptions = [
   { label: '500万円未満', value: '500万円未満' },
-  { label: '500万～1000万円', value: '500万～1000万円' },
-  { label: '1000万～3000万円', value: '1000万～3000万円' },
-  { label: '3000万円以上', value: '3000万円以上' },
-  { label: 'その他', value: 'その他' },
+  { label: '500万円～1000万円', value: '500万円～1000万円' },
+  { label: '1000万円～5000万円', value: '1000万円～5000万円' },
+  { label: '5000万円～1億円', value: '5000万円～1億円' },
+  { label: '1億円以上', value: '1億円以上' },
+  { label: '非開示', value: '非開示' },
 ];
 
 const ProfileForm: React.FC<ProfileFormProps> = ({
   initialProfile,
   onSaveProfile,
 }) => {
-  // 初期プロファイルの資産運用規模が未入力の場合は「その他」をデフォルトに設定
-  const [formData, setFormData] = useState<ProfileData>({
-    ...initialProfile,
-    asset_scale: initialProfile.asset_scale || 'その他'
-  });
+  // 初期プロファイルをそのまま使用（デフォルト値は設定しない）
+  const [formData, setFormData] = useState<ProfileData>(initialProfile);
   const [isSaving, setIsSaving] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   // 初期プロファイルが変更された場合にフォームデータを更新
   useEffect(() => {
-    setFormData({
-      ...initialProfile,
-      asset_scale: initialProfile.asset_scale || 'その他'
-    });
+    setFormData(initialProfile);
   }, [initialProfile]);
 
   // フィールド変更ハンドラ
@@ -90,14 +85,15 @@ const ProfileForm: React.FC<ProfileFormProps> = ({
         </div>
       )}
       
-      <div>
+      {/* 表示名 - 一旦非表示 */}
+      {/* <div>
         <label className="block mb-1">表示名</label>
         <Input
           value={formData.display_name || ''}
           onChange={(value) => handleChange("display_name", value)}
           placeholder="表示名"
         />
-      </div>
+      </div> */}
       <div>
         <label className="block mb-1">メールアドレス</label>
         <Input
@@ -125,14 +121,15 @@ const ProfileForm: React.FC<ProfileFormProps> = ({
           onChange={(value) => handleChange("asset_scale", value)}
         />
       </div>
-      <div>
+      {/* 自己紹介 - 一旦非表示 */}
+      {/* <div>
         <label className="block mb-1">自己紹介</label>
         <Input
           value={formData.bio || ""}
           onChange={(value) => handleChange("bio", value)}
           placeholder="自己紹介"
         />
-      </div>
+      </div> */}
       <div>
         <Button
           type="submit"

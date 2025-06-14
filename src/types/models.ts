@@ -197,14 +197,14 @@ export interface ChatSession {
  * - 投資家分類
  * - 投資家向け機能制御
  */
-export type investor_type = '機関投資家' | '個人投資家' | 'アナリスト' | 'その他' | string;
+export type investor_type = '個人投資家' | '機関投資家' | 'セルサイドアナリスト' | 'その他' | string;
 
 /**
  * 資産管理規模（投資家プロフィール用）
  * - 投資家分類
  * - 投資家向け機能制御
  */
-export type asset_scale = '500万円未満' | '500万～1000万円' | '1000万～3000万' | '3000万円以上' | string;
+export type asset_scale = '500万円未満' | '500万円～1000万円' | '1000万円～5000万円' | '5000万円～1億円' | '1億円以上' | '非開示' | string;
 
 /**
  * プロフィールデータ（ユーザープロフィール管理用）
