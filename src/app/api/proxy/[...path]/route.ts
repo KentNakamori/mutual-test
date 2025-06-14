@@ -57,7 +57,13 @@ async function handler(
     
     // トークンもなく、ゲストアクセス不可能なエンドポイントの場合は認証エラー
     if (!accessToken && !isGuest) {
-        console.log('[PROXY] Authentication required for endpoint:', targetPath);
+        console.error('[PROXY] Authentication required for endpoint:', {
+            path: targetPath,
+            method: req.method,
+            hasToken: !!accessToken,
+            isGuest,
+            isGuestAccessible
+        });
         return NextResponse.json(
             { error: 'Authentication required', message: 'このエンドポイントにはログインが必要です' }, 
             { status: 401 }
@@ -65,10 +71,22 @@ async function handler(
     }
     
     console.log(`[PROXY ${req.method}] Target URL:`, targetUrl);
+    console.log(`[PROXY ${req.method}] Target Path:`, targetPath);
     if (accessToken) {
         console.log(`[PROXY ${req.method}] Access Token:`, accessToken.substring(0, 20) + '...');
     } else if (isGuest) {
         console.log(`[PROXY ${req.method}] Guest user access`);
+    }
+
+    // ファイルアップロード関連の詳細ログ
+    if (targetPath.includes('corporate/files')) {
+        console.log(`🔥 [PROXY] ファイル関連API検出:`, {
+            method: req.method,
+            path: targetPath,
+            hasToken: !!accessToken,
+            contentType: req.headers.get('Content-Type'),
+            userAgent: req.headers.get('User-Agent')?.substring(0, 50)
+        });
     }
 
     const headers: HeadersInit = {};
@@ -79,9 +97,11 @@ async function handler(
         headers['X-Guest-Access'] = 'true';
     }
     
-    // クライアントからのContent-Typeを尊重する (FormDataなどのため)
-    if (req.headers.has('Content-Type')) {
-        headers['Content-Type'] = req.headers.get('Content-Type')!;
+    // FormData以外の場合のみContent-Typeを設定
+    // FormDataの場合、fetchが自動的に適切なContent-Type（multipart/form-data + boundary）を設定するため
+    const contentType = req.headers.get('Content-Type');
+    if (contentType && !contentType.includes('multipart/form-data')) {
+        headers['Content-Type'] = contentType;
     }
     // SSEのためのAcceptヘッダーを転送
     if (req.headers.has('Accept')) {
@@ -91,25 +111,39 @@ async function handler(
     let body: BodyInit | null | undefined = undefined;
     // GET や HEAD リクエストではボディを送信しない
     if (req.method !== 'GET' && req.method !== 'HEAD') {
-        // FormDataの場合、NextResponse.json()でパースしようとするとエラーになることがあるため、
-        // req.blob() や req.formData() を使用して適切に扱う必要がある。
-        // ここではシンプルに req.body を渡すが、Content-Type によっては調整が必要。
-        // Content-Typeがapplication/jsonでない場合は、req.text()やreq.blob()などを試す。
         const contentType = req.headers.get('Content-Type');
+        
         if (contentType && contentType.includes('application/json')) {
+            // JSONの場合
             try {
                 const textBody = await req.text();
                 body = textBody === "" ? undefined : textBody;
             } catch (e) {
-                console.warn(`[PROXY ${req.method}] Could not parse JSON body, attempting to use raw body`, e);
-                body = req.body; // パース失敗時は元のReadableStreamを試みる (限定的)
+                console.warn(`[PROXY ${req.method}] Could not parse JSON body`, e);
+                body = req.body;
+            }
+        } else if (contentType && contentType.includes('multipart/form-data')) {
+            // FormDataの場合
+            try {
+                const formData = await req.formData();
+                
+                // ファイルアップロードの場合、詳細ログを出力
+                if (targetPath.includes('corporate/files')) {
+                    console.log(`🔥 [PROXY] FormData処理中:`, {
+                        entries: Array.from(formData.entries()).map(([key, value]) => [
+                            key,
+                            value instanceof File ? `File(${value.name}, ${value.size}bytes)` : value
+                        ])
+                    });
+                }
+                
+                body = formData;
+            } catch (e) {
+                console.error(`[PROXY ${req.method}] FormData解析エラー:`, e);
+                body = req.body;
             }
         } else {
-             // JSON以外（FormDataなど）の場合は、そのまま ReadableStream を渡す
-             // 注意: Node.js の fetch では ReadableStream を直接 body に渡せるが、
-             // 環境によっては blob() や formData() で変換が必要な場合がある。
-             // Cloudflare Workersなどでは ReadableStream が使えるはず。
-             // Next.js Edge Runtimeでも ReadableStream が使えるはず。
+            // その他の場合
             body = req.body;
         }
     }
@@ -188,15 +222,52 @@ async function handler(
             return new NextResponse(null, { status: res.status, headers: responseHeaders });
         }
 
+        // エラーレスポンスの詳細ログ
+        if (res.status >= 400) {
+            console.error(`[PROXY ${req.method}] HTTP Error Response:`, {
+                status: res.status,
+                statusText: res.statusText,
+                path: targetPath,
+                method: req.method,
+                targetUrl,
+                hasToken: !!accessToken,
+                responseContentType
+            });
+        }
+
         if (responseContentType && responseContentType.includes('application/json')) {
             const responseData = await res.json();
             console.log(`[PROXY ${req.method}] Response Status:`, res.status);
             console.log(`[PROXY ${req.method}] Response Body (JSON):`, JSON.stringify(responseData).substring(0, 200) + '...');
+            
+            // ファイル関連APIのレスポンス詳細ログ
+            if (targetPath.includes('corporate/files')) {
+                console.log(`🔥 [PROXY] ファイルAPI レスポンス詳細:`, {
+                    status: res.status,
+                    path: targetPath,
+                    method: req.method,
+                    responseSize: JSON.stringify(responseData).length,
+                    responsePreview: JSON.stringify(responseData).substring(0, 500)
+                });
+            }
+            
             return new NextResponse(JSON.stringify(responseData), { status: res.status, headers: responseHeaders });
         } else if (responseContentType && responseContentType.startsWith('text/')) {
             const responseData = await res.text();
             console.log(`[PROXY ${req.method}] Response Status:`, res.status);
             console.log(`[PROXY ${req.method}] Response Body (Text):`, responseData.substring(0, 200) + '...');
+            
+            // ファイル関連APIのレスポンス詳細ログ
+            if (targetPath.includes('corporate/files')) {
+                console.log(`🔥 [PROXY] ファイルAPI テキストレスポンス:`, {
+                    status: res.status,
+                    path: targetPath,
+                    method: req.method,
+                    responseSize: responseData.length,
+                    responsePreview: responseData.substring(0, 500)
+                });
+            }
+            
             return new NextResponse(responseData, { status: res.status, headers: responseHeaders });
         } else {
              // JSONでもテキストでもない場合 (例: 画像、ファイルダウンロード)
@@ -208,6 +279,20 @@ async function handler(
 
     } catch (error: any) {
         console.error(`[PROXY ${req.method}] Error forwarding request to ${targetUrl}:`, error);
+        
+        // ファイル関連APIのエラー詳細ログ
+        if (targetPath.includes('corporate/files')) {
+            console.error(`🔥 [PROXY] ファイルAPI エラー詳細:`, {
+                error: error?.message || String(error),
+                stack: error?.stack,
+                path: targetPath,
+                method: req.method,
+                targetUrl,
+                hasToken: !!accessToken,
+                contentType: req.headers.get('Content-Type')
+            });
+        }
+        
         return NextResponse.json({ message: 'Proxy error', error: error.message }, { status: 502 }); // Bad Gateway
     }
 }
