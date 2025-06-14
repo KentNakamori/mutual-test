@@ -25,4 +25,8 @@ auth0_audience = "https://api.local.dev"
 api_base_url = "https://d20rzkwelg7jzp.cloudfront.net"
 # 
 # 2. ALB直接接続（オプション）:
-#    api_base_url = "https://mutual-app-alb-v2-684193640.ap-northeast-1.elb.amazonaws.com" 
+#    api_base_url = "https://mutual-app-alb-v2-684193640.ap-northeast-1.elb.amazonaws.com"
+
+# Auth0機密情報はAWS Secrets Managerで管理されています
+# 機密情報の更新は以下のコマンドで行ってください:
+# ./scripts/update-secrets.sh 

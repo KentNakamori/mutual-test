@@ -170,17 +170,28 @@ resource "aws_secretsmanager_secret" "app_secrets" {
   description = "Application secrets for ${var.project_name} frontend"
 }
 
+# Secrets Managerの値は ./scripts/update-secrets.sh で管理
+# Terraformでは機密情報を管理しない
 resource "aws_secretsmanager_secret_version" "app_secrets" {
   secret_id = aws_secretsmanager_secret.app_secrets.id
   secret_string = jsonencode({
+    # 公開情報のみTerraformで管理
+    AUTH0_ISSUER_BASE_URL = var.auth0_issuer_base_url
+    AUTH0_DOMAIN         = var.auth0_domain
     AUTH0_CLIENT_ID      = var.auth0_client_id
-    AUTH0_CLIENT_SECRET  = var.auth0_client_secret
-    AUTH0_AUDIENCE       = "https://api.local.dev"
-    AUTH0_SECRET         = var.auth0_secret
-    AUTH0_M2M_CLIENT_ID  = var.auth0_m2m_client_id
-    AUTH0_M2M_CLIENT_SECRET = var.auth0_m2m_client_secret
-    AUTH0_CONNECTION_NAME = var.auth0_connection_name
+    AUTH0_AUDIENCE       = var.auth0_audience
+    # 機密情報は ./scripts/update-secrets.sh で管理
+    AUTH0_CLIENT_SECRET  = "MANAGED_BY_SCRIPT"
+    AUTH0_SECRET         = "MANAGED_BY_SCRIPT"
+    AUTH0_M2M_CLIENT_ID  = "MANAGED_BY_SCRIPT"
+    AUTH0_M2M_CLIENT_SECRET = "MANAGED_BY_SCRIPT"
+    AUTH0_CONNECTION_NAME = "MANAGED_BY_SCRIPT"
   })
+  
+  # 既存のSecrets Managerの機密情報を保護
+  lifecycle {
+    ignore_changes = [secret_string]
+  }
 }
 
 # ------------------------------------------------------------------------------
