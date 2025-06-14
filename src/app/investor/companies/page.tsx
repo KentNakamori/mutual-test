@@ -1,7 +1,7 @@
 // src/app/investor/companies/page.tsx
 "use client";
 
-import React, { useState, useCallback } from 'react';
+import React, { useCallback } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import { useUser } from '@auth0/nextjs-auth0';
 import Sidebar from '@/components/common/sidebar';

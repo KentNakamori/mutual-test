@@ -8,6 +8,11 @@ declare global {
       AUTH0_CLIENT_SECRET: string;
       AUTH0_SCOPE: string;
       
+      // Auth0 Machine to Machine 設定
+      AUTH0_M2M_CLIENT_ID: string;
+      AUTH0_M2M_CLIENT_SECRET: string;
+      AUTH0_CONNECTION_NAME: string;
+      
       // その他の環境変数
       NEXT_PUBLIC_API_URL: string;
       NEXT_PUBLIC_ENVIRONMENT: string;
@@ -41,9 +46,9 @@ declare module '@auth0/nextjs-auth0' {
     sub: string;
     
     // カスタムプロパティ
-    'https://salt2.dev/role'?: string;
-    'https://salt2.dev/company_id'?: string;
-    'https://salt2.dev/permissions'?: string[];
+    'mutual-test/role'?: string;
+    'mutual-test/company_id'?: string;
+    'mutual-test/permissions'?: string[];
   }
   
   interface Session {

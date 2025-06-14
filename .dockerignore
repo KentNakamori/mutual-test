@@ -7,5 +7,4 @@ README.md
 .env
 .env.*
 .dockerignore
-Dockerfile
-docker-compose.yml 
+Dockerfile 

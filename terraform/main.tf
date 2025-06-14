@@ -179,6 +179,9 @@ resource "aws_secretsmanager_secret_version" "app_secrets" {
     AUTH0_CLIENT_SECRET  = "RWAG_gPJ-1ZPoXfkefvFMPSlhRL7e86iM_hHRDsJNb_FLkMwfyWdGccFCMOopoA5"
     AUTH0_AUDIENCE       = "https://api.local.dev"
     AUTH0_SECRET         = "this-is-a-secret-value-at-least-32-characters-long-for-production-use"
+    AUTH0_M2M_CLIENT_ID  = "dPWR7NFNU0eOYqfV4gbGUb1HfZbaToSc"
+    AUTH0_M2M_CLIENT_SECRET = "PqbseOB7BENdjNgRT2tAYtb7M9tSCeMj4qUv2PhDXg65BJ45_Ke7LsiqIXz2EKOa"
+    AUTH0_CONNECTION_NAME = "Corporate-DB"
   })
 }
 
@@ -308,7 +311,10 @@ resource "aws_ecs_task_definition" "main" {
         { name = "AUTH0_CLIENT_ID", valueFrom = "${aws_secretsmanager_secret.app_secrets.arn}:AUTH0_CLIENT_ID::" },
         { name = "AUTH0_CLIENT_SECRET", valueFrom = "${aws_secretsmanager_secret.app_secrets.arn}:AUTH0_CLIENT_SECRET::" },
         { name = "AUTH0_AUDIENCE", valueFrom = "${aws_secretsmanager_secret.app_secrets.arn}:AUTH0_AUDIENCE::" },
-        { name = "AUTH0_SECRET", valueFrom = "${aws_secretsmanager_secret.app_secrets.arn}:AUTH0_SECRET::" }
+        { name = "AUTH0_SECRET", valueFrom = "${aws_secretsmanager_secret.app_secrets.arn}:AUTH0_SECRET::" },
+        { name = "AUTH0_M2M_CLIENT_ID", valueFrom = "${aws_secretsmanager_secret.app_secrets.arn}:AUTH0_M2M_CLIENT_ID::" },
+        { name = "AUTH0_M2M_CLIENT_SECRET", valueFrom = "${aws_secretsmanager_secret.app_secrets.arn}:AUTH0_M2M_CLIENT_SECRET::" },
+        { name = "AUTH0_CONNECTION_NAME", valueFrom = "${aws_secretsmanager_secret.app_secrets.arn}:AUTH0_CONNECTION_NAME::" }
       ]
       environment = [
         { name = "NODE_ENV", value = "production" },

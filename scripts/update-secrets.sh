@@ -47,6 +47,7 @@ echo ""
 # 各項目の入力
 read -p "AUTH0_CLIENT_SECRET (機密): " AUTH0_CLIENT_SECRET
 read -p "AUTH0_SECRET (32文字以上のランダム文字列): " AUTH0_SECRET
+read -p "AUTH0_M2M_CLIENT_SECRET (M2M機密): " AUTH0_M2M_CLIENT_SECRET
 read -p "DATABASE_URL (必要な場合): " DATABASE_URL
 
 # 現在の設定を取得して更新
@@ -56,8 +57,9 @@ CURRENT_SECRET=$(aws secretsmanager get-secret-value --secret-id "$SECRET_NAME" 
 UPDATED_SECRET=$(echo "$CURRENT_SECRET" | jq \
     --arg client_secret "${AUTH0_CLIENT_SECRET:-CHANGE_ME_IN_AWS_CONSOLE}" \
     --arg auth_secret "${AUTH0_SECRET:-CHANGE_ME_IN_AWS_CONSOLE}" \
+    --arg m2m_client_secret "${AUTH0_M2M_CLIENT_SECRET:-CHANGE_ME_IN_AWS_CONSOLE}" \
     --arg db_url "${DATABASE_URL:-CHANGE_ME_IF_NEEDED}" \
-    '.AUTH0_CLIENT_SECRET = $client_secret | .AUTH0_SECRET = $auth_secret | .DATABASE_URL = $db_url')
+    '.AUTH0_CLIENT_SECRET = $client_secret | .AUTH0_SECRET = $auth_secret | .AUTH0_M2M_CLIENT_SECRET = $m2m_client_secret | .DATABASE_URL = $db_url')
 
 echo ""
 echo -e "${YELLOW}📝 更新される設定:${NC}"

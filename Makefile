@@ -1,4 +1,4 @@
-.PHONY: help setup lint lint-fix test docker-init docker-build docker-push deploy tf-init tf-plan tf-apply tf-destroy tf-outputs dev-start dev-stop dev-logs dev-status dev-logs-follow compose-up compose-down compose-logs api-info
+.PHONY: help setup lint lint-fix test docker-init docker-build docker-push deploy tf-init tf-plan tf-apply tf-destroy tf-outputs dev-start dev-stop dev-logs dev-status dev-logs-follow api-info
 
 # ==============================================================================
 # VARIABLES
@@ -32,11 +32,7 @@ help:
 	@echo "    make dev-logs-follow - フロントエンドコンテナのログを常に監視（Ctrl+Cで終了）"
 	@echo "    make dev-status      - フロントエンドコンテナの状況を確認"
 	@echo ""
-	@echo "  🐳 Docker Compose:"
-	@echo "    make compose-up      - docker-composeで開発環境を起動"
-	@echo "    make compose-down    - docker-composeで開発環境を停止"
-	@echo "    make compose-logs    - docker-composeのログを常に監視（Ctrl+Cで終了）"
-	@echo ""
+
 	@echo "  📝 開発環境の起動手順:"
 	@echo "    1. バックエンドリポジトリで 'make dev-start' を実行"
 	@echo "    2. このリポジトリで 'make dev-start' を実行"
@@ -72,9 +68,15 @@ setup:
 		echo "# Auth0 Configuration" >> .env.local; \
 		echo "AUTH0_SECRET=$$(openssl rand -hex 32)" >> .env.local; \
 		echo "AUTH0_BASE_URL=http://localhost:3000" >> .env.local; \
-		echo "AUTH0_ISSUER_BASE_URL=https://YOUR_AUTH0_DOMAIN" >> .env.local; \
-		echo "AUTH0_CLIENT_ID=YOUR_AUTH0_CLIENT_ID" >> .env.local; \
-		echo "AUTH0_CLIENT_SECRET=YOUR_AUTH0_CLIENT_SECRET" >> .env.local; \
+		echo "AUTH0_ISSUER_BASE_URL=https://dev-ldw81lf4gyh8azw6.jp.auth0.com/" >> .env.local; \
+		echo "AUTH0_CLIENT_ID=Y5p4Fn2rllKLs4M2zoIShqIhn4JdKZzP" >> .env.local; \
+		echo "AUTH0_CLIENT_SECRET=RWAG_gPJ-1ZPoXfkefvFMPSlhRL7e86iM_hHRDsJNb_FLkMwfyWdGccFCMOopoA5" >> .env.local; \
+		echo "AUTH0_AUDIENCE=https://api.local.dev" >> .env.local; \
+		echo "" >> .env.local; \
+		echo "# Auth0 Machine to Machine Configuration" >> .env.local; \
+		echo "AUTH0_M2M_CLIENT_ID=dPWR7NFNU0eOYqfV4gbGUb1HfZbaToSc" >> .env.local; \
+		echo "AUTH0_M2M_CLIENT_SECRET=PqbseOB7BENdjNgRT2tAYtb7M9tSCeMj4qUv2PhDXg65BJ45_Ke7LsiqIXz2EKOa" >> .env.local; \
+		echo "AUTH0_CONNECTION_NAME=Corporate-DB" >> .env.local; \
 		echo "" >> .env.local; \
 		echo "# API Configuration" >> .env.local; \
 		echo "API_BASE_URL=http://localhost:8000" >> .env.local; \
@@ -286,22 +288,6 @@ api-info:
 	@echo "代替API_BASE_URL (ALB直接):"
 	@cd terraform && terraform output -raw api_endpoint_alb
 
-# ==============================================================================
-# Docker Compose
-# ==============================================================================
-compose-up:
-	@echo "docker-composeで開発環境を起動します..."
-	docker-compose up -d
-	@echo "✅ docker-composeで開発環境を起動しました！"
 
-compose-down:
-	@echo "docker-composeで開発環境を停止します..."
-	docker-compose down
-	@echo "✅ docker-composeで開発環境を停止しました。"
-
-compose-logs:
-	@echo "docker-composeのログを常に監視します（Ctrl+Cで終了）..."
-	@echo "=================================================="
-	@docker-compose logs -f
 
 .DEFAULT_GOAL := help 
