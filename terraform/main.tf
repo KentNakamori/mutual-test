@@ -173,15 +173,13 @@ resource "aws_secretsmanager_secret" "app_secrets" {
 resource "aws_secretsmanager_secret_version" "app_secrets" {
   secret_id = aws_secretsmanager_secret.app_secrets.id
   secret_string = jsonencode({
-    AUTH0_ISSUER_BASE_URL = "https://dev-ldw81lf4gyh8azw6.jp.auth0.com/"
-    AUTH0_DOMAIN         = "dev-ldw81lf4gyh8azw6.jp.auth0.com"
-    AUTH0_CLIENT_ID      = "Y5p4Fn2rllKLs4M2zoIShqIhn4JdKZzP"
-    AUTH0_CLIENT_SECRET  = "RWAG_gPJ-1ZPoXfkefvFMPSlhRL7e86iM_hHRDsJNb_FLkMwfyWdGccFCMOopoA5"
+    AUTH0_CLIENT_ID      = var.auth0_client_id
+    AUTH0_CLIENT_SECRET  = var.auth0_client_secret
     AUTH0_AUDIENCE       = "https://api.local.dev"
-    AUTH0_SECRET         = "this-is-a-secret-value-at-least-32-characters-long-for-production-use"
-    AUTH0_M2M_CLIENT_ID  = "dPWR7NFNU0eOYqfV4gbGUb1HfZbaToSc"
-    AUTH0_M2M_CLIENT_SECRET = "PqbseOB7BENdjNgRT2tAYtb7M9tSCeMj4qUv2PhDXg65BJ45_Ke7LsiqIXz2EKOa"
-    AUTH0_CONNECTION_NAME = "Corporate-DB"
+    AUTH0_SECRET         = var.auth0_secret
+    AUTH0_M2M_CLIENT_ID  = var.auth0_m2m_client_id
+    AUTH0_M2M_CLIENT_SECRET = var.auth0_m2m_client_secret
+    AUTH0_CONNECTION_NAME = var.auth0_connection_name
   })
 }
 

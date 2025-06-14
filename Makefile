@@ -69,13 +69,13 @@ setup:
 		echo "AUTH0_SECRET=$$(openssl rand -hex 32)" >> .env.local; \
 		echo "AUTH0_BASE_URL=http://localhost:3000" >> .env.local; \
 		echo "AUTH0_ISSUER_BASE_URL=https://dev-ldw81lf4gyh8azw6.jp.auth0.com/" >> .env.local; \
-		echo "AUTH0_CLIENT_ID=Y5p4Fn2rllKLs4M2zoIShqIhn4JdKZzP" >> .env.local; \
-		echo "AUTH0_CLIENT_SECRET=RWAG_gPJ-1ZPoXfkefvFMPSlhRL7e86iM_hHRDsJNb_FLkMwfyWdGccFCMOopoA5" >> .env.local; \
+		echo "AUTH0_CLIENT_ID=${AUTH0_CLIENT_ID}" >> .env.local; \
+		echo "AUTH0_CLIENT_SECRET=${AUTH0_CLIENT_SECRET}" >> .env.local; \
 		echo "AUTH0_AUDIENCE=https://api.local.dev" >> .env.local; \
 		echo "" >> .env.local; \
 		echo "# Auth0 Machine to Machine Configuration" >> .env.local; \
-		echo "AUTH0_M2M_CLIENT_ID=dPWR7NFNU0eOYqfV4gbGUb1HfZbaToSc" >> .env.local; \
-		echo "AUTH0_M2M_CLIENT_SECRET=PqbseOB7BENdjNgRT2tAYtb7M9tSCeMj4qUv2PhDXg65BJ45_Ke7LsiqIXz2EKOa" >> .env.local; \
+		echo "AUTH0_M2M_CLIENT_ID=${AUTH0_M2M_CLIENT_ID}" >> .env.local; \
+		echo "AUTH0_M2M_CLIENT_SECRET=${AUTH0_M2M_CLIENT_SECRET}" >> .env.local; \
 		echo "AUTH0_CONNECTION_NAME=Corporate-DB" >> .env.local; \
 		echo "" >> .env.local; \
 		echo "# API Configuration" >> .env.local; \
@@ -287,7 +287,5 @@ api-info:
 	@echo ""
 	@echo "代替API_BASE_URL (ALB直接):"
 	@cd terraform && terraform output -raw api_endpoint_alb
-
-
 
 .DEFAULT_GOAL := help 
