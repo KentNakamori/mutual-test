@@ -58,4 +58,7 @@ variable "environment" {
   description = "Environment name (dev, staging, production)"
   type        = string
   default     = "production"
-} 
+}
+
+# Auth0 機密情報はAWS Secrets Managerで管理
+# 機密情報の更新は ./scripts/update-secrets.sh を使用 

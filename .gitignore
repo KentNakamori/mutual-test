@@ -54,3 +54,9 @@ backup/
 .idea/
 *.swp
 *.swo
+
+# Terraform state files
+terraform/terraform.tfstate
+terraform/terraform.tfstate.*
+terraform/.terraform/
+terraform/.terraform.lock.hcl

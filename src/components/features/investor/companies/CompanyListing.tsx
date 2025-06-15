@@ -1,6 +1,6 @@
 // src/components/features/investor/companies/CompanyListing.tsx
 import React, { useState, useEffect, useRef } from 'react';
-import { Filter, Search, Grid, List, ChevronDown, Lock } from 'lucide-react';
+import { Filter, Search, ChevronDown, Lock } from 'lucide-react';
 import { usePathname } from 'next/navigation';
 import { Industry, INDUSTRY_OPTIONS, getIndustryLabel } from '@/types/industry';
 import { useUser } from '@auth0/nextjs-auth0';

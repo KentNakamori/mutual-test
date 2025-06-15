@@ -3,11 +3,13 @@ import { QA, CompanyInfo, ProfileData, NotificationSetting, Stat, GraphDataItem 
 /**
  * ダッシュボードQ&A一覧（Q&A表示用）
  * - Q&A一覧表示
- * - Q&A選択
+ * - Q&A選択・編集・削除
  */
 export interface DashboardQnAListProps {
   publishedQAs: QA[];
-  onSelectQA: (qaId: string) => void
+  onSelectQA: (qaId: string) => void;
+  onUpdateQA: (updatedQA: QA) => void;
+  onDeleteQA: (qaId: string) => void;
 }
 
 /**

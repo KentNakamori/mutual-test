@@ -39,6 +39,34 @@ const DashboardPage: React.FC = () => {
 
   const [filter, setFilter] = useState<Filter>({ period: 'monthly' });
 
+  // QA更新処理
+  const handleUpdateQA = (updatedQA: any) => {
+    if (!dashboardData) return;
+    
+    setDashboardData({
+      ...dashboardData,
+      qas: {
+        ...dashboardData.qas,
+        published: dashboardData.qas.published.map(qa => 
+          qa.qaId === updatedQA.qaId ? updatedQA : qa
+        )
+      }
+    });
+  };
+
+  // QA削除処理
+  const handleDeleteQA = (qaId: string) => {
+    if (!dashboardData) return;
+    
+    setDashboardData({
+      ...dashboardData,
+      qas: {
+        ...dashboardData.qas,
+        published: dashboardData.qas.published.filter(qa => qa.qaId !== qaId)
+      }
+    });
+  };
+
   /** ④ ダッシュボードデータ取得 */
   useEffect(() => {
     const fetchData = async () => {
@@ -107,6 +135,8 @@ const DashboardPage: React.FC = () => {
           <DashboardQnAList
             publishedQAs={dashboardData.qas.published}
             onSelectQA={(qaId) => router.push(`/corporate/qa/${qaId}`)}
+            onUpdateQA={handleUpdateQA}
+            onDeleteQA={handleDeleteQA}
           />
         </main>
       </div>
