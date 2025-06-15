@@ -41,8 +41,6 @@ const QaDetailModal: React.FC<QaDetailModalProps> = ({
   const [showGuestRestricted, setShowGuestRestricted] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  const [editableCategory, setEditableCategory] = useState<string[]>(qa?.category || []);
-  const [editableSource, setEditableSource] = useState<string[]>(qa?.source || []);
   const [isLoading, setIsLoading] = useState(false);
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [isGeneratingAI, setIsGeneratingAI] = useState(false);
@@ -54,8 +52,6 @@ const QaDetailModal: React.FC<QaDetailModalProps> = ({
   useEffect(() => {
     if (qa) {
       setEditableQA(qa);
-      setEditableCategory(qa.category || []);
-      setEditableSource(qa.source || []);
     }
   }, [qa]);
 
@@ -104,8 +100,8 @@ const QaDetailModal: React.FC<QaDetailModalProps> = ({
         title: editableQA.title,
         question: editableQA.question,
         answer: editableQA.answer,
-        category: editableCategory,
-        source: editableSource,
+        category: editableQA.category,
+        source: editableQA.source,
         fiscalPeriod: editableQA.fiscalPeriod,
         question_route: editableQA.question_route,
         reviewStatus: editableQA.reviewStatus
@@ -118,9 +114,7 @@ const QaDetailModal: React.FC<QaDetailModalProps> = ({
 
       // 保存成功時の処理
       const updatedQa = {
-        ...editableQA,
-        category: editableCategory,
-        source: editableSource
+        ...editableQA
       };
 
       console.log(`保存成功: ${qa.qaId}`, updatedQa);
@@ -275,15 +269,22 @@ const QaDetailModal: React.FC<QaDetailModalProps> = ({
 
   // AI生成ボタンの有効/無効条件を判定
   const getAIButtonStatus = () => {
+    const issues = [];
+    
     if (!editableQA.question || editableQA.question.trim() === '') {
-      return { disabled: true, tooltip: '質問内容を入力してください' };
+      issues.push('質問内容を入力してください');
     }
     if (!editableQA.fiscalPeriod || editableQA.fiscalPeriod.trim() === '') {
-      return { disabled: true, tooltip: '決算期を選択してください' };
+      issues.push('決算期を選択してください');
     }
     if (editableQA.answer && editableQA.answer.trim() !== '') {
-      return { disabled: true, tooltip: '回答内容が既に入力されています' };
+      issues.push('回答内容が既に入力されています');
     }
+    
+    if (issues.length > 0) {
+      return { disabled: true, tooltip: issues.join('\n') };
+    }
+    
     return { disabled: false, tooltip: '' };
   };
 
@@ -673,7 +674,7 @@ const QaDetailModal: React.FC<QaDetailModalProps> = ({
                         const { disabled, tooltip } = getAIButtonStatus();
                         return (
                           <div className="flex justify-start mt-2">
-                            <div className="relative">
+                            <div className="relative group">
                               <button
                                 onClick={handleGenerateAI}
                                 disabled={disabled || isGeneratingAI}
@@ -682,7 +683,6 @@ const QaDetailModal: React.FC<QaDetailModalProps> = ({
                                     ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
                                     : 'bg-gradient-to-r from-[#1CB5E0] to-[#9967EE] text-white hover:opacity-90'
                                 }`}
-                                title={tooltip}
                               >
                                 {isGeneratingAI ? (
                                   <>
@@ -699,8 +699,9 @@ const QaDetailModal: React.FC<QaDetailModalProps> = ({
                                 )}
                               </button>
                               {tooltip && disabled && !isGeneratingAI && (
-                                <div className="absolute bottom-full left-0 mb-2 px-2 py-1 text-xs text-white bg-gray-800 rounded opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap">
+                                <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-4 py-3 text-xs text-white bg-gray-800 rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-pre-line text-center z-50 min-w-72 max-w-sm">
                                   {tooltip}
+                                  <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-800"></div>
                                 </div>
                               )}
                             </div>

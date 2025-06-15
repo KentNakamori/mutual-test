@@ -4,13 +4,30 @@ import QACard from "@/components/ui/QACard";
 import QaDetailModal from "@/components/ui/QaDetailModal";
 import { QA, DashboardQnAListProps } from "@/types";
 
-const DashboardQnAList: React.FC<DashboardQnAListProps> = ({ publishedQAs }) => {
+const DashboardQnAList: React.FC<DashboardQnAListProps> = ({ 
+  publishedQAs, 
+  onSelectQA, 
+  onUpdateQA, 
+  onDeleteQA 
+}) => {
   const [selectedQA, setSelectedQA] = React.useState<QA | null>(null);
 
   // QAカードがクリックされたときのハンドラ
   const handleCardSelect = (id: string) => {
     const qa = publishedQAs.find((q) => q.qaId === id) || null;
     setSelectedQA(qa);
+  };
+
+  // QA更新処理
+  const handleSaveEdit = async (updatedQA: QA) => {
+    onUpdateQA(updatedQA);
+    setSelectedQA(null);
+  };
+
+  // QA削除処理
+  const handleDelete = async (qaId: string) => {
+    onDeleteQA(qaId);
+    setSelectedQA(null);
   };
 
   return (
@@ -36,6 +53,8 @@ const DashboardQnAList: React.FC<DashboardQnAListProps> = ({ publishedQAs }) => 
           onLike={async (id: string) => {
             console.log("いいね", id);
           }}
+          onSaveEdit={handleSaveEdit}
+          onDelete={handleDelete}
         />
       )}
     </div>
