@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import Dialog from '@/components/ui/Dialog';
 import Input from '@/components/ui/Input';
 import FiscalPeriodSelect from '@/components/ui/FiscalPeriodSelect';
-import AiGenerateButton from './AiGenerateButton';
 import Button from '@/components/ui/Button';
 import ReactMarkdown from 'react-markdown';
 import { QA, TagOption } from '@/types';
@@ -14,6 +13,9 @@ import {
   getTagColor,
 } from '@/components/ui/tagConfig';
 import { X, Plus, BookOpen, HelpCircle, CheckCircle, Calendar, FileText, Tag, Activity, Eye, Edit } from 'lucide-react';
+import QaPreview from '@/components/ui/QaPreview';
+import AiGenerateButton from '@/components/ui/AiGenerateButton';
+import { extractErrorMessage, getAIButtonStatus } from '@/components/ui/qaUtils';
 
 export interface QaCreateModalProps {
   isOpen: boolean;
@@ -53,26 +55,16 @@ const QaCreateModal: React.FC<QaCreateModalProps> = ({ isOpen, onClose, onCreate
 
       setAnswer(response.answer);
       setSource(response.sources || []);
-    } catch (error) {
-      console.error("AI回答生成に失敗しました:", error);
-      setError("AI回答の生成に失敗しました。もう一度お試しください。");
-    } finally {
+             } catch (error) {
+    console.error("AI回答生成に失敗しました:", error);
+    const errorMessage = extractErrorMessage(error);
+    setError(errorMessage);
+   } finally {
       setIsGeneratingAI(false);
     }
   };
 
-  const getAIButtonStatus = () => {
-    if (!question || question.trim() === '') {
-      return { disabled: true, tooltip: '質問内容を入力してください' };
-    }
-    if (!fiscalPeriod || fiscalPeriod.trim() === '') {
-      return { disabled: true, tooltip: '決算期を選択してください' };
-    }
-    if (answer && answer.trim() !== '') {
-      return { disabled: true, tooltip: '回答内容が既に入力されています' };
-    }
-    return { disabled: false, tooltip: '' };
-  };
+  const aiButtonStatus = getAIButtonStatus(question, fiscalPeriod, answer);
 
   const handleSave = async () => {
     if (!title || !question || !answer) {
@@ -159,7 +151,7 @@ const QaCreateModal: React.FC<QaCreateModalProps> = ({ isOpen, onClose, onCreate
     >
       <div className="overflow-y-auto" style={{ maxHeight: 'calc(90vh - 100px)' }}>
         {error && (
-          <div className="mb-4 p-4 bg-red-100 text-red-700 rounded">
+          <div className="mb-4 p-4 bg-red-100 text-red-700 rounded whitespace-pre-line">
             {error}
           </div>
         )}
@@ -208,111 +200,21 @@ const QaCreateModal: React.FC<QaCreateModalProps> = ({ isOpen, onClose, onCreate
           </div>
 
           {showInvestorPreview ? (
-            // Investor画面と同じプレビュー表示
-            <div className="p-6 bg-white rounded-lg relative">
-              {/* ヘッダー情報 */}
-              <div className="mb-6 pb-4 border-b border-gray-200">
-                <h2 className="text-2xl font-semibold text-gray-900 mb-3">{title || 'タイトル未入力'}</h2>
-                <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600">
-                  <div className="flex items-center">
-                    <Calendar size={16} className="mr-2 text-gray-500" />
-                    <span>{formatDate(new Date().toISOString())}</span>
-                  </div>
-                  <div className="flex items-center">
-                    <FileText size={16} className="mr-2 text-gray-500" />
-                    <span>{fiscalPeriod || '未選択'}</span>
-                  </div>
-                  {questionRoute && (
-                    <div className="flex items-center">
-                      <Tag size={16} className="mr-2 text-gray-500" />
-                      <span>{questionRoute}</span>
-                    </div>
-                  )}
-                </div>
-              </div>
-              
-              {/* 質問エリア */}
-              <div className="mb-6 p-4 bg-blue-50 rounded-lg border-l-4 border-blue-400">
-                <h3 className="text-sm font-medium text-blue-800 mb-2 flex items-center">
-                  <HelpCircle size={16} className="mr-2" />
-                  質問
-                </h3>
-                <p className="text-gray-800 leading-relaxed">{question || '質問内容を入力してください'}</p>
-              </div>
-              
-              {/* 回答エリア */}
-              <div className="mb-6 p-4 bg-green-50 rounded-lg border-l-4 border-green-400">
-                <h3 className="text-sm font-medium text-green-800 mb-2 flex items-center">
-                  <CheckCircle size={16} className="mr-2" />
-                  回答
-                </h3>
-                <div className="bg-white border border-green-200 rounded-lg p-4">
-                  <div className="text-gray-800 leading-relaxed prose prose-sm max-w-none">
-                    <ReactMarkdown>
-                      {answer || '*回答内容を入力してください*'}
-                    </ReactMarkdown>
-                  </div>
-                </div>
-              </div>
-              
-              {/* メタデータエリア */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                {/* 情報ソース */}
-                <div className="p-4 bg-gray-50 rounded-lg">
-                  <h4 className="text-sm font-medium text-gray-700 mb-2 flex items-center">
-                    <BookOpen size={14} className="mr-2 text-gray-600" />
-                    情報ソース
-                  </h4>
-                  <div className="flex flex-wrap gap-2">
-                    {source && source.length > 0 ? (
-                      source.map((src) => (
-                        <span
-                          key={src}
-                          className="inline-flex items-center bg-white border border-gray-300 text-gray-700 px-2 py-1 rounded text-xs"
-                        >
-                          <BookOpen size={10} className="mr-1" />
-                          {src}
-                        </span>
-                      ))
-                    ) : (
-                      <span className="text-gray-500 text-sm">情報ソースなし</span>
-                    )}
-                  </div>
-                </div>
-                
-                {/* カテゴリ */}
-                <div className="p-4 bg-gray-50 rounded-lg">
-                  <h4 className="text-sm font-medium text-gray-700 mb-2 flex items-center">
-                    <Activity size={14} className="mr-2 text-gray-600" />
-                    カテゴリ
-                  </h4>
-                  <div className="flex flex-wrap gap-2">
-                    {category && category.length > 0 ? (
-                      category.map((g) => (
-                        <span
-                          key={g}
-                          className={`inline-flex items-center ${getTagColor(g)} px-2 py-1 rounded text-xs font-medium`}
-                        >
-                          {g}
-                        </span>
-                      ))
-                    ) : (
-                      <span className="text-gray-500 text-sm">カテゴリ未設定</span>
-                    )}
-                  </div>
-                </div>
-              </div>
-              
-              {/* いいねボタン */}
-              <div className="flex justify-end mt-4">
-                <div className="flex items-center bg-gray-100 text-gray-600 px-4 py-2 rounded-lg">
-                  <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                    <path d="M2 10.5a1.5 1.5 0 113 0v6a1.5 1.5 0 01-3 0v-6zM6 10.333v5.43a2 2 0 001.106 1.79l.05.025A4 4 0 008.943 18h5.416a2 2 0 001.962-1.608l1.2-6A2 2 0 0015.56 8H12V4a2 2 0 00-2-2 1 1 0 00-1 1v.667a4 4 0 01-.8 2.4L6.8 7.933a4 4 0 00-.8 2.4z" />
-                  </svg>
-                  <span className="font-medium">0</span>
-                </div>
-              </div>
-            </div>
+            <QaPreview
+              qa={{
+                title,
+                question,
+                answer,
+                fiscalPeriod,
+                question_route: questionRoute,
+                category,
+                source,
+                likeCount: 0,
+                isLiked: false
+              }}
+              role="corporate"
+              showLikeButton={false}
+            />
           ) : (
             // 編集モード（レスポンシブ対応）
             <div className="flex flex-col lg:grid lg:grid-cols-5 gap-6 p-4 sm:p-6 overflow-x-hidden">
@@ -482,9 +384,9 @@ const QaCreateModal: React.FC<QaCreateModalProps> = ({ isOpen, onClose, onCreate
                   <div className="mt-3">
                     <AiGenerateButton
                       onClick={handleGenerateAI}
-                      disabled={getAIButtonStatus().disabled}
+                      disabled={aiButtonStatus.disabled}
                       isLoading={isGeneratingAI}
-                      tooltip={getAIButtonStatus().tooltip}
+                      tooltip={aiButtonStatus.tooltip}
                     />
                   </div>
                 </div>

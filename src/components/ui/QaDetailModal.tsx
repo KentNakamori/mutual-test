@@ -13,6 +13,9 @@ import { updateCorporateQa, generateCorporateQaAnswer } from '@/lib/api';
 import { useUser } from "@auth0/nextjs-auth0";
 import FiscalPeriodSelect from '@/components/ui/FiscalPeriodSelect';
 import GuestRestrictedContent from '@/components/features/investor/common/GuestRestrictedContent';
+import QaPreview from '@/components/ui/QaPreview';
+import AiGenerateButton from '@/components/ui/AiGenerateButton';
+import { extractErrorMessage, getAIButtonStatus, getCompanyName } from '@/components/ui/qaUtils';
 
 const QaDetailModal: React.FC<QaDetailModalProps> = ({
   qa,
@@ -54,6 +57,11 @@ const QaDetailModal: React.FC<QaDetailModalProps> = ({
       setEditableQA(qa);
     }
   }, [qa]);
+
+  // エラー状態をログ出力（デバッグ用）
+  useEffect(() => {
+    console.log("Error state changed:", error);
+  }, [error]);
 
   // 背景スクロール防止
   useEffect(() => {
@@ -261,46 +269,21 @@ const QaDetailModal: React.FC<QaDetailModalProps> = ({
       setHasChanges(true);
     } catch (error) {
       console.error("AI回答生成に失敗しました:", error);
-      setError("AI回答の生成に失敗しました。もう一度お試しください。");
+      const errorMessage = extractErrorMessage(error);
+      setError(errorMessage);
     } finally {
       setIsGeneratingAI(false);
     }
   };
 
   // AI生成ボタンの有効/無効条件を判定
-  const getAIButtonStatus = () => {
-    const issues = [];
-    
-    if (!editableQA.question || editableQA.question.trim() === '') {
-      issues.push('質問内容を入力してください');
-    }
-    if (!editableQA.fiscalPeriod || editableQA.fiscalPeriod.trim() === '') {
-      issues.push('決算期を選択してください');
-    }
-    if (editableQA.answer && editableQA.answer.trim() !== '') {
-      issues.push('回答内容が既に入力されています');
-    }
-    
-    if (issues.length > 0) {
-      return { disabled: true, tooltip: issues.join('\n') };
-    }
-    
-    return { disabled: false, tooltip: '' };
-  };
+  const aiButtonStatus = getAIButtonStatus(
+    editableQA.question || '',
+    editableQA.fiscalPeriod || '',
+    editableQA.answer || ''
+  );
 
-  const formatDate = (dateStr: string) => {
-    const date = new Date(dateStr);
-    return `${date.getFullYear()}/${String(date.getMonth() + 1).padStart(2, '0')}/${String(date.getDate()).padStart(2, '0')}`;
-  };
 
-  // 企業名を取得する関数
-  function getCompanyName(companyId: string): string {
-    const companyMap: Record<string, string> = {
-      comp1: 'テック・イノベーターズ株式会社',
-      comp2: 'グリーンエナジー株式会社',
-    };
-    return companyMap[companyId] || companyId;
-  }
 
   // モーダルのタイトル設定
   const modalTitle = role === 'corporate' && qa
@@ -335,7 +318,7 @@ const QaDetailModal: React.FC<QaDetailModalProps> = ({
       >
         <div className="overflow-y-auto" style={{ maxHeight: 'calc(90vh - 100px)' }}>
           {error && (
-            <div className="mb-4 p-4 bg-red-100 text-red-700 rounded">
+            <div className="mb-4 p-4 bg-red-100 text-red-700 rounded whitespace-pre-line">
               {error}
             </div>
           )}
@@ -386,112 +369,18 @@ const QaDetailModal: React.FC<QaDetailModalProps> = ({
 
               {showInvestorPreview ? (
                 // Investor画面と同じプレビュー表示
-                <div className="p-6 bg-white rounded-lg relative">
-                  {/* ヘッダー情報 */}
-                  <div className="mb-6 pb-4 border-b border-gray-200 pr-12">
-                    <h2 className="text-2xl font-semibold text-gray-900 mb-3">{editableQA.title}</h2>
-                    <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600">
-                      <div className="flex items-center">
-                        <Users size={16} className="mr-2 text-gray-500" />
-                        <span className="font-medium">{qa.companyName || getCompanyName(qa.companyId || '')}</span>
-                      </div>
-                      <div className="flex items-center">
-                        <Calendar size={16} className="mr-2 text-gray-500" />
-                        <span>{formatDate(qa.createdAt)}</span>
-                      </div>
-                      <div className="flex items-center">
-                        <FileText size={16} className="mr-2 text-gray-500" />
-                        <span>{editableQA.fiscalPeriod}</span>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  {/* 質問エリア */}
-                  <div className="mb-6">
-                    <h3 className="text-lg font-medium text-blue-600 mb-2 flex items-center">
-                      <HelpCircle size={24} className="mr-2 text-blue-600" />
-                      質問
-                    </h3>
-                    <p className="text-gray-800 leading-relaxed pl-6">{editableQA.question}</p>
-                  </div>
-                  
-                  {/* 回答エリア */}
-                  <div className="mb-6">
-                    <h3 className="text-lg font-medium text-green-600 mb-2 flex items-center">
-                      <CheckCircle size={24} className="mr-2 text-green-600" />
-                      回答
-                    </h3>
-                    <div className="ml-6">
-                      <div className="text-gray-800 leading-relaxed prose prose-sm max-w-none">
-                        <ReactMarkdown>
-                          {editableQA.answer || '*回答内容を入力してください*'}
-                        </ReactMarkdown>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  {/* メタデータエリア */}
-                  <div className="space-y-4 mb-6">
-                    {/* 質問ルート */}
-                    <div>
-                      <h4 className="text-sm font-medium text-gray-700 mb-2 flex items-center">
-                        <Route size={14} className="mr-2 text-indigo-600" />
-                        質問ルート
-                      </h4>
-                      <div className="flex flex-wrap gap-2 pl-5">
-                        {editableQA.question_route ? (
-                          (() => {
-                            const routeOption = QUESTION_ROUTE_OPTIONS.find(opt => opt.label === editableQA.question_route);
-                            const colorClass = routeOption ? routeOption.color : 'bg-gray-100 text-gray-800';
-                            return (
-                              <span
-                                className={`inline-flex items-center ${colorClass} px-3 py-1 rounded-full text-xs font-medium`}
-                              >
-                                {editableQA.question_route}
-                              </span>
-                            );
-                          })()
-                        ) : (
-                          <span className="text-gray-500 text-sm">質問ルート未設定</span>
-                        )}
-                      </div>
-                    </div>
-                    
-                    {/* カテゴリ */}
-                    <div>
-                      <h4 className="text-sm font-medium text-gray-700 mb-2 flex items-center">
-                        <Activity size={14} className="mr-2 text-amber-600" />
-                        カテゴリ
-                      </h4>
-                      <div className="flex flex-wrap gap-2 pl-5">
-                        {editableQA.category && editableQA.category.length > 0 ? (
-                          editableQA.category.map((genre: string) => {
-                            const genreOption = CATEGORY_OPTION.find(opt => opt.label === genre);
-                            const colorClass = genreOption ? genreOption.color : 'bg-gray-100 text-gray-800';
-                            return (
-                            <span
-                              key={genre}
-                                className={`inline-flex items-center ${colorClass} px-3 py-1 rounded-full text-xs font-medium`}
-                            >
-                              {genre}
-                            </span>
-                            );
-                          })
-                        ) : (
-                          <span className="text-gray-500 text-sm">カテゴリ未設定</span>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                  
-                  {/* ブックマークボタン */}
-                  <div className="flex justify-end mt-4">
-                    <div className="flex items-center bg-gray-100 text-gray-600 px-4 py-2 rounded-lg">
-                      <Bookmark size={16} className="mr-2" />
-                      <span className="font-medium">{qa.likeCount || 0}</span>
-                    </div>
-                  </div>
-                </div>
+                <QaPreview
+                  qa={{
+                    ...editableQA,
+                    createdAt: qa.createdAt,
+                    companyId: qa.companyId,
+                    companyName: qa.companyName,
+                    likeCount: qa.likeCount,
+                    isLiked: qa.isLiked
+                  }}
+                  role="corporate"
+                  showLikeButton={true}
+                />
               ) : (
                 // 編集モード（レスポンシブ対応）
                 <div className="flex flex-col lg:grid lg:grid-cols-5 gap-6 p-4 sm:p-6 overflow-x-hidden">
@@ -670,44 +559,13 @@ const QaDetailModal: React.FC<QaDetailModalProps> = ({
                         className="w-full min-w-0 px-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500 resize-y"
                         placeholder="回答内容を入力してください"
                       />
-                      {(() => {
-                        const { disabled, tooltip } = getAIButtonStatus();
-                        return (
-                          <div className="flex justify-start mt-2">
-                            <div className="relative group">
-                              <button
-                                onClick={handleGenerateAI}
-                                disabled={disabled || isGeneratingAI}
-                                className={`flex items-center px-3 py-2 text-sm rounded-md transition-colors ${
-                                  disabled || isGeneratingAI
-                                    ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                                    : 'bg-gradient-to-r from-[#1CB5E0] to-[#9967EE] text-white hover:opacity-90'
-                                }`}
-                              >
-                                {isGeneratingAI ? (
-                                  <>
-                                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                                    AIで回答を生成中...
-                                  </>
-                                ) : (
-                                  <>
-                                    <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
-                                    </svg>
-                                    AIで回答を生成
-                                  </>
-                                )}
-                              </button>
-                              {tooltip && disabled && !isGeneratingAI && (
-                                <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 px-4 py-3 text-xs text-white bg-gray-800 rounded-lg shadow-lg opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none whitespace-pre-line text-center z-50 min-w-72 max-w-sm">
-                                  {tooltip}
-                                  <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-800"></div>
-                                </div>
-                              )}
-                            </div>
-                          </div>
-                        );
-                      })()}
+                      <AiGenerateButton
+                        onClick={handleGenerateAI}
+                        disabled={aiButtonStatus.disabled}
+                        isLoading={isGeneratingAI}
+                        tooltip={aiButtonStatus.tooltip}
+                        className="mt-2"
+                      />
                     </div>
                   </div>
                 </div>
@@ -715,130 +573,22 @@ const QaDetailModal: React.FC<QaDetailModalProps> = ({
             </div>
           ) : (
             // 投資家向けUI（企業プレビューと統一）
-            <div className="p-6 bg-white rounded-lg relative">
+            <div className="relative">
               {/* 投資家向けモーダル用の閉じるボタン */}
               <button
                 onClick={onClose}
-                className="absolute top-4 right-4 p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-colors duration-200"
+                className="absolute top-4 right-4 p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-colors duration-200 z-10"
                 aria-label="モーダルを閉じる"
               >
                 <X size={20} />
               </button>
               
-              {/* ヘッダー情報 */}
-              <div className="mb-6 pb-4 border-b border-gray-200 pr-12">
-                <h2 className="text-2xl font-semibold text-gray-900 mb-3">{qa.title}</h2>
-                <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600">
-                  <div className="flex items-center">
-                    <Users size={16} className="mr-2 text-gray-500" />
-                    <span className="font-medium">{qa.companyName || getCompanyName(qa.companyId || '')}</span>
-                  </div>
-                  <div className="flex items-center">
-                    <Calendar size={16} className="mr-2 text-gray-500" />
-                    <span>{formatDate(qa.createdAt)}</span>
-                  </div>
-                  <div className="flex items-center">
-                    <FileText size={16} className="mr-2 text-gray-500" />
-                    <span>{qa.fiscalPeriod}</span>
-                  </div>
-                </div>
-              </div>
-              
-              {/* 質問エリア */}
-              <div className="mb-6">
-                <h3 className="text-lg font-medium text-blue-600 mb-2 flex items-center">
-                  <HelpCircle size={24} className="mr-2 text-blue-600" />
-                  質問
-                </h3>
-                <p className="text-gray-800 leading-relaxed pl-6">{qa.question}</p>
-              </div>
-              
-              {/* 回答エリア */}
-              <div className="mb-6">
-                <h3 className="text-lg font-medium text-green-600 mb-2 flex items-center">
-                  <CheckCircle size={24} className="mr-2 text-green-600" />
-                  回答
-                </h3>
-                <div className="ml-6">
-                  <div className="text-gray-800 leading-relaxed prose prose-sm max-w-none">
-                    <ReactMarkdown>
-                      {qa.answer}
-                    </ReactMarkdown>
-                  </div>
-                </div>
-              </div>
-              
-              {/* メタデータエリア */}
-              <div className="space-y-4 mb-6">
-                {/* 質問ルート */}
-                <div>
-                  <h4 className="text-sm font-medium text-gray-700 mb-2 flex items-center">
-                    <Route size={14} className="mr-2 text-indigo-600" />
-                    質問ルート
-                  </h4>
-                  <div className="flex flex-wrap gap-2 pl-5">
-                    {qa.question_route ? (
-                      (() => {
-                        const routeOption = QUESTION_ROUTE_OPTIONS.find(opt => opt.label === qa.question_route);
-                        const colorClass = routeOption ? routeOption.color : 'bg-gray-100 text-gray-800';
-                        return (
-                          <span
-                            className={`inline-flex items-center ${colorClass} px-3 py-1 rounded-full text-xs font-medium`}
-                          >
-                            {qa.question_route}
-                          </span>
-                        );
-                      })()
-                    ) : (
-                      <span className="text-gray-500 text-sm">質問ルート未設定</span>
-                    )}
-                  </div>
-                </div>
-                
-                {/* カテゴリ */}
-                <div>
-                  <h4 className="text-sm font-medium text-gray-700 mb-2 flex items-center">
-                    <Activity size={14} className="mr-2 text-amber-600" />
-                    カテゴリ
-                  </h4>
-                  <div className="flex flex-wrap gap-2 pl-5">
-                    {qa.category && qa.category.length > 0 ? (
-                      qa.category.map((genre: string) => {
-                        const genreOption = CATEGORY_OPTION.find(opt => opt.label === genre);
-                        const colorClass = genreOption ? genreOption.color : 'bg-gray-100 text-gray-800';
-                        return (
-                        <span
-                          key={genre}
-                            className={`inline-flex items-center ${colorClass} px-3 py-1 rounded-full text-xs font-medium`}
-                        >
-                          {genre}
-                        </span>
-                        );
-                      })
-                    ) : (
-                      <span className="text-gray-500 text-sm">カテゴリ未設定</span>
-                    )}
-                  </div>
-                </div>
-              </div>
-              
-              {/* ブックマークボタン */}
-              <div className="flex justify-end mt-4">
-                <button
-                  onClick={handleLike}
-                  className={`flex items-center px-4 py-2 rounded-lg transition-all duration-200 ${
-                    role === 'investor' 
-                      ? qa.isLiked 
-                        ? 'bg-blue-100 text-blue-700 shadow-sm' 
-                        : 'bg-gray-100 hover:bg-blue-50 text-gray-600 hover:text-blue-600' 
-                      : 'bg-gray-100 text-gray-400 cursor-default' 
-                  }`}
-                  disabled={role !== 'investor'}
-                >
-                  <Bookmark size={16} className="mr-2" />
-                  <span className="font-medium">{qa.likeCount || 0}</span>
-                </button>
-              </div>
+              <QaPreview
+                qa={qa}
+                role={role as 'corporate' | 'investor'}
+                onLike={handleLike}
+                showLikeButton={true}
+              />
             </div>
           )}
 
