@@ -541,13 +541,21 @@ const CompanyGridCard = ({ company, isGuest, onFollowToggle, onShowGuestPopup }:
       className="bg-white rounded-xl shadow-sm overflow-hidden border border-gray-200 hover:shadow-md transition-all h-full cursor-pointer"
     >
       <div className="p-5 flex h-full">
-        {/* ロゴ部分 - 縦幅いっぱい */}
+        {/* ロゴ部分 - 横長の統一された枠 */}
         <div className="flex-shrink-0 mr-4">
           {company.logoUrl ? (
-            <img src={getFullImageUrl(company.logoUrl)} alt={`${company.companyName} logo`} className="w-32 h-full rounded-md object-cover bg-gray-100" />
+            <div className="w-32 h-20 flex items-center justify-center bg-gray-50 rounded border overflow-hidden">
+              <img 
+                src={getFullImageUrl(company.logoUrl)} 
+                alt={`${company.companyName} logo`} 
+                className="w-full h-full object-contain" 
+              />
+            </div>
           ) : (
-            <div className="w-32 h-full rounded-md bg-gray-100 flex items-center justify-center text-2xl font-bold text-gray-500">
-              {company.companyName.charAt(0)}
+            <div className="w-32 h-20 rounded border bg-gray-100 flex items-center justify-center">
+              <span className="text-xl font-bold text-gray-500">
+                {company.companyName.charAt(0)}
+              </span>
             </div>
           )}
         </div>
@@ -632,10 +640,18 @@ const CompanyListCard = ({ company, isGuest, onFollowToggle, onShowGuestPopup }:
     >
       <div className="p-4 flex items-start h-full">
         {company.logoUrl ? (
-          <img src={getFullImageUrl(company.logoUrl)} alt={`${company.companyName} logo`} className="w-16 h-10 rounded-md object-contain bg-gray-100 mr-4" />
+          <div className="w-20 h-12 flex items-center justify-center bg-gray-50 rounded border overflow-hidden mr-4">
+            <img 
+              src={getFullImageUrl(company.logoUrl)} 
+              alt={`${company.companyName} logo`} 
+              className="w-full h-full object-contain" 
+            />
+          </div>
         ) : (
-          <div className="w-16 h-10 rounded-md bg-gray-100 flex items-center justify-center text-xl font-bold text-gray-500 mr-4">
-            {company.companyName.charAt(0)}
+          <div className="w-20 h-12 rounded border bg-gray-100 flex items-center justify-center mr-4">
+            <span className="text-sm font-bold text-gray-500">
+              {company.companyName.charAt(0)}
+            </span>
           </div>
         )}
         

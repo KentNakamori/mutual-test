@@ -8,7 +8,7 @@ import Sidebar from "@/components/common/sidebar";
 import Footer from "@/components/common/footer";
 
 // 企業向け設定用のコンポーネント
-import SettingsTabs from "@/components/features/corporate/settings/SettingsTabs";
+import CompanyInfoForm from "@/components/features/corporate/settings/CompanyInfoForm";
 
 // API 接続と認証用のカスタムフック
 import { useCorporateCompanySettings } from "@/hooks/useCorporateCompanySettings";
@@ -65,7 +65,7 @@ const SettingsPage: React.FC = () => {
             </p>
           )}
           {companyInfo ? (
-            <SettingsTabs companyInfo={companyInfo} refetchCompanyInfo={refetch} />
+            <CompanyInfoForm initialData={companyInfo} onSaveSuccess={refetch} />
           ) : (
             !isCompanyInfoLoading && <p>企業情報がありません。</p>
           )}

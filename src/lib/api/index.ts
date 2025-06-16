@@ -14,4 +14,7 @@ export * from './common';
 export * from './tracking';
 
 // HTTPクライアント（必要に応じて）
-export { apiFetch, streamingFetch } from './client'; 
+export { apiFetch, streamingFetch } from './client';
+
+// 管理者向けAPI
+export * from './admin'; 

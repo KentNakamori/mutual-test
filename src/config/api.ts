@@ -104,7 +104,7 @@ export const ENDPOINTS = {
   // 管理者向けAPI
   admin: {
     company: {
-      register: '/admin/company/register',
+      register: '/admin/companies/register',
       list: '/admin/companies',
       detail: (id: string) => `/admin/companies/${id}`,
       approve: (id: string) => `/admin/companies/${id}/approve`,

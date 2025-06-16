@@ -360,6 +360,28 @@ export async function updateCorporateCompanySettings(
 }
 
 /**
+ * 企業設定更新API（FormData対応）
+ * 
+ * 入力:
+ * - formData: 更新する企業情報とロゴファイルを含むFormData
+ * 
+ * 出力:
+ * - CompanyInfo & { message: string }: 更新後の企業情報とメッセージ
+ */
+export async function updateCorporateCompanySettingsWithLogo(
+  formData: FormData
+): Promise<CompanyInfo & { message: string }> {
+  return apiFetch<CompanyInfo & { message: string }>(
+    ENDPOINTS.corporate.settings.company,
+    "PUT",
+    formData,
+    undefined,
+    true,
+    true
+  );
+}
+
+/**
  * アカウント設定更新API
  * 
  * 入力:

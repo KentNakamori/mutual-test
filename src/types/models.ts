@@ -38,13 +38,14 @@ export interface Company {
   logoUrl?: string;
   securitiesCode?: string;        // IR API: 企業証券コード
   majorStockExchange?: string;    // 主要取引所
+  marketSegment?: string;         // 市場区分
   websiteUrl?: string;            // WebサイトURL
   createdAt?: DateString;
   updatedAt?: DateString;
   adminUserIds?: UserId[];
   establishedDate?: string;       // IR API: 設立年月日
   address?: string;               // 企業登録時に送信される所在地
-  phone?: string;                 // 電話番号
+  phone?: string;                 // 電話番号（telからphoneに変更）
   ceo?: string;                   // 代表者名
   businessDescription?: string;   // 事業内容
   capital?: string;               // 資本金
@@ -155,15 +156,17 @@ export interface CompanyInfo {
   industry?: Industry;
   address: string;
   email: string;
-  tel?: string;
+  tel?: string;  // phoneからtelに変更（バックエンドのレスポンス構造に合わせる）
   securitiesCode?: string;
   establishedDate?: string;
+  marketSegment?: string;
   ceo?: string;
   businessDescription?: string;
   capital?: string;
   employeeCount?: number;
   websiteUrl?: string;
-  contactEmail?: string;
+  contactEmail?: string;  // バックエンドではこれがemailとして返される
+  logoUrl?: string;
   [key: string]: string | number | Industry | undefined;
 }
 

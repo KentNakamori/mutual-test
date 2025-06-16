@@ -74,16 +74,18 @@ const CompanyHeader: React.FC<CompanyHeaderProps> = ({ company, onFollowStatusCh
     <div className="mb-2 flex items-center justify-between">
       {/* 左側：ロゴと企業情報を横並び */}
       <div className="flex items-center space-x-3">
-        {/* ロゴ：縦幅いっぱい */}
+        {/* ロゴ：横長の統一された枠 */}
         {company.logoUrl ? (
-          <img
-            src={getFullImageUrl(company.logoUrl)}
-            alt={`${company.companyName} のロゴ`}
-            className="h-14 w-auto max-w-[80px] rounded-md object-contain"
-          />
+          <div className="w-20 h-12 flex items-center justify-center bg-gray-50 rounded border overflow-hidden">
+            <img
+              src={getFullImageUrl(company.logoUrl)}
+              alt={`${company.companyName} のロゴ`}
+              className="w-full h-full object-contain"
+            />
+          </div>
         ) : (
-          <div className="h-14 w-14 rounded-md bg-gray-300 flex items-center justify-center">
-            <span className="font-semibold text-white text-lg">
+          <div className="w-20 h-12 rounded border bg-gray-300 flex items-center justify-center">
+            <span className="font-semibold text-white text-sm">
               {company.companyName.charAt(0)}
             </span>
           </div>
