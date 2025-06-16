@@ -16,6 +16,8 @@ export default function UserInvitePage() {
   const [email, setEmail] = useState<string>("");
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [flash, setFlash] = useState<string | null>(null);
+  const [showConfirmation, setShowConfirmation] = useState<boolean>(false);
+  const [formData, setFormData] = useState<{companyId: string; email: string} | null>(null);
 
   // 企業一覧を取得
   useEffect(() => {
@@ -51,6 +53,17 @@ export default function UserInvitePage() {
       return;
     }
 
+    if (!showConfirmation) {
+      // 確認画面を表示
+      setFormData({
+        companyId: selectedCompanyId,
+        email: email
+      });
+      setShowConfirmation(true);
+      return;
+    }
+
+    // 実際の登録処理
     setIsLoading(true);
 
     try {
@@ -73,6 +86,8 @@ export default function UserInvitePage() {
       setFlash(`✅ ${result.message || 'ユーザーアカウントを作成し、招待メールを送信しました。ユーザーはメール内のリンクからパスワードを設定できます。'}`);
       setEmail("");
       setSelectedCompanyId("");
+      setShowConfirmation(false);
+      setFormData(null);
     } catch (error) {
       console.error("ユーザー登録エラー:", error);
       const errorMessage = error instanceof Error ? error.message : "ユーザー登録に失敗しました";
@@ -81,6 +96,80 @@ export default function UserInvitePage() {
       setIsLoading(false);
     }
   };
+
+  async function handleConfirmSubmit() {
+    const e = { preventDefault: () => {} } as React.FormEvent;
+    await handleSubmit(e);
+  }
+
+  function handleBackToEdit() {
+    setShowConfirmation(false);
+    setFlash(null);
+  }
+
+  // 確認画面の表示
+  if (showConfirmation && formData) {
+    const selectedCompany = companies.find(company => company.companyId === formData.companyId);
+    
+    return (
+      <div className="min-h-screen bg-gray-50">
+        <div className="max-w-4xl mx-auto p-6">
+          <div className="bg-white shadow-lg rounded-lg p-8">
+            <div className="flex justify-between items-center mb-8">
+              <div>
+                <h1 className="text-3xl font-bold text-gray-800 mb-2">
+                  入力内容確認
+                </h1>
+                <p className="text-gray-600">
+                  以下の内容でユーザーを登録します
+                </p>
+              </div>
+            </div>
+
+            <div className="space-y-6 max-w-2xl mx-auto">
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-400 mb-1">企業</label>
+                  <p className="text-lg font-semibold text-gray-800">{selectedCompany?.companyName || '未選択'}</p>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-400 mb-1">メールアドレス</label>
+                  <p className="text-lg text-gray-800">{formData.email}</p>
+                </div>
+              </div>
+
+              <div className="flex justify-center gap-4 pt-6">
+                <button
+                  onClick={handleBackToEdit}
+                  className="bg-gray-500 hover:bg-gray-600 text-white px-8 py-3 rounded transition-colors duration-200"
+                >
+                  編集
+                </button>
+                <button
+                  onClick={handleConfirmSubmit}
+                  disabled={isLoading}
+                  className="bg-black text-white px-8 py-3 rounded transition-colors duration-200 hover:bg-gray-800 disabled:bg-gray-400 disabled:cursor-not-allowed"
+                >
+                  {isLoading ? "登録中…" : "ユーザー登録"}
+                </button>
+              </div>
+            </div>
+
+            {flash && (
+              <div className={`mt-6 p-4 rounded text-center max-w-2xl mx-auto ${
+                flash.includes('✅') 
+                  ? 'bg-green-100 text-green-700 border border-green-300' 
+                  : 'bg-red-100 text-red-700 border border-red-300'
+              }`}>
+                {flash}
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -98,15 +187,9 @@ export default function UserInvitePage() {
             <div>
               <button
                 onClick={() => router.push('/admin')}
-                className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded transition-colors duration-200 mr-2"
+                className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded transition-colors duration-200"
               >
                 戻る
-              </button>
-              <button
-                onClick={() => window.location.href = '/api/auth/logout'}
-                className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded transition-colors duration-200"
-              >
-                ログアウト
               </button>
             </div>
           </div>
@@ -154,7 +237,7 @@ export default function UserInvitePage() {
                 disabled={isLoading}
                 className="bg-black text-white px-8 py-3 rounded transition-colors duration-200 hover:bg-gray-800 disabled:bg-gray-400 disabled:cursor-not-allowed"
               >
-                {isLoading ? "アカウント作成中..." : "ユーザー登録"}
+                {isLoading ? "確認中…" : "入力内容確認へ"}
               </button>
             </div>
           </form>
