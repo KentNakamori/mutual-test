@@ -58,7 +58,7 @@ export async function GET(_req: NextRequest) {
  * POST /api/admin/companies
  *  └─ FastAPI /admin/companies/register へプロキシして企業を登録
  *     バックエンド: app/routers/admin/company.py の register エンドポイント
- *     リクエスト: CompanyCreateRequest（企業詳細情報）
+ *     リクエスト: multipart/form-data（企業詳細情報 + ロゴファイル）
  *     レスポンス: CompanyCreateResponse（企業ID、メッセージ）
  */
 export async function POST(req: NextRequest) {
@@ -73,45 +73,82 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const body = await req.json();
+    // FormDataとして受け取る
+    const formData = await req.formData();
     
     // 必須フィールドのバリデーション
-    const requiredFields = ['companyName', 'industry'];
-    for (const field of requiredFields) {
-      if (!body[field]) {
-        return NextResponse.json(
-          { error: `${field}は必須項目です` }, 
-          { status: 400 }
-        );
-      }
+    const companyName = formData.get('companyName') as string;
+    const industry = formData.get('industry') as string;
+    
+    if (!companyName) {
+      return NextResponse.json(
+        { error: 'companyNameは必須項目です' }, 
+        { status: 400 }
+      );
+    }
+    
+    if (!industry) {
+      return NextResponse.json(
+        { error: 'industryは必須項目です' }, 
+        { status: 400 }
+      );
     }
 
-    // 企業登録データの構造化
-    const companyData = {
-      companyName: body.companyName,
-      securitiesCode: body.securitiesCode || null,
-      establishedDate: body.establishedDate || null, // YYYY-MM形式
-      listingDate: body.listingDate || null, // YYYY-MM-DD形式
-      marketSegment: body.marketSegment || null, // 東証プライム、東証スタンダード等
-      address: body.address || null,
-      phone: body.phone || null,
-      ceo: body.ceo || null,
-      industry: body.industry, // 必須
-      businessDescription: body.businessDescription || null,
-      capital: body.capital || null, // 資本金
-      employeeCount: body.employeeCount || null,
-      websiteUrl: body.websiteUrl || null,
-      contactEmail: body.contactEmail || null,
-      logoUrl: body.logoUrl || null,
-      // createdAt, updatedAtはバックエンドで自動設定
-    };
+    // バックエンドに送信するFormDataを作成
+    const backendFormData = new FormData();
+    
+    // 各フィールドをFormDataに追加
+    backendFormData.append('companyName', companyName);
+    if (industry) backendFormData.append('industry', industry);
+    
+    const securitiesCode = formData.get('securitiesCode') as string;
+    if (securitiesCode) backendFormData.append('securitiesCode', securitiesCode);
+    
+    const establishedDate = formData.get('establishedDate') as string;
+    if (establishedDate) backendFormData.append('establishedDate', establishedDate);
+    
+    const marketSegment = formData.get('marketSegment') as string;
+    if (marketSegment) backendFormData.append('marketSegment', marketSegment);
+    
+    const address = formData.get('address') as string;
+    if (address) backendFormData.append('address', address);
+    
+    const phone = formData.get('phone') as string;
+    if (phone) backendFormData.append('phone', phone);
+    
+    const ceo = formData.get('ceo') as string;
+    if (ceo) backendFormData.append('ceo', ceo);
+    
+    const businessDescription = formData.get('businessDescription') as string;
+    if (businessDescription) backendFormData.append('businessDescription', businessDescription);
+    
+    const capital = formData.get('capital') as string;
+    if (capital) backendFormData.append('capital', capital);
+    
+    const employeeCount = formData.get('employeeCount') as string;
+    if (employeeCount) backendFormData.append('employeeCount', employeeCount);
+    
+    const websiteUrl = formData.get('websiteUrl') as string;
+    if (websiteUrl) backendFormData.append('websiteUrl', websiteUrl);
+    
+    const contactEmail = formData.get('contactEmail') as string;
+    if (contactEmail) backendFormData.append('contactEmail', contactEmail);
+    
+    // ロゴファイルがある場合は追加
+    const logoFile = formData.get('logo') as File;
+    if (logoFile && logoFile.size > 0) {
+      backendFormData.append('logo', logoFile);
+    }
 
-    console.log('企業登録データ:', JSON.stringify(companyData, null, 2));
+    console.log('企業登録データ送信:', {
+      companyName,
+      industry,
+      hasLogo: !!(logoFile && logoFile.size > 0)
+    });
     
     const resp = await fetch(`${backendUrl}/admin/companies/register`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(companyData),
+      body: backendFormData, // FormDataとして送信（Content-Typeは自動設定）
     });
 
     if (!resp.ok) {

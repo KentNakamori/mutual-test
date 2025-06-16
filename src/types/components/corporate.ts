@@ -77,16 +77,6 @@ export interface NotificationSettingFormProps {
 }
 
 /**
- * 設定タブ（設定用）
- * - 設定表示
- * - 設定処理
- */
-export interface SettingsTabsProps {
-  companyInfo: CompanyInfo;
-  refetchCompanyInfo: () => void;
-}
-
-/**
  * アップロードボタン（アップロード用）
  * - アップロード表示
  * - アップロード処理
