@@ -3,7 +3,6 @@ import Dialog from '@/components/ui/Dialog';
 import Input from '@/components/ui/Input';
 import FiscalPeriodSelect from '@/components/ui/FiscalPeriodSelect';
 import Button from '@/components/ui/Button';
-import ReactMarkdown from 'react-markdown';
 import { QA, TagOption } from '@/types';
 import { createCorporateQa, generateCorporateQaAnswer } from '@/lib/api';
 import {
@@ -12,7 +11,7 @@ import {
   QUESTION_ROUTE_OPTIONS,
   getTagColor,
 } from '@/components/ui/tagConfig';
-import { X, Plus, BookOpen, HelpCircle, CheckCircle, Calendar, FileText, Tag, Activity, Eye, Edit } from 'lucide-react';
+import { X, Plus, BookOpen, Eye, Edit } from 'lucide-react';
 import QaPreview from '@/components/ui/QaPreview';
 import AiGenerateButton from '@/components/ui/AiGenerateButton';
 import { extractErrorMessage, getAIButtonStatus } from '@/components/ui/qaUtils';

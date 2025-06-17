@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import Dialog from '@/components/ui/Dialog';
-import ReactMarkdown from 'react-markdown';
 import { QaDetailModalProps, QA, TagOption } from '@/types';
 import {
   INFO_SOURCE_OPTIONS,
@@ -8,7 +7,7 @@ import {
   QUESTION_ROUTE_OPTIONS,
   getTagColor,
 } from '@/components/ui/tagConfig';
-import { Calendar, Bookmark, X, BookOpen, Plus, FileText, Activity, HelpCircle, CheckCircle, Eye, Edit, Route, Users } from 'lucide-react';
+import { X, BookOpen, Plus, Eye, Edit } from 'lucide-react';
 import { updateCorporateQa, generateCorporateQaAnswer } from '@/lib/api';
 import { useUser } from "@auth0/nextjs-auth0";
 import FiscalPeriodSelect from '@/components/ui/FiscalPeriodSelect';
