@@ -88,7 +88,7 @@ const Sidebar: React.FC<ExtendedSidebarProps> = ({
             </button>
             <div className="flex-1 flex justify-center">
               <Image
-                src="https://mutual-app-static-assets.s3.ap-northeast-1.amazonaws.com/QAstation.png"
+                src="https://mutual-app-static-assets.s3.ap-northeast-1.amazonaws.com/QA+Station_%E3%83%AD%E3%82%B3%E3%82%99%EF%BC%88JP%EF%BC%89.svg"
                 alt="QA Station Logo"
                 width={160}
                 height={40}
