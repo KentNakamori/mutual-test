@@ -12,9 +12,36 @@ const nextConfig = {
   
   // 画像最適化の設定
   images: {
-    // CloudFrontのドメインを設定（運用時に追加）
-    domains: [],
-    unoptimized: process.env.NODE_ENV === 'production', // 本番では外部で最適化
+    // Next.js 15ではremotePatternsを使用（domainsは非推奨）
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'mutual-app-static-assets.s3.ap-northeast-1.amazonaws.com',
+        port: '',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'd2c6wliagz68kk.cloudfront.net',
+        port: '',
+        pathname: '/**',
+      },
+      // S3の別の形式のURLにも対応
+      {
+        protocol: 'https',
+        hostname: '*.s3.ap-northeast-1.amazonaws.com',
+        port: '',
+        pathname: '/**',
+      },
+      {
+        protocol: 'https',
+        hostname: '*.s3.amazonaws.com',
+        port: '',
+        pathname: '/**',
+      },
+    ],
+    // 開発環境では最適化を無効にしてエラーを回避
+    unoptimized: process.env.NODE_ENV === 'development' || process.env.NODE_ENV === 'production',
     dangerouslyAllowSVG: true,
     contentDispositionType: 'attachment',
     contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",

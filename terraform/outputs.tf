@@ -5,7 +5,7 @@ output "ecr_repository_url" {
 
 output "ecs_cluster_name" {
   description = "The name of the ECS cluster"
-  value       = aws_ecs_cluster.main.name
+  value       = local.ecs_cluster_name
 }
 
 output "ecs_service_name" {
@@ -78,4 +78,39 @@ output "waf_web_acl_arn" {
 output "application_url" {
   description = "The URL to access the application"
   value       = var.domain_name != "" ? "https://${var.domain_name}" : "https://${aws_cloudfront_distribution.main.domain_name}"
+}
+
+# セキュリティ関連の出力
+output "security_group_alb_id" {
+  description = "The ID of the ALB security group"
+  value       = aws_security_group.lb.id
+}
+
+output "security_group_ecs_id" {
+  description = "The ID of the ECS tasks security group" 
+  value       = aws_security_group.ecs_tasks.id
+}
+
+output "iam_task_execution_role_arn" {
+  description = "The ARN of the ECS task execution role"
+  value       = aws_iam_role.ecs_task_execution_role.arn
+}
+
+output "iam_task_role_arn" {
+  description = "The ARN of the ECS task role"
+  value       = aws_iam_role.ecs_task_role.arn
+}
+
+# デプロイ情報
+output "deployment_info" {
+  description = "Summary of deployment information"
+  value = {
+    application_url    = var.domain_name != "" ? "https://${var.domain_name}" : "https://${aws_cloudfront_distribution.main.domain_name}"
+    cloudfront_id      = aws_cloudfront_distribution.main.id
+    ecr_repository     = aws_ecr_repository.frontend.repository_url
+    ecs_cluster        = local.ecs_cluster_name
+    ecs_service        = aws_ecs_service.main.name
+    secrets_manager    = aws_secretsmanager_secret.app_secrets.name
+    waf_web_acl        = aws_wafv2_web_acl.main.arn
+  }
 } 

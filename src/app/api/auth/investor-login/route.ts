@@ -9,7 +9,7 @@ export const GET = async () => {
   if (session?.user) {
     const userRole = session.user['https://salt2.dev/role'];
     if (userRole === 'investor') {
-      return NextResponse.redirect(new URL('/investor/companies', process.env.APP_BASE_URL || 'http://localhost:3000'));
+      return NextResponse.redirect(new URL('/investor/companies', process.env.AUTH0_BASE_URL || process.env.APP_BASE_URL || 'http://localhost:3000'));
     }
   }
 
@@ -21,6 +21,6 @@ export const GET = async () => {
   });
 
   return NextResponse.redirect(
-    new URL(`/auth/login?${qs.toString()}`, process.env.APP_BASE_URL || 'http://localhost:3000')
+    new URL(`/auth/login?${qs.toString()}`, process.env.AUTH0_BASE_URL || process.env.APP_BASE_URL || 'http://localhost:3000')
   );
 };

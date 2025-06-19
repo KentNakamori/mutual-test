@@ -17,12 +17,17 @@ const LoginPage: React.FC = () => {
   const handleLogoClick = () => router.push('/');
   const handleLogin = () => {
     // Corporate-DB connection 指定、ログイン後に /corporate/dashboard へ
-    router.push('/api/auth/corporate-login');
+    // クライアントサイドナビゲーションではなく、ブラウザナビゲーションを使用
+    window.location.href = '/api/auth/corporate-login';
   };
 
   return (
     <div className="min-h-screen flex flex-col bg-white">
-      <MinimalHeader onClickLogo={handleLogoClick} logoText="MyApp" links={[{ label: 'Home', href: '/' }]} />
+      <MinimalHeader 
+        onClickLogo={handleLogoClick} 
+        logoSrc="https://mutual-app-static-assets.s3.ap-northeast-1.amazonaws.com/QAstation.png"
+        links={[{ label: 'Home', href: '/' }]} 
+      />
       <main className="flex-grow flex items-center justify-center bg-gray-50">
         <div className="w-full max-w-md p-6 space-y-8 bg-white shadow rounded-lg">
           <div className="text-center">

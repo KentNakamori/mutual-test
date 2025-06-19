@@ -35,31 +35,49 @@ echo -e "${GREEN}✅ シークレット名: $SECRET_NAME${NC}"
 
 # 現在の設定を表示
 echo -e "${YELLOW}📖 現在の設定を確認中...${NC}"
-aws secretsmanager get-secret-value --secret-id "$SECRET_NAME" --query 'SecretString' --output text | jq . 2>/dev/null || {
+CURRENT_SECRET=$(aws secretsmanager get-secret-value --secret-id "$SECRET_NAME" --query 'SecretString' --output text 2>/dev/null)
+if [ $? -eq 0 ]; then
+    echo "$CURRENT_SECRET" | jq . 2>/dev/null || {
+        echo -e "${RED}❌ シークレットの解析に失敗しました${NC}"
+        CURRENT_SECRET="{}"
+    }
+else
     echo -e "${RED}❌ シークレットの取得に失敗しました。AWS CLIの設定を確認してください${NC}"
     exit 1
-}
+fi
 
 echo ""
 echo -e "${YELLOW}🔧 新しい値を入力してください（空白の場合は現在の値を維持）${NC}"
 echo ""
 
 # 各項目の入力
-read -p "AUTH0_CLIENT_SECRET (機密): " AUTH0_CLIENT_SECRET
-read -p "AUTH0_SECRET (32文字以上のランダム文字列): " AUTH0_SECRET
-read -p "AUTH0_M2M_CLIENT_SECRET (M2M機密): " AUTH0_M2M_CLIENT_SECRET
-read -p "DATABASE_URL (必要な場合): " DATABASE_URL
+read -s -p "AUTH0_CLIENT_SECRET (メインアプリケーションの機密): " AUTH0_CLIENT_SECRET
+echo ""
+read -p "AUTH0_SECRET (32文字以上のランダム文字列、生成する場合は空白): " AUTH0_SECRET
+if [ -z "$AUTH0_SECRET" ]; then
+    AUTH0_SECRET=$(openssl rand -hex 32)
+    echo -e "${GREEN}✅ AUTH0_SECRETを生成しました${NC}"
+fi
+read -p "AUTH0_M2M_CLIENT_ID (M2MアプリケーションのID): " AUTH0_M2M_CLIENT_ID
+read -s -p "AUTH0_M2M_CLIENT_SECRET (M2Mアプリケーションの機密): " AUTH0_M2M_CLIENT_SECRET
+echo ""
+read -p "AUTH0_CONNECTION_NAME (デフォルト: Corporate-DB): " AUTH0_CONNECTION_NAME
+read -p "DATABASE_URL (オプション、通常は不要): " DATABASE_URL
 
-# 現在の設定を取得して更新
-CURRENT_SECRET=$(aws secretsmanager get-secret-value --secret-id "$SECRET_NAME" --query 'SecretString' --output text)
-
-# jqを使用してJSONを更新
+# 現在の値を保持しつつ、新しい値で更新
 UPDATED_SECRET=$(echo "$CURRENT_SECRET" | jq \
-    --arg client_secret "${AUTH0_CLIENT_SECRET:-CHANGE_ME_IN_AWS_CONSOLE}" \
-    --arg auth_secret "${AUTH0_SECRET:-CHANGE_ME_IN_AWS_CONSOLE}" \
-    --arg m2m_client_secret "${AUTH0_M2M_CLIENT_SECRET:-CHANGE_ME_IN_AWS_CONSOLE}" \
-    --arg db_url "${DATABASE_URL:-CHANGE_ME_IF_NEEDED}" \
-    '.AUTH0_CLIENT_SECRET = $client_secret | .AUTH0_SECRET = $auth_secret | .AUTH0_M2M_CLIENT_SECRET = $m2m_client_secret | .DATABASE_URL = $db_url')
+    --arg client_secret "${AUTH0_CLIENT_SECRET}" \
+    --arg auth_secret "${AUTH0_SECRET}" \
+    --arg m2m_client_id "${AUTH0_M2M_CLIENT_ID}" \
+    --arg m2m_client_secret "${AUTH0_M2M_CLIENT_SECRET}" \
+    --arg connection_name "${AUTH0_CONNECTION_NAME:-Corporate-DB}" \
+    --arg db_url "${DATABASE_URL}" \
+    'if $client_secret != "" then .AUTH0_CLIENT_SECRET = $client_secret else . end |
+     if $auth_secret != "" then .AUTH0_SECRET = $auth_secret else . end |
+     if $m2m_client_id != "" then .AUTH0_M2M_CLIENT_ID = $m2m_client_id else . end |
+     if $m2m_client_secret != "" then .AUTH0_M2M_CLIENT_SECRET = $m2m_client_secret else . end |
+     .AUTH0_CONNECTION_NAME = $connection_name |
+     if $db_url != "" then .DATABASE_URL = $db_url else . end')
 
 echo ""
 echo -e "${YELLOW}📝 更新される設定:${NC}"

@@ -1,31 +1,46 @@
 //src/libs/auth0.ts
 import { Auth0Client } from "@auth0/nextjs-auth0/server";
 
-// 必要な環境変数の確認
-const requiredEnvVars = {
-    AUTH0_SECRET: process.env.AUTH0_SECRET,
-    AUTH0_ISSUER_BASE_URL: process.env.AUTH0_ISSUER_BASE_URL,
-    AUTH0_CLIENT_ID: process.env.AUTH0_CLIENT_ID,
-    AUTH0_CLIENT_SECRET: process.env.AUTH0_CLIENT_SECRET,
-};
+// ビルド時には環境変数チェックをスキップ
+const isBuildTime = typeof window === 'undefined' && process.env.NODE_ENV === 'production' && !process.env.AUTH0_SECRET;
 
-// 環境変数の検証
-const missingVars = Object.entries(requiredEnvVars)
-    .filter(([_, value]) => !value)
-    .map(([key]) => key);
+if (!isBuildTime) {
+  // 実行時のみ環境変数をチェック
+  const requiredEnvVars = {
+      AUTH0_SECRET: process.env.AUTH0_SECRET,
+      AUTH0_ISSUER_BASE_URL: process.env.AUTH0_ISSUER_BASE_URL,
+      AUTH0_CLIENT_ID: process.env.AUTH0_CLIENT_ID,
+      AUTH0_CLIENT_SECRET: process.env.AUTH0_CLIENT_SECRET,
+  };
 
-if (missingVars.length > 0) {
-    console.error('Missing Auth0 environment variables:', missingVars);
+  const missingVars = Object.entries(requiredEnvVars)
+      .filter(([_, value]) => !value)
+      .map(([key]) => key);
+
+  if (missingVars.length > 0) {
+      console.error('Missing Auth0 environment variables:', missingVars);
+  }
+
+  if (!process.env.AUTH0_BASE_URL && process.env.NODE_ENV === 'production') {
+      console.warn('AUTH0_BASE_URL is not set. This may cause issues in production.');
+  }
 }
 
-// AUTH0_BASE_URLは開発環境では省略可能（SDKが自動推測）
-if (!process.env.AUTH0_BASE_URL && process.env.NODE_ENV === 'production') {
-    console.warn('AUTH0_BASE_URL is not set. This may cause issues in production.');
-}
-
-export const auth0 = new Auth0Client({
-    authorizationParameters: {
-        audience: process.env.AUTH0_AUDIENCE || 'https://api.local.dev',
-        scope: 'openid profile email'
+// ビルド時は最小限の設定、実行時は正常な設定
+export const auth0 = new Auth0Client(
+    isBuildTime 
+    ? {
+        // ビルド時用の最小設定（イメージに埋め込まれない）
+        domain: process.env.AUTH0_DOMAIN || 'placeholder.auth0.com',
+        clientId: process.env.AUTH0_CLIENT_ID || 'placeholder',
+        secret: process.env.AUTH0_SECRET || 'build-time-placeholder-32-chars-long',
+        appBaseUrl: process.env.AUTH0_BASE_URL || 'http://localhost:3000'
     }
-});
+    : {
+        // 実行時は通常の設定
+        authorizationParameters: {
+            audience: process.env.AUTH0_AUDIENCE || 'https://api.local.dev',
+            scope: 'openid profile email'
+        }
+    }
+);

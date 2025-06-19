@@ -61,7 +61,8 @@ const Sidebar: React.FC<ExtendedSidebarProps> = ({
   const handleLogin = () => {
     // 現在のURLをreturnToパラメータとして渡してAuth0のログイン画面に遷移
     const returnTo = typeof window !== 'undefined' ? window.location.pathname : '/investor/companies';
-    router.push(`/api/auth/investor-login?returnTo=${encodeURIComponent(returnTo)}`);
+    // クライアントサイドナビゲーションではなく、ブラウザナビゲーションを使用
+    window.location.href = `/api/auth/investor-login?returnTo=${encodeURIComponent(returnTo)}`;
   };
 
   return (
@@ -87,7 +88,7 @@ const Sidebar: React.FC<ExtendedSidebarProps> = ({
             </button>
             <div className="flex-1 flex justify-center">
               <Image
-                src="/images/qa-station-logo.png"
+                src="https://mutual-app-static-assets.s3.ap-northeast-1.amazonaws.com/QAstation.png"
                 alt="QA Station Logo"
                 width={160}
                 height={40}

@@ -34,7 +34,7 @@ export const GET = async () => {
     const finalRole = Array.isArray(userRoles) ? userRoles[0] : userRoles;
     if (finalRole === 'corporate') {
       console.log('[CORPORATE-LOGIN] Corporate role confirmed, redirecting to dashboard');
-      return NextResponse.redirect(new URL('/corporate/dashboard', process.env.APP_BASE_URL || 'http://localhost:3000'));
+      return NextResponse.redirect(new URL('/corporate/dashboard', process.env.AUTH0_BASE_URL || process.env.APP_BASE_URL || 'http://localhost:3000'));
     } else {
       console.log('[CORPORATE-LOGIN] User role is not corporate:', finalRole);
     }
@@ -48,6 +48,6 @@ export const GET = async () => {
   });
 
   return NextResponse.redirect(
-    new URL(`/auth/login?${qs.toString()}`, process.env.APP_BASE_URL || 'http://localhost:3000')
+    new URL(`/auth/login?${qs.toString()}`, process.env.AUTH0_BASE_URL || process.env.APP_BASE_URL || 'http://localhost:3000')
   );
 };

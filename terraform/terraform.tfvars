@@ -22,7 +22,7 @@ auth0_audience = "https://api.local.dev"
 # 
 # 利用可能なエンドポイント:
 # 1. CloudFront経由（推奨）:
-api_base_url = "https://d20rzkwelg7jzp.cloudfront.net"
+api_base_url = "https://d28ns8mblnoihl.cloudfront.net"
 # 
 # 2. ALB直接接続（オプション）:
 #    api_base_url = "https://mutual-app-alb-v2-684193640.ap-northeast-1.elb.amazonaws.com"
@@ -30,3 +30,6 @@ api_base_url = "https://d20rzkwelg7jzp.cloudfront.net"
 # Auth0機密情報はAWS Secrets Managerで管理されています
 # 機密情報の更新は以下のコマンドで行ってください:
 # ./scripts/update-secrets.sh 
+
+# VPC設定（バックエンドと共有）
+vpc_id = "vpc-0642b0e0d50fe6441"

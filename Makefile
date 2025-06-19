@@ -128,6 +128,7 @@ dev-start:
 		-e API_BASE_URL=http://mutual-backend:8000 \
 		-v $(PWD)/src:/app/src \
 		-v $(PWD)/public:/app/public \
+		-v $(PWD)/next.config.js:/app/next.config.js \
 		$(DEV_IMAGE_NAME):$(IMAGE_TAG)
 	@echo "✅ フロントエンド開発環境が起動しました！"
 	@echo ""
@@ -196,8 +197,9 @@ deploy: docker-push
 	AWS_PROFILE=admin aws ecs update-service \
 		--cluster $(ECS_CLUSTER_NAME) \
 		--service $(ECS_SERVICE_NAME) \
-		--force-new-deployment
+		--force-new-deployment &
 	@echo "✅ デプロイが開始されました。AWSコンソールで進行状況を確認してください。"
+	@exit 0
 
 deploy-check:
 	@echo "🔍 デプロイ設定の確認..."
@@ -271,6 +273,81 @@ tf-outputs:
 	@echo "📊 Terraform出力情報:"
 	@echo "========================="
 	cd terraform && terraform output
+
+# terraform.tfvarsの自動生成（恒久的エラー防止機能付き）
+setup-tfvars:
+	@echo "🔧 terraform.tfvarsの自動生成..."
+	@echo ""
+	@echo "🔍 バックエンドデプロイ状況を確認中..."
+	@if [ ! -f ../mutual_backend/terraform/terraform.tfstate ]; then \
+		echo "❌ バックエンドのterraform.tfstateが見つかりません"; \
+		echo ""; \
+		echo "📝 解決方法:"; \
+		echo "   1. バックエンドディレクトリに移動: cd ../mutual_backend"; \
+		echo "   2. バックエンドをデプロイ: make deploy-full"; \
+		echo "   3. このコマンドを再実行: cd ../mutual-test && make setup-tfvars"; \
+		exit 1; \
+	fi
+	@echo "✅ バックエンドのstateファイルを確認"
+	@echo ""
+	@echo "📋 バックエンドから必須設定値を取得中..."
+	@echo "   - CloudFront URL取得中..."
+	@BACKEND_CF=$$(cd ../mutual_backend/terraform && terraform output -raw cloudfront_domain_name 2>/dev/null || terraform output -raw api_endpoint_alb 2>/dev/null | sed 's|http[s]*://||g' || echo ""); \
+	echo "   - VPC ID取得中..."; \
+	BACKEND_VPC=$$(cd ../mutual_backend/terraform && terraform output -raw vpc_id 2>/dev/null || echo ""); \
+	echo "   - ALB URL取得中（フォールバック用）..."; \
+	BACKEND_ALB=$$(cd ../mutual_backend/terraform && terraform output -raw api_endpoint_alb 2>/dev/null || echo ""); \
+	echo ""; \
+	echo "🔍 取得結果の検証..."; \
+	if [ -z "$$BACKEND_VPC" ]; then \
+		echo "❌ VPC IDが取得できませんでした"; \
+		echo ""; \
+		echo "📝 手動確認方法:"; \
+		echo "   cd ../mutual_backend/terraform && terraform output vpc_id"; \
+		echo "   または: aws ec2 describe-vpcs --filters Name=tag:Name,Values=mutual-app-vpc"; \
+		exit 1; \
+	fi; \
+	if [ -z "$$BACKEND_CF" ] && [ -z "$$BACKEND_ALB" ]; then \
+		echo "❌ バックエンドURLが取得できませんでした"; \
+		echo ""; \
+		echo "📝 手動確認方法:"; \
+		echo "   cd ../mutual_backend/terraform && terraform output"; \
+		exit 1; \
+	fi; \
+	API_URL=""; \
+	if [ -n "$$BACKEND_CF" ]; then \
+		API_URL="https://$$BACKEND_CF"; \
+		echo "✅ CloudFront URL: $$API_URL"; \
+	elif [ -n "$$BACKEND_ALB" ]; then \
+		API_URL="$$BACKEND_ALB"; \
+		echo "✅ ALB URL: $$API_URL"; \
+	fi; \
+	echo "✅ VPC ID: $$BACKEND_VPC"; \
+	echo ""; \
+	echo "📝 terraform.tfvarsファイルを生成中..."; \
+	if [ -f terraform/terraform.tfvars ]; then \
+		echo "⚠️  既存のterraform.tfvarsをバックアップ中..."; \
+		cp terraform/terraform.tfvars terraform/terraform.tfvars.backup.$$(date +%Y%m%d_%H%M%S); \
+	fi; \
+	cp terraform/terraform.tfvars.example terraform/terraform.tfvars; \
+	if [[ "$$OSTYPE" == "darwin"* ]]; then \
+		sed -i '' "s|https://REPLACE_WITH_BACKEND_URL|$$API_URL|g" terraform/terraform.tfvars; \
+		sed -i '' "s|vpc-REPLACE_WITH_VPC_ID|$$BACKEND_VPC|g" terraform/terraform.tfvars; \
+	else \
+		sed -i "s|https://REPLACE_WITH_BACKEND_URL|$$API_URL|g" terraform/terraform.tfvars; \
+		sed -i "s|vpc-REPLACE_WITH_VPC_ID|$$BACKEND_VPC|g" terraform/terraform.tfvars; \
+	fi; \
+	echo ""; \
+	echo "🎉 terraform.tfvarsの生成が完了しました！"; \
+	echo ""; \
+	echo "📋 設定内容:"; \
+	echo "   - api_base_url = $$API_URL"; \
+	echo "   - vpc_id = $$BACKEND_VPC"; \
+	echo ""; \
+	echo "📝 次のステップ:"; \
+	echo "   1. 設定確認: cat terraform/terraform.tfvars"; \
+	echo "   2. インフラ構築: make tf-apply"; \
+	echo "   3. アプリデプロイ: make deploy"
 
 # API接続情報の表示
 api-info:

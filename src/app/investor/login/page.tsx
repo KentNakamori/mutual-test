@@ -17,13 +17,17 @@ const InvestorLoginPage: React.FC = () => {
   const router = useRouter();
   const handleLogoClick = () => router.push('/investor/companies');
   const handleAuth0Login = () => {
-    router.push('/api/auth/investor-login');
+    // クライアントサイドナビゲーションではなく、ブラウザナビゲーションを使用
+    window.location.href = '/api/auth/investor-login';
   };
   const handleGuestContinue = () => router.push('/investor/companies');
 
   return (
     <div className="min-h-screen flex flex-col">
-      <MinimalHeader onClickLogo={handleLogoClick} logoText="MyApp" />
+      <MinimalHeader 
+        onClickLogo={handleLogoClick} 
+        logoSrc="https://mutual-app-static-assets.s3.ap-northeast-1.amazonaws.com/QAstation.png"
+      />
       <main className="flex-grow flex flex-col items-center justify-center p-4">
         <Card className="w-full max-w-md space-y-6">
           <div className="text-center">

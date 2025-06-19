@@ -13,19 +13,33 @@ provider "aws" {
 # ------------------------------------------------------------------------------
 # Data Sources for Existing VPC
 # ------------------------------------------------------------------------------
+# VPCの動的検出 - vpc_idが指定されていない場合はタグで検索
 data "aws_vpc" "existing" {
-  id = var.vpc_id
+  count = var.vpc_id != "" ? 1 : 0
+  id    = var.vpc_id
+}
+
+data "aws_vpc" "by_tag" {
+  count = var.vpc_id == "" ? 1 : 0
+  
+  tags = {
+    Name = var.vpc_name_tag
+  }
+}
+
+locals {
+  vpc_id = var.vpc_id != "" ? data.aws_vpc.existing[0].id : data.aws_vpc.by_tag[0].id
 }
 
 data "aws_subnets" "all" {
   filter {
     name   = "vpc-id"
-    values = [data.aws_vpc.existing.id]
+    values = [local.vpc_id]
   }
 }
 
 data "aws_route_tables" "all" {
-  vpc_id = data.aws_vpc.existing.id
+  vpc_id = local.vpc_id
 }
 
 locals {
@@ -111,11 +125,11 @@ resource "aws_ecr_repository" "frontend" {
 # CloudWatch Log Group
 # ------------------------------------------------------------------------------
 resource "aws_cloudwatch_log_group" "ecs" {
-  name              = "/ecs/${var.project_name}"
+  name              = "/ecs/${var.project_name}-frontend-${random_id.deployment_suffix.hex}"
   retention_in_days = 7
 
   tags = {
-    Name = "${var.project_name}-ecs-logs"
+    Name = "${var.project_name}-frontend-ecs-logs"
   }
 }
 
@@ -133,7 +147,7 @@ data "aws_iam_policy_document" "ecs_task_assume_role" {
 }
 
 resource "aws_iam_role" "ecs_task_execution_role" {
-  name               = "${var.project_name}-frontend-ecs-exec-role"
+  name               = "${var.project_name}-frontend-ecs-exec-role-${random_id.deployment_suffix.hex}"
   assume_role_policy = data.aws_iam_policy_document.ecs_task_assume_role.json
 }
 
@@ -143,7 +157,7 @@ resource "aws_iam_role_policy_attachment" "ecs_task_execution_role_policy" {
 }
 
 resource "aws_iam_role" "ecs_task_role" {
-  name               = "${var.project_name}-frontend-ecs-task-role"
+  name               = "${var.project_name}-frontend-ecs-task-role-${random_id.deployment_suffix.hex}"
   assume_role_policy = data.aws_iam_policy_document.ecs_task_assume_role.json
 }
 
@@ -166,7 +180,7 @@ resource "aws_iam_role_policy" "secrets_manager_access" {
 # Secrets Manager
 # ------------------------------------------------------------------------------
 resource "aws_secretsmanager_secret" "app_secrets" {
-  name        = "${var.project_name}/frontend/app-secrets"
+  name        = "${var.project_name}/frontend/app-secrets-${random_id.deployment_suffix.hex}"
   description = "Application secrets for ${var.project_name} frontend"
 }
 
@@ -198,9 +212,9 @@ resource "aws_secretsmanager_secret_version" "app_secrets" {
 # Security Groups
 # ------------------------------------------------------------------------------
 resource "aws_security_group" "lb" {
-  name        = "${var.project_name}-lb-sg"
+  name        = "${var.project_name}-frontend-lb-sg"
   description = "Allow HTTP traffic to ALB"
-  vpc_id      = data.aws_vpc.existing.id
+  vpc_id      = local.vpc_id
 
   ingress {
     protocol    = "tcp"
@@ -220,7 +234,7 @@ resource "aws_security_group" "lb" {
 resource "aws_security_group" "ecs_tasks" {
   name        = "${var.project_name}-frontend-ecs-tasks-sg"
   description = "Allow traffic from ALB to ECS tasks"
-  vpc_id      = data.aws_vpc.existing.id
+  vpc_id      = local.vpc_id
 
   ingress {
     protocol        = "tcp"
@@ -241,18 +255,22 @@ resource "aws_security_group" "ecs_tasks" {
 # ALB (Application Load Balancer)
 # ------------------------------------------------------------------------------
 resource "aws_lb" "main" {
-  name               = "${var.project_name}-lb"
+  name               = "${var.project_name}-frontend-lb"
   internal           = false
   load_balancer_type = "application"
   security_groups    = [aws_security_group.lb.id]
   subnets            = local.public_subnet_ids
+  
+  tags = merge(var.tags, {
+    Name = "${var.project_name}-frontend-lb"
+  })
 }
 
 resource "aws_lb_target_group" "main" {
-  name        = "${var.project_name}-tg"
+  name        = "${var.project_name}-frontend-tg"
   port        = 3000
   protocol    = "HTTP"
-  vpc_id      = data.aws_vpc.existing.id
+  vpc_id      = local.vpc_id
   target_type = "ip"
   
   health_check {
@@ -282,8 +300,24 @@ resource "aws_lb_listener" "http" {
 # ------------------------------------------------------------------------------
 # ECS (Elastic Container Service)
 # ------------------------------------------------------------------------------
+# 既存ECSクラスターの検索または新規作成
+data "aws_ecs_cluster" "existing" {
+  count        = var.use_existing_ecs_cluster ? 1 : 0
+  cluster_name = var.existing_ecs_cluster_name
+}
+
 resource "aws_ecs_cluster" "main" {
-  name = "${var.project_name}-cluster"
+  count = var.use_existing_ecs_cluster ? 0 : 1
+  name  = "${var.project_name}-${var.environment}-cluster"
+  
+  tags = merge(var.tags, {
+    Name = "${var.project_name}-${var.environment}-cluster"
+  })
+}
+
+locals {
+  ecs_cluster_id   = var.use_existing_ecs_cluster ? data.aws_ecs_cluster.existing[0].id : aws_ecs_cluster.main[0].id
+  ecs_cluster_name = var.use_existing_ecs_cluster ? var.existing_ecs_cluster_name : aws_ecs_cluster.main[0].name
 }
 
 resource "aws_ecs_task_definition" "main" {
@@ -336,8 +370,8 @@ resource "aws_ecs_task_definition" "main" {
 }
 
 resource "aws_ecs_service" "main" {
-  name            = "${var.project_name}-service"
-  cluster         = aws_ecs_cluster.main.id
+  name            = "${var.project_name}-frontend-service"
+  cluster         = local.ecs_cluster_id
   task_definition = aws_ecs_task_definition.main.arn
   desired_count   = 1
   launch_type     = "FARGATE"
@@ -361,7 +395,7 @@ resource "aws_ecs_service" "main" {
 # S3 for Static Assets
 # ------------------------------------------------------------------------------
 resource "aws_s3_bucket" "static_assets" {
-  bucket = "${var.project_name}-static-assets"
+  bucket = "${var.project_name}-static-assets-${random_id.deployment_suffix.hex}"
 }
 
 resource "aws_s3_bucket_public_access_block" "static_assets" {
@@ -370,6 +404,43 @@ resource "aws_s3_bucket_public_access_block" "static_assets" {
   block_public_policy     = true
   ignore_public_acls      = true
   restrict_public_buckets = true
+}
+
+# S3バケットの暗号化
+resource "aws_s3_bucket_server_side_encryption_configuration" "static_assets" {
+  bucket = aws_s3_bucket.static_assets.id
+
+  rule {
+    apply_server_side_encryption_by_default {
+      sse_algorithm = "AES256"
+    }
+  }
+}
+
+# S3バケットのバージョニング
+resource "aws_s3_bucket_versioning" "static_assets" {
+  bucket = aws_s3_bucket.static_assets.id
+  versioning_configuration {
+    status = "Enabled"
+  }
+}
+
+# S3バケットのライフサイクルポリシー
+resource "aws_s3_bucket_lifecycle_configuration" "static_assets" {
+  bucket = aws_s3_bucket.static_assets.id
+
+  rule {
+    id     = "delete-old-versions"
+    status = "Enabled"
+    
+    filter {
+      prefix = ""
+    }
+
+    noncurrent_version_expiration {
+      noncurrent_days = 30
+    }
+  }
 }
 
 resource "aws_s3_bucket_policy" "static_assets" {
@@ -398,7 +469,7 @@ resource "aws_s3_bucket_policy" "static_assets" {
 # CloudFront
 # ------------------------------------------------------------------------------
 resource "aws_cloudfront_origin_access_control" "main" {
-  name                              = "${var.project_name}-oac"
+  name                              = "${var.project_name}-oac-${random_id.deployment_suffix.hex}"
   description                       = "OAC for ${var.project_name}"
   origin_access_control_origin_type = "s3"
   signing_behavior                  = "always"
@@ -417,6 +488,8 @@ resource "aws_cloudfront_distribution" "main" {
       https_port             = 443
       origin_protocol_policy = "http-only"
       origin_ssl_protocols   = ["TLSv1.2"]
+      origin_read_timeout    = 60
+      origin_keepalive_timeout = 5
     }
   }
 
@@ -432,13 +505,25 @@ resource "aws_cloudfront_distribution" "main" {
     allowed_methods        = ["GET", "HEAD", "OPTIONS", "PUT", "POST", "PATCH", "DELETE"]
     cached_methods         = ["GET", "HEAD"]
     compress               = true
+    
     forwarded_values {
       query_string = true
-      headers      = ["Authorization", "Host"]
+      headers      = ["Authorization", "Host", "CloudFront-Viewer-Country", "CloudFront-Is-Mobile-Viewer"]
       cookies {
         forward = "all"
       }
     }
+    
+    # Lambda@Edge関数の関連付け（セキュリティヘッダー追加）
+    # lambda_function_association {
+    #   event_type   = "origin-response"
+    #   lambda_arn   = aws_lambda_function.security_headers.qualified_arn
+    #   include_body = false
+    # }
+    
+    min_ttl                = 0
+    default_ttl            = 0
+    max_ttl                = 31536000
   }
 
   ordered_cache_behavior {
@@ -448,6 +533,7 @@ resource "aws_cloudfront_distribution" "main" {
     allowed_methods        = ["GET", "HEAD", "OPTIONS"]
     cached_methods         = ["GET", "HEAD"]
     compress               = true
+    
     forwarded_values {
       query_string = false
       headers      = ["Host"]
@@ -455,17 +541,65 @@ resource "aws_cloudfront_distribution" "main" {
         forward = "none"
       }
     }
+    
+    min_ttl                = 0
+    default_ttl            = 86400
+    max_ttl                = 31536000
+  }
+  
+  ordered_cache_behavior {
+    path_pattern           = "/images/*"
+    target_origin_id       = "s3-${var.project_name}"
+    viewer_protocol_policy = "redirect-to-https"
+    allowed_methods        = ["GET", "HEAD"]
+    cached_methods         = ["GET", "HEAD"]
+    compress               = true
+    
+    forwarded_values {
+      query_string = false
+      cookies {
+        forward = "none"
+      }
+    }
+    
+    min_ttl                = 0
+    default_ttl            = 604800
+    max_ttl                = 31536000
   }
   
   restrictions {
     geo_restriction {
       restriction_type = "none"
+      # 必要に応じて地域制限を追加
+      # restriction_type = "whitelist"
+      # locations        = ["JP", "US"]
     }
   }
 
   viewer_certificate {
     cloudfront_default_certificate = true
+    minimum_protocol_version       = "TLSv1.2_2021"
   }
+  
+  # カスタムエラーページ
+  custom_error_response {
+    error_code         = 403
+    response_code      = 200
+    response_page_path = "/403.html"
+  }
+  
+  custom_error_response {
+    error_code         = 404
+    response_code      = 200
+    response_page_path = "/404.html"
+  }
+  
+  # ログ設定（オプション）
+  # logging_config {
+  #   include_cookies = false
+  #   bucket          = aws_s3_bucket.logs.bucket_domain_name
+  #   prefix          = "cloudfront/"
+  # }
   
   web_acl_id = aws_wafv2_web_acl.main.arn
 }
@@ -473,22 +607,34 @@ resource "aws_cloudfront_distribution" "main" {
 # ------------------------------------------------------------------------------
 # WAF (Web Application Firewall)
 # ------------------------------------------------------------------------------
+
+# リソース名重複防止用のランダムID
+resource "random_id" "deployment_suffix" {
+  byte_length = 4
+}
+
+# WAF名前重複防止用のランダムID（継続性のため別途定義）
+resource "random_id" "waf_suffix" {
+  byte_length = 4
+}
+
 resource "aws_wafv2_web_acl" "main" {
   provider    = aws.virginia
-  name        = "${var.project_name}-waf"
+  name        = "${var.project_name}-frontend-waf-${random_id.waf_suffix.hex}"
   scope       = "CLOUDFRONT"
-  description = "WAF for ${var.project_name}"
+  description = "WAF for ${var.project_name} frontend"
 
   default_action {
     allow {}
   }
 
-  visibility_config {
-    cloudwatch_metrics_enabled = true
-    metric_name                = "${var.project_name}-WebACL"
-    sampled_requests_enabled   = true
-  }
+            visibility_config {
+            cloudwatch_metrics_enabled = true
+            metric_name                = "${var.project_name}-Frontend-WebACL"
+            sampled_requests_enabled   = true
+          }
 
+  # ルール1: AWS管理ルール - 一般的な脆弱性対策
   rule {
     name     = "AWSManagedRulesCommonRuleSet"
     priority = 1
@@ -499,11 +645,104 @@ resource "aws_wafv2_web_acl" "main" {
       managed_rule_group_statement {
         vendor_name = "AWS"
         name        = "AWSManagedRulesCommonRuleSet"
+        
+        rule_action_override {
+          name = "SizeRestrictions_BODY"
+          action_to_use {
+            allow {}
+          }
+        }
+        
+        rule_action_override {
+          name = "GenericRFI_BODY"
+          action_to_use {
+            allow {}
+          }
+        }
       }
     }
     visibility_config {
       cloudwatch_metrics_enabled = true
       metric_name                = "${var.project_name}-CommonRuleSet"
+      sampled_requests_enabled   = true
+    }
+  }
+  
+  # ルール2: AWS管理ルール - 既知の不正な入力
+  rule {
+    name     = "AWSManagedRulesKnownBadInputsRuleSet"
+    priority = 2
+    override_action {
+      none {}
+    }
+    statement {
+      managed_rule_group_statement {
+        vendor_name = "AWS"
+        name        = "AWSManagedRulesKnownBadInputsRuleSet"
+      }
+    }
+    visibility_config {
+      cloudwatch_metrics_enabled = true
+      metric_name                = "${var.project_name}-KnownBadInputs"
+      sampled_requests_enabled   = true
+    }
+  }
+  
+  # ルール3: レート制限
+  rule {
+    name     = "RateLimitRule"
+    priority = 3
+    action {
+      block {}
+    }
+    statement {
+      rate_based_statement {
+        limit              = 2000
+        aggregate_key_type = "IP"
+      }
+    }
+    visibility_config {
+      cloudwatch_metrics_enabled = true
+      metric_name                = "${var.project_name}-RateLimit"
+      sampled_requests_enabled   = true
+    }
+  }
+  
+  # ルール4: 地理的制限（オプション）
+  # rule {
+  #   name     = "GeoRestriction"
+  #   priority = 4
+  #   action {
+  #     block {}
+  #   }
+  #   statement {
+  #     geo_match_statement {
+  #       country_codes = ["CN", "RU", "KP"]  # ブロックする国のコード
+  #     }
+  #   }
+  #   visibility_config {
+  #     cloudwatch_metrics_enabled = true
+  #     metric_name                = "${var.project_name}-GeoBlock"
+  #     sampled_requests_enabled   = true
+  #   }
+  # }
+  
+  # ルール5: SQLインジェクション対策
+  rule {
+    name     = "AWSManagedRulesSQLiRuleSet"
+    priority = 5
+    override_action {
+      none {}
+    }
+    statement {
+      managed_rule_group_statement {
+        vendor_name = "AWS"
+        name        = "AWSManagedRulesSQLiRuleSet"
+      }
+    }
+    visibility_config {
+      cloudwatch_metrics_enabled = true
+      metric_name                = "${var.project_name}-SQLi"
       sampled_requests_enabled   = true
     }
   }

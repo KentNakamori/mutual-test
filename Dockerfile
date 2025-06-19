@@ -19,10 +19,11 @@ WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 
-# 環境変数設定
+# ビルド時の環境変数設定
 ENV NEXT_TELEMETRY_DISABLED=1
+ENV NODE_ENV=production
 
-# 本番用ビルド
+# 本番用ビルド（Auth0環境変数なしでもエラーにならない）
 RUN npm run build
 
 # 本番環境ステージ

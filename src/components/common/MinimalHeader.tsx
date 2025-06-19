@@ -1,5 +1,6 @@
 // components/common/MinimalHeader.tsx
 import React from 'react';
+import Image from 'next/image';
 import { MinimalHeaderProps } from '@/types';
 
 
@@ -33,7 +34,7 @@ const MinimalHeader: React.FC<MinimalHeaderProps> = ({
     <header className="bg-white text-black py-3 px-4 flex justify-between items-center">
       <div className="cursor-pointer flex items-center" onClick={onClickLogo}>
         {logoSrc ? (
-          <img src={logoSrc} alt="Logo" className="h-8 w-auto" />
+          <Image src={logoSrc} alt="Logo" width={120} height={32} className="h-8 w-auto" />
         ) : (
           <span className="text-xl font-bold">{logoText}</span>
         )}
