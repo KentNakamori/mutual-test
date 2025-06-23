@@ -105,9 +105,15 @@ export const ENDPOINTS = {
   admin: {
     company: {
       register: '/admin/companies/register',
-      list: '/admin/companies',
+      list: '/admin/users/companies',
       detail: (id: string) => `/admin/companies/${id}`,
       approve: (id: string) => `/admin/companies/${id}/approve`,
+    },
+    users: {
+      register: '/admin/users/register',
+      list: '/admin/users',
+      detail: (userId: string) => `/admin/users/${userId}`,
+      updateStatus: (userId: string) => `/admin/users/${userId}/status`,
     },
     corporate: {
       registerUser: '/admin/corporate/register',
