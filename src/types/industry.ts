@@ -6,76 +6,46 @@
  * バックエンドのIndustry Enumと同期
  */
 export enum Industry {
-  FINANCE = 'FINANCE',
-  BANKS = 'BANKS',
-  REAL_ESTATE = 'REAL_ESTATE',
-  RETAIL_TRADE = 'RETAIL_TRADE',
-  COMMERCIAL_WHOLESALE_TRADE = 'COMMERCIAL_WHOLESALE_TRADE',
-  TRANSPORTATION_LOGISTICS = 'TRANSPORTATION_LOGISTICS',
-  ELECTRIC_POWER_GAS = 'ELECTRIC_POWER_GAS',
-  IT_SERVICES = 'IT_SERVICES',
-  ELECTRONICS_PRECISION = 'ELECTRONICS_PRECISION',
-  MACHINERY = 'MACHINERY',
-  STEEL_NONFERROUS = 'STEEL_NONFERROUS',
-  AUTOMOBILES_TRANSPORTATION = 'AUTOMOBILES_TRANSPORTATION',
-  PHARMACEUTICALS = 'PHARMACEUTICALS',
-  MATERIALS_CHEMICALS = 'MATERIALS_CHEMICALS',
-  CONSTRUCTION_MATERIALS = 'CONSTRUCTION_MATERIALS',
-  ENERGY_RESOURCES = 'ENERGY_RESOURCES',
-  FOODS = 'FOODS'
+  FINANCE = '金融',
+  BANKS = '銀行',
+  REAL_ESTATE = '不動産',
+  RETAIL_TRADE = '小売',
+  COMMERCIAL_WHOLESALE_TRADE = '商社・卸売',
+  TRANSPORTATION_LOGISTICS = '運輸・物流',
+  ELECTRIC_POWER_GAS = '電力ガス',
+  IT_SERVICES = '情報通信・サービス',
+  ELECTRONICS_PRECISION = '電機・精密',
+  MACHINERY = '機械',
+  STEEL_NONFERROUS = '鉄鋼・非鉄',
+  AUTOMOBILES_TRANSPORTATION = '自動車・輸送機',
+  PHARMACEUTICALS = '医薬品',
+  MATERIALS_CHEMICALS = '素材・化学',
+  CONSTRUCTION_MATERIALS = '建設・資材',
+  ENERGY_RESOURCES = 'エネルギー資源',
+  FOODS = '食品'
 }
 
 /**
- * 業界Enum値から日本語表示名への変換マップ
- */
-export const INDUSTRY_LABELS: Record<Industry, string> = {
-  [Industry.FINANCE]: '金融',
-  [Industry.BANKS]: '銀行',
-  [Industry.REAL_ESTATE]: '不動産',
-  [Industry.RETAIL_TRADE]: '小売',
-  [Industry.COMMERCIAL_WHOLESALE_TRADE]: '商社・卸売',
-  [Industry.TRANSPORTATION_LOGISTICS]: '運輸・物流',
-  [Industry.ELECTRIC_POWER_GAS]: '電力ガス',
-  [Industry.IT_SERVICES]: '情報通信・サービス',
-  [Industry.ELECTRONICS_PRECISION]: '電機・精密',
-  [Industry.MACHINERY]: '機械',
-  [Industry.STEEL_NONFERROUS]: '鉄鋼・非鉄',
-  [Industry.AUTOMOBILES_TRANSPORTATION]: '自動車・輸送機',
-  [Industry.PHARMACEUTICALS]: '医薬品',
-  [Industry.MATERIALS_CHEMICALS]: '素材・化学',
-  [Industry.CONSTRUCTION_MATERIALS]: '建設・資材',
-  [Industry.ENERGY_RESOURCES]: 'エネルギー資源',
-  [Industry.FOODS]: '食品'
-};
-
-/**
- * 日本語表示名からEnum値への変換マップ
- */
-export const INDUSTRY_VALUES: Record<string, Industry> = Object.fromEntries(
-  Object.entries(INDUSTRY_LABELS).map(([key, value]) => [value, key as Industry])
-);
-
-/**
  * 業界選択用のオプション配列
+ * Enum値がそのまま日本語なので、valueとlabelが同じになります
  */
-export const INDUSTRY_OPTIONS = Object.entries(INDUSTRY_LABELS).map(([value, label]) => ({
-  value: value as Industry,
-  label
+export const INDUSTRY_OPTIONS = Object.values(Industry).map((value) => ({
+  value: value,
+  label: value
 }));
 
 /**
- * 業界Enum値を日本語表示名に変換する関数
+ * 業界Enum値をそのまま返す関数（後方互換性のため）
+ * 既にEnum値が日本語なので、変換の必要がありません
  */
 export function getIndustryLabel(industry: Industry | string): string {
-  if (typeof industry === 'string') {
-    return INDUSTRY_LABELS[industry as Industry] || industry;
-  }
-  return INDUSTRY_LABELS[industry] || industry;
+  return industry;
 }
 
 /**
  * 日本語表示名を業界Enum値に変換する関数
+ * Enum値が既に日本語なので、そのまま返します
  */
 export function getIndustryValue(label: string): Industry | undefined {
-  return INDUSTRY_VALUES[label];
+  return Object.values(Industry).find(value => value === label) as Industry | undefined;
 } 

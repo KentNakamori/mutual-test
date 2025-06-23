@@ -1,7 +1,6 @@
 // src/components/features/investor/company/CompanyHeader.tsx
 import React, { useState, useEffect } from 'react';
 import { CompanyHeaderProps } from '../../../../types';
-import { getIndustryLabel } from '@/types/industry';
 import { getFullImageUrl } from '@/lib/utils/imageUtils';
 import { X } from 'lucide-react';
 import { useUser } from '@auth0/nextjs-auth0';
@@ -126,7 +125,7 @@ const CompanyHeader: React.FC<CompanyHeaderProps> = ({ company, onFollowStatusCh
             {company.websiteUrl && company.industry && (
               <span className="text-gray-400 mx-1">|</span>
             )}
-            <p className="text-sm text-gray-600">{getIndustryLabel(company.industry)}</p>
+            <p className="text-sm text-gray-600">{company.industry}</p>
           </div>
         </div>
       </div>
