@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Filter, Search, ChevronDown, Lock } from 'lucide-react';
 import { usePathname } from 'next/navigation';
-import { Industry, INDUSTRY_OPTIONS, getIndustryLabel } from '@/types/industry';
+import { Industry, INDUSTRY_OPTIONS } from '@/types/industry';
 import { useUser } from '@auth0/nextjs-auth0';
 import { getFullImageUrl } from '@/lib/utils/imageUtils';//画像のURLを取得する関数仮
 import { getInvestorCompanies } from '@/lib/api/investor'; // getInvestorCompaniesをインポート
@@ -168,9 +168,8 @@ const CompanyListing: React.FC<CompanyListingProps> = ({ isFollowedOnly = false,
     
     // 業界フィルター
     if (activeIndustry !== 'すべて') {
-      const targetIndustryLabel = getIndustryLabel(activeIndustry); // Enum値を日本語ラベルに変換
       filtered = filtered.filter(company => {
-        return company.industry === targetIndustryLabel;
+        return company.industry === activeIndustry;
       });
     }
     
@@ -285,7 +284,7 @@ const CompanyListing: React.FC<CompanyListingProps> = ({ isFollowedOnly = false,
             }}
             className="flex items-center justify-between w-48 px-4 py-2 bg-white border border-gray-300 rounded-lg shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
-            <span>業界: {activeIndustry === 'すべて' ? 'すべて' : getIndustryLabel(activeIndustry)}</span>
+            <span>業界: {activeIndustry === 'すべて' ? 'すべて' : activeIndustry}</span>
             <ChevronDown size={16} className="ml-2 text-gray-500" />
           </button>
       
@@ -429,7 +428,7 @@ const CompanyListing: React.FC<CompanyListingProps> = ({ isFollowedOnly = false,
           )}
           {activeIndustry !== 'すべて' && (
             <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-              業界: {getIndustryLabel(activeIndustry)}
+              業界: {activeIndustry}
               <button onClick={() => setActiveIndustry('すべて')} className="ml-1 text-green-600 hover:text-green-800 focus:outline-none">
                 ×
               </button>
@@ -572,7 +571,7 @@ const CompanyGridCard = ({ company, isGuest, onFollowToggle, onShowGuestPopup }:
                 </span>
               )}
               <span className="inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-medium bg-blue-50 text-blue-700 border border-blue-100">
-                {getIndustryLabel(company.industry)}
+                {company.industry}
               </span>
               {company.majorStockExchange && (
                 <span className="inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-medium bg-green-50 text-green-700 border border-green-100">
@@ -666,7 +665,7 @@ const CompanyListCard = ({ company, isGuest, onFollowToggle, onShowGuestPopup }:
                   </span>
                 )}
                 <span className="inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-medium bg-blue-50 text-blue-700 border border-blue-100">
-                  {getIndustryLabel(company.industry)}
+                  {company.industry}
                 </span>
                 {company.majorStockExchange && (
                   <span className="inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-medium bg-green-50 text-green-700 border border-green-100">

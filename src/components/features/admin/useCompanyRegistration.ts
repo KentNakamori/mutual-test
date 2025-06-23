@@ -57,7 +57,9 @@ export const useCompanyRegistration = () => {
       
       if (formData) {
         submitFormData.append('companyName', formData.companyName);
-        if (formData.industry) submitFormData.append('industry', formData.industry);
+        if (formData.industry) {
+          submitFormData.append('industry', formData.industry);
+        }
         if (formData.securitiesCode) submitFormData.append('securitiesCode', formData.securitiesCode);
         if (formData.marketSegment) submitFormData.append('marketSegment', formData.marketSegment);
         if (formData.establishedDate) submitFormData.append('establishedDate', formData.establishedDate);
