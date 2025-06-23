@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from "react";
 import { useRouter } from 'next/navigation';
+import { getCompanies, registerUser } from '@/lib/api/admin';
 
 interface Company {
   companyId: string;
@@ -23,12 +24,8 @@ export default function UserInvitePage() {
   useEffect(() => {
     const fetchCompanies = async () => {
       try {
-        const response = await fetch("/api/admin/users");
-        if (!response.ok) {
-          throw new Error("企業一覧の取得に失敗しました");
-        }
-        const data = await response.json();
-        setCompanies(data);
+        const companiesData = await getCompanies();
+        setCompanies(companiesData);
       } catch (error) {
         console.error("企業一覧取得エラー:", error);
         setFlash("❌ 企業一覧の取得に失敗しました");
@@ -67,22 +64,7 @@ export default function UserInvitePage() {
     setIsLoading(true);
 
     try {
-      const response = await fetch("/api/admin/users", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          companyId: selectedCompanyId,
-          email: email,
-        }),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        const errorMessage = errorData.error || errorData.message || "ユーザー登録に失敗しました";
-        throw new Error(errorMessage);
-      }
-
-      const result = await response.json();
+      const result = await registerUser(selectedCompanyId, email);
       setFlash(`✅ ${result.message || 'ユーザーアカウントを作成し、招待メールを送信しました。ユーザーはメール内のリンクからパスワードを設定できます。'}`);
       setEmail("");
       setSelectedCompanyId("");
