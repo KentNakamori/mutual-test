@@ -1,5 +1,15 @@
 // 認証関連API
-export * from './auth';
+export {
+  login,
+  refreshToken,
+  passwordReset,
+  registerUser as authRegisterUser,
+  getUser,
+  updateUser,
+  logout,
+  investorRegister,
+  deleteInvestorAccount
+} from './auth';
 
 // 企業向けAPI
 export * from './corporate';
@@ -17,4 +27,8 @@ export * from './tracking';
 export { apiFetch, streamingFetch } from './client';
 
 // 管理者向けAPI
-export * from './admin'; 
+export {
+  registerCompany,
+  getCompanies,
+  registerUser as adminRegisterUser
+} from './admin'; 

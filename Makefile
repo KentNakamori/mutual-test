@@ -182,9 +182,17 @@ docker-build:
 		echo "   make ECR_REPOSITORY_URL=your-ecr-url docker-build"; \
 		exit 1; \
 	fi
-	docker buildx build --platform linux/amd64 -t $(ECR_REPOSITORY_URL):$(IMAGE_TAG) -f Dockerfile . --push
+	docker buildx build --platform linux/amd64 -t $(ECR_REPOSITORY_URL):$(IMAGE_TAG) -f Dockerfile .
 
 docker-push: docker-init docker-build
+	@echo "DockerイメージをECRにプッシュします..."
+	@if [ -z "$(ECR_REPOSITORY_URL)" ]; then \
+		echo "❌ ECR_REPOSITORY_URLが設定されていません。"; \
+		echo "   terraform outputから取得するか、手動で設定してください:"; \
+		echo "   make ECR_REPOSITORY_URL=your-ecr-url docker-push"; \
+		exit 1; \
+	fi
+	docker push $(ECR_REPOSITORY_URL):$(IMAGE_TAG)
 	@echo "✅ DockerイメージをECRにプッシュしました: $(ECR_REPOSITORY_URL):$(IMAGE_TAG)"
 
 deploy: docker-push
