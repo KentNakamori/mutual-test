@@ -6,7 +6,8 @@ import { ENDPOINTS } from "../../config/api";
  */
 
 /**
- * 企業登録API
+ * 企業登録API（APIルーター経由版）
+ * APIルーター経由でバックエンドのPOST /admin/companies/registerを呼び出し
  * 
  * 入力:
  * - formData: FormData containing company information and logo file
@@ -19,10 +20,34 @@ export async function registerCompany(formData: FormData): Promise<{
   companyId: string;
   message: string;
 }> {
-  return apiFetch<{
-    companyId: string;
-    message: string;
-  }>(ENDPOINTS.admin.company.register, "POST", formData, undefined, false, true);
+  console.log('🔄 registerCompany関数呼び出し');
+  console.log('📍 APIルーター呼び出し予定: /api/admin/companies');
+
+  try {
+    const response = await fetch('/api/admin/companies', {
+      method: 'POST',
+      body: formData
+    });
+
+    console.log('📡 APIルーターレスポンス:', {
+      status: response.status,
+      ok: response.ok,
+      url: response.url
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      console.error('❌ APIルーターエラー:', errorData);
+      throw new Error(errorData.error || '企業登録に失敗しました');
+    }
+
+    const result = await response.json();
+    console.log('✅ APIルーター成功:', result);
+    return result;
+  } catch (error) {
+    console.error('❌ registerCompany関数エラー:', error);
+    throw error;
+  }
 }
 
 /**

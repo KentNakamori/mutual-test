@@ -182,7 +182,7 @@ docker-build:
 		echo "   make ECR_REPOSITORY_URL=your-ecr-url docker-build"; \
 		exit 1; \
 	fi
-	docker buildx build --platform linux/amd64 -t $(ECR_REPOSITORY_URL):$(IMAGE_TAG) -f Dockerfile .
+	docker buildx build --platform linux/amd64 --load -t $(ECR_REPOSITORY_URL):$(IMAGE_TAG) -f Dockerfile .
 
 docker-push: docker-init docker-build
 	@echo "DockerイメージをECRにプッシュします..."
