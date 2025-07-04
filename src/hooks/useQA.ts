@@ -12,6 +12,7 @@ export interface QASearchParams {
   fiscalPeriod?: string[];
   companyId?: string;
   companyName?: string;
+  isBookmarked?: boolean;
   sort?: 'createdAt' | 'likeCount';
   order?: 'asc' | 'desc';
   page?: number;

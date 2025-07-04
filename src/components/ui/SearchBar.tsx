@@ -21,7 +21,8 @@ const SearchBar: React.FC<EnhancedSearchBarProps> = ({
   ],
   filterComponent,
   onSearch,
-  onSort
+  onSort,
+  additionalButtons
 }) => {
   const [keyword, setKeyword] = useState(initialKeyword);
   const [showFilters, setShowFilters] = useState(false);
@@ -372,6 +373,9 @@ const SearchBar: React.FC<EnhancedSearchBarProps> = ({
               </div>
             )}
           </div>
+          
+          {/* 追加ボタンを表示 */}
+          {additionalButtons && additionalButtons}
         </div>
       </div>
     </div>

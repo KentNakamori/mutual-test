@@ -38,6 +38,7 @@ export interface FilterType {
   question_route?: string;
   category?: string[];
   fiscalPeriod?: string[];
+  isBookmarked?: boolean;
   sort?: 'createdAt' | 'likeCount';
   order?: 'asc' | 'desc';
   [key: string]: any;

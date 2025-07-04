@@ -80,6 +80,7 @@ const QASearchPage: React.FC = () => {
         ...(filters.question_route ? { question_route: filters.question_route } : {}),
         ...(filters.category && filters.category.length > 0 ? { category: filters.category } : {}),
         ...(filters.fiscalPeriod && filters.fiscalPeriod.length > 0 ? { fiscalPeriod: filters.fiscalPeriod } : {}),
+        ...(filters.isBookmarked !== undefined ? { isBookmarked: filters.isBookmarked } : {}),
         ...(filters.sort ? { sort: filters.sort } : {}),
         ...(filters.order ? { order: filters.order } : {}),
         // 後方互換性のため、古いフィルター形式もサポート

@@ -1,5 +1,6 @@
 import React from 'react';
 import ReactMarkdown from 'react-markdown';
+import Link from 'next/link';
 import { QA } from '@/types';
 import {
   CATEGORY_OPTION,
@@ -37,6 +38,9 @@ const QaPreview: React.FC<QaPreviewProps> = ({
   const displayDate = qa.createdAt ? formatDate(qa.createdAt) : formatDate(new Date().toISOString());
   const displayCompanyName = qa.companyName || (qa.companyId ? getCompanyName(qa.companyId) : 'Company A');
 
+  // 企業のQAリストページへのリンクを生成
+  const companyQaLink = qa.companyId ? `/investor/company/${qa.companyId}?tab=qa` : null;
+
   return (
     <div className="p-6 bg-white rounded-lg relative">
       {/* ヘッダー情報 */}
@@ -45,7 +49,16 @@ const QaPreview: React.FC<QaPreviewProps> = ({
         <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600">
           <div className="flex items-center">
             <Users size={16} className="mr-2 text-gray-500" />
-            <span className="font-medium">{displayCompanyName}</span>
+            {role === 'investor' && companyQaLink ? (
+              <Link 
+                href={companyQaLink} 
+                className="font-medium hover:text-gray-800 cursor-pointer"
+              >
+                {displayCompanyName}
+              </Link>
+            ) : (
+              <span className="font-medium">{displayCompanyName}</span>
+            )}
           </div>
           <div className="flex items-center">
             <Calendar size={16} className="mr-2 text-gray-500" />
