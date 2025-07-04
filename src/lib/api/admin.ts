@@ -1,6 +1,3 @@
-import { apiFetch } from "./client";
-import { ENDPOINTS } from "../../config/api";
-
 /**
  * 管理者向けAPI
  */
