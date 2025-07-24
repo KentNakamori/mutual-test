@@ -3,6 +3,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Search, Filter, ChevronDown } from 'lucide-react';
 import { EnhancedSearchBarProps } from '@/types';
 import { getTagColor } from '@/components/ui/tagConfig';
+import { parseFiscalPeriod, createFiscalPeriod } from './qaUtils';
 
 const SearchBar: React.FC<EnhancedSearchBarProps> = ({
   placeholder = "検索",
@@ -255,14 +256,14 @@ const SearchBar: React.FC<EnhancedSearchBarProps> = ({
                                     <div className="flex items-center gap-1">
                                       <input
                                         type="number"
-                                        value={selectedFilters[option.id]?.split('-Q')[0] || ''}
+                                        value={parseFiscalPeriod(selectedFilters[option.id] || '').year}
                                         onChange={(e) => {
-                                          const year = e.target.value;
-                                          const quarter = selectedFilters[option.id]?.split('-Q')[1] || '';
-                                          if (!year) {
+                                          const { month, quarter } = parseFiscalPeriod(selectedFilters[option.id] || '');
+                                          const newYear = e.target.value;
+                                          if (!newYear) {
                                             updateFilter(option.id, '');
                                           } else {
-                                            updateFilter(option.id, quarter ? `${year}-Q${quarter}` : year);
+                                            updateFilter(option.id, createFiscalPeriod(newYear, month, quarter));
                                           }
                                         }}
                                         placeholder="年度"
@@ -270,26 +271,46 @@ const SearchBar: React.FC<EnhancedSearchBarProps> = ({
                                         min="1900"
                                         max="2100"
                                       />
-                                      <span className="text-gray-600">年度</span>
+                                      <span className="text-gray-600">年</span>
+                                    </div>
+                                    <div className="flex items-center gap-1">
+                                      <input
+                                        type="number"
+                                        value={parseFiscalPeriod(selectedFilters[option.id] || '').month}
+                                        onChange={(e) => {
+                                          const { year, quarter } = parseFiscalPeriod(selectedFilters[option.id] || '');
+                                          const newMonth = e.target.value;
+                                          if (!year) {
+                                            updateFilter(option.id, '');
+                                          } else {
+                                            updateFilter(option.id, createFiscalPeriod(year, newMonth, quarter));
+                                          }
+                                        }}
+                                        placeholder="月"
+                                        className="w-16 px-2 py-1 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                        min="1"
+                                        max="12"
+                                      />
+                                      <span className="text-gray-600">月期</span>
                                     </div>
                                     <div className="flex items-center gap-1">
                                       <span className="text-gray-600">Q</span>
                                       <input
                                         type="number"
-                                        value={selectedFilters[option.id]?.split('-Q')[1] || ''}
+                                        value={parseFiscalPeriod(selectedFilters[option.id] || '').quarter}
                                         onChange={(e) => {
-                                          const year = selectedFilters[option.id]?.split('-Q')[0] || '';
-                                          const quarter = e.target.value;
+                                          const { year, month } = parseFiscalPeriod(selectedFilters[option.id] || '');
+                                          const newQuarter = e.target.value;
                                           if (!year) {
                                             updateFilter(option.id, '');
                                           } else {
-                                            updateFilter(option.id, quarter ? `${year}-Q${quarter}` : year);
+                                            updateFilter(option.id, createFiscalPeriod(year, month, newQuarter));
                                           }
                                         }}
                                         placeholder="Q"
                                         className="w-16 px-2 py-1 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                                         min="1"
-                                        max="99"
+                                        max="4"
                                       />
                                     </div>
                                   </div>
@@ -372,8 +393,7 @@ const SearchBar: React.FC<EnhancedSearchBarProps> = ({
                 </div>
               </div>
             )}
-          </div>
-          
+          </div>          
           {/* 追加ボタンを表示 */}
           {additionalButtons && additionalButtons}
         </div>
