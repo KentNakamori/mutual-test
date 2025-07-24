@@ -1,4 +1,5 @@
 import React from 'react';
+import { parseFiscalPeriod, createFiscalPeriod } from './qaUtils';
 
 interface FiscalPeriodSelectProps {
   value: string;
@@ -14,7 +15,7 @@ export const FiscalPeriodSelect: React.FC<FiscalPeriodSelectProps> = ({
   includeEmpty = false
 }) => {
   // 現在の選択値を分解
-  const [year, quarter] = value.split('-Q');
+  const { year, month, quarter } = parseFiscalPeriod(value);
 
   // 年度入力時の処理
   const handleYearChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -23,11 +24,17 @@ export const FiscalPeriodSelect: React.FC<FiscalPeriodSelectProps> = ({
       onChange('');
       return;
     }
-    if (quarter) {
-      onChange(`${newYear}-Q${quarter}`);
-    } else {
-      onChange(newYear);
+    onChange(createFiscalPeriod(newYear, month, quarter));
+  };
+
+  // 月入力時の処理
+  const handleMonthChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newMonth = e.target.value;
+    if (!year) {
+      onChange('');
+      return;
     }
+    onChange(createFiscalPeriod(year, newMonth, quarter));
   };
 
   // 四半期入力時の処理
@@ -37,11 +44,7 @@ export const FiscalPeriodSelect: React.FC<FiscalPeriodSelectProps> = ({
       onChange('');
       return;
     }
-    if (newQuarter) {
-      onChange(`${year}-Q${newQuarter}`);
-    } else {
-      onChange(year);
-    }
+    onChange(createFiscalPeriod(year, month, newQuarter));
   };
 
   return (
@@ -56,7 +59,19 @@ export const FiscalPeriodSelect: React.FC<FiscalPeriodSelectProps> = ({
           min="1900"
           max="2100"
         />
-        <span className="text-gray-600">年度</span>
+        <span className="text-gray-600">年</span>
+      </div>
+      <div className="flex items-center gap-1">
+        <input
+          type="number"
+          value={month || ''}
+          onChange={handleMonthChange}
+          placeholder="月"
+          className="w-16 px-2 py-1 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          min="1"
+          max="12"
+        />
+        <span className="text-gray-600">月期</span>
       </div>
       <div className="flex items-center gap-1">
         <span className="text-gray-600">Q</span>
@@ -67,7 +82,7 @@ export const FiscalPeriodSelect: React.FC<FiscalPeriodSelectProps> = ({
           placeholder="Q"
           className="w-16 px-2 py-1 border rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
           min="1"
-          max="99"
+          max="4"
         />
       </div>
     </div>

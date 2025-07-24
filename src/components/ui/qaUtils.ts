@@ -1,6 +1,75 @@
 // QA関連の共通ユーティリティ関数
 
 /**
+ * 決算期をフォーマットする（表示用）
+ * @param fiscalPeriod "2024-3-Q3" 形式の文字列
+ * @returns "2024年３月期Q３" 形式の文字列
+ */
+export const formatFiscalPeriod = (fiscalPeriod: string): string => {
+  if (!fiscalPeriod || fiscalPeriod.trim() === '') {
+    return '未選択';
+  }
+  
+  // 旧形式（2024-Q3）の場合は従来通り表示
+  if (fiscalPeriod.match(/^\d{4}-Q\d+$/)) {
+    return fiscalPeriod.replace(/(\d{4})-Q(\d+)/, '$1年Q$2');
+  }
+  
+  // 新形式（2024-3-Q3）の場合は新しい表示形式
+  const match = fiscalPeriod.match(/^(\d{4})-(\d{1,2})-Q(\d+)$/);
+  if (match) {
+    const [, year, month, quarter] = match;
+    return `${year}年${month}月期Q${quarter}`;
+  }
+  
+  return fiscalPeriod;
+};
+
+/**
+ * 決算期の文字列を分解する
+ * @param fiscalPeriod "2024-3-Q3" 形式の文字列
+ * @returns { year: string, month: string, quarter: string }
+ */
+export const parseFiscalPeriod = (fiscalPeriod: string): { year: string; month: string; quarter: string } => {
+  if (!fiscalPeriod || fiscalPeriod.trim() === '') {
+    return { year: '', month: '', quarter: '' };
+  }
+  
+  // 旧形式（2024-Q3）の場合
+  const oldMatch = fiscalPeriod.match(/^(\d{4})-Q(\d+)$/);
+  if (oldMatch) {
+    const [, year, quarter] = oldMatch;
+    return { year, month: '', quarter };
+  }
+  
+  // 新形式（2024-3-Q3）の場合
+  const newMatch = fiscalPeriod.match(/^(\d{4})-(\d{1,2})-Q(\d+)$/);
+  if (newMatch) {
+    const [, year, month, quarter] = newMatch;
+    return { year, month, quarter };
+  }
+  
+  return { year: '', month: '', quarter: '' };
+};
+
+/**
+ * 年・月・Qから決算期の文字列を作成する
+ * @param year 年度
+ * @param month 月
+ * @param quarter 四半期
+ * @returns "2024-3-Q3" 形式の文字列
+ */
+export const createFiscalPeriod = (year: string, month: string, quarter: string): string => {
+  if (!year) return '';
+  
+  if (!month && !quarter) return year;
+  if (!month && quarter) return `${year}-Q${quarter}`;
+  if (month && !quarter) return `${year}-${month}`;
+  
+  return `${year}-${month}-Q${quarter}`;
+};
+
+/**
  * エラーオブジェクトから適切なエラーメッセージを抽出する
  */
 export const extractErrorMessage = (error: unknown): string => {
@@ -70,9 +139,12 @@ export const formatDate = (dateStr: string): string => {
  * 企業名を取得する
  */
 export const getCompanyName = (companyId: string): string => {
+  // 企業名のマッピングロジック（実際の実装に応じて調整）
   const companyMap: Record<string, string> = {
-    comp1: 'テック・イノベーターズ株式会社',
-    comp2: 'グリーンエナジー株式会社',
+    'comp1': 'Company A',
+    'comp2': 'Company B',
+    'comp3': 'Company C',
   };
+  
   return companyMap[companyId] || companyId;
 }; 

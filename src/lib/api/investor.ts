@@ -188,6 +188,7 @@ export async function followInvestorCompany(
  *   - fiscalPeriod: 会計期間配列
  *   - companyId: 企業ID
  *   - companyName: 企業名
+ *   - isBookmarked: ブックマーク済みのみ表示
  *   - sort: ソート項目（createdAt/likeCount）
  *   - order: ソート順（asc/desc）
  *   - page: ページ番号
@@ -207,6 +208,7 @@ export async function searchInvestorQa(
     fiscalPeriod?: string[];
     companyId?: string;
     companyName?: string;
+    isBookmarked?: boolean;
     sort?: 'createdAt' | 'likeCount';
     order?: 'asc' | 'desc';
     page?: number;
@@ -240,6 +242,10 @@ export async function searchInvestorQa(
     });
   }
   
+  if (query.isBookmarked !== undefined) {
+    queryString.append('isBookmarked', query.isBookmarked.toString());
+  }
+  
   if (query.sort) queryString.append('sort', query.sort);
   if (query.order) queryString.append('order', query.order);
   if (query.page) queryString.append('page', query.page.toString());
@@ -260,6 +266,7 @@ export async function searchInvestorQa(
  *   - category: カテゴリ配列
  *   - fiscalPeriod: 会計期間
  *   - is_faq: FAQフラグ
+ *   - isBookmarked: ブックマーク済みのみ表示
  *   - sort: ソート項目（createdAt/likeCount）
  *   - order: ソート順（asc/desc）
  *   - page: ページ番号
@@ -279,6 +286,7 @@ export async function searchInvestorCompanyQa(
     category?: string[];
     fiscalPeriod?: string;
     is_faq?: boolean;
+    isBookmarked?: boolean;
     sort?: 'createdAt' | 'likeCount';
     order?: 'asc' | 'desc';
     page?: number;
@@ -304,6 +312,10 @@ export async function searchInvestorCompanyQa(
     query.category.forEach(g => {
       if (g && g.trim()) queryString.append('category', g);
     });
+  }
+  
+  if (query.isBookmarked !== undefined) {
+    queryString.append('isBookmarked', query.isBookmarked.toString());
   }
   
   if (query.sort) queryString.append('sort', query.sort);

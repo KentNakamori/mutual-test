@@ -3,11 +3,12 @@ import React, { useState } from 'react';
 import { QACardProps } from '@/types';
 import { getTagColor } from '@/components/ui/tagConfig';
 import { 
-  Calendar, Users, FileText, HelpCircle, Bookmark, Activity, Route
+  Calendar, Users, FileText, HelpCircle, Bookmark, Tag, Route
 } from 'lucide-react';
 import { useUser } from '@auth0/nextjs-auth0';
 import { useRouter } from 'next/navigation';
 import GuestRestrictedContent from '@/components/features/investor/common/GuestRestrictedContent';
+import { formatFiscalPeriod } from './qaUtils';
 
 // ユーティリティ関数をオプションで受け取る型を拡張
 export type QACardMode = 'preview' | 'detail' | 'edit';
@@ -84,7 +85,7 @@ const QACard: React.FC<QACardProps> = ({
               )}
               <div className="flex items-center">
                 <FileText size={14} className="mr-1 text-blue-600" />
-                <span className="text-gray-700 text-sm">{qa.fiscalPeriod || '未設定'}</span>
+                <span className="text-gray-700 text-sm">{formatFiscalPeriod(qa.fiscalPeriod || '')}</span>
               </div>
             </div>
             {/* 右グループ */}
@@ -102,7 +103,7 @@ const QACard: React.FC<QACardProps> = ({
 
                 {qa.category && qa.category.length > 0 && (
                   <div className="flex items-center gap-1">
-                    <Activity size={14} className="text-amber-600" />
+                    <Tag size={14} className="text-amber-600" />
                     {qa.category.map((category, index) => (
                       <span 
                         key={`category-${index}`} 
@@ -158,7 +159,14 @@ const QACard: React.FC<QACardProps> = ({
                     : 'bg-gray-100 hover:bg-blue-100'
                   : 'bg-gray-50'
               }`}>
-                <Bookmark size={16} className="mr-0.5" />
+                <Bookmark 
+                  size={16} 
+                  className={`mr-0.5 ${role === 'investor' && qa.isLiked ? 'fill-current' : 'fill-none'}`}
+                  style={{
+                    fill: role === 'investor' && qa.isLiked ? 'currentColor' : 'none',
+                    stroke: 'currentColor'
+                  }}
+                />
               </div>
               <span className="ml-2 text-sm font-medium">{qa.likeCount || 0}</span>
             </button>

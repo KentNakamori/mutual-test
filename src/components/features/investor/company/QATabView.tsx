@@ -61,6 +61,11 @@ const QATabView: React.FC<QATabViewProps> = ({ companyId, companyName }) => {
           }
         }
         
+        // ブックマークフィルター
+        if (searchFilters.isBookmarked !== undefined) {
+          queryParams.append('isBookmarked', searchFilters.isBookmarked.toString());
+        }
+        
         // ソート
         if (searchFilters.sort) {
           queryParams.append('sort', searchFilters.sort);

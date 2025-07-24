@@ -252,6 +252,7 @@ export interface EnhancedSearchBarProps extends SearchBarProps {
   }[];
   initialSortBy?: string;
   onSort?: (sortBy: string) => void;
+  additionalButtons?: React.ReactNode;
 }
 
 /**

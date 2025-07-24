@@ -2,6 +2,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { QA } from "@/types";
 import { getTagColor } from "@/components/ui/tagConfig";
 import { useUser } from "@auth0/nextjs-auth0";
@@ -15,6 +16,7 @@ interface NewQAListProps {
 
 const NewQAList: React.FC<NewQAListProps> = ({ onRowClick }) => {
   const { user, isLoading: userLoading } = useUser();
+  const router = useRouter();
   const [qas, setQas] = useState<QA[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -113,6 +115,12 @@ const NewQAList: React.FC<NewQAListProps> = ({ onRowClick }) => {
     console.log('ブックマーク処理:', qaId);
   };
 
+  // 企業名クリック処理
+  const handleCompanyNameClick = (e: React.MouseEvent, companyId: string) => {
+    e.stopPropagation(); // 行のクリックイベントを停止
+    router.push(`/investor/company/${companyId}`);
+  };
+
   // 5行に満たない場合は空行を追加（各行は h-8）
   const fillerRowsCount = Math.max(0, 5 - qas.length);
   const fillerRows = Array.from({ length: fillerRowsCount });
@@ -203,7 +211,12 @@ const NewQAList: React.FC<NewQAListProps> = ({ onRowClick }) => {
                       {new Date(qa.createdAt).toLocaleDateString()}
                     </td>
                     <td className="px-6 py-1 whitespace-nowrap text-xs text-gray-700">
-                      {qa.companyName || qa.companyId}
+                      <span 
+                        className="text-blue-600 hover:text-blue-800 cursor-pointer"
+                        onClick={(e) => handleCompanyNameClick(e, qa.companyId)}
+                      >
+                        {qa.companyName || qa.companyId}
+                      </span>
                     </td>
                     <td className="px-6 py-1 whitespace-nowrap text-xs text-blue-600 hover:text-blue-800">
                       {qa.title}

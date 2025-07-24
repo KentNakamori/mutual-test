@@ -1,12 +1,13 @@
 import React from 'react';
 import ReactMarkdown from 'react-markdown';
+import Link from 'next/link';
 import { QA } from '@/types';
 import {
   CATEGORY_OPTION,
   QUESTION_ROUTE_OPTIONS,
 } from '@/components/ui/tagConfig';
-import { Calendar, Bookmark, FileText, Activity, HelpCircle, CheckCircle, Route, Users } from 'lucide-react';
-import { formatDate, getCompanyName } from './qaUtils';
+import { Calendar, Bookmark, FileText, HelpCircle, CheckCircle, Route, Users, Tag } from 'lucide-react';
+import { formatDate, getCompanyName, formatFiscalPeriod } from './qaUtils';
 
 interface QaPreviewProps {
   qa: Partial<QA> & {
@@ -37,6 +38,9 @@ const QaPreview: React.FC<QaPreviewProps> = ({
   const displayDate = qa.createdAt ? formatDate(qa.createdAt) : formatDate(new Date().toISOString());
   const displayCompanyName = qa.companyName || (qa.companyId ? getCompanyName(qa.companyId) : 'Company A');
 
+  // 企業のQAリストページへのリンクを生成
+  const companyQaLink = qa.companyId ? `/investor/company/${qa.companyId}?tab=qa` : null;
+
   return (
     <div className="p-6 bg-white rounded-lg relative">
       {/* ヘッダー情報 */}
@@ -45,7 +49,16 @@ const QaPreview: React.FC<QaPreviewProps> = ({
         <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600">
           <div className="flex items-center">
             <Users size={16} className="mr-2 text-gray-500" />
-            <span className="font-medium">{displayCompanyName}</span>
+            {role === 'investor' && companyQaLink ? (
+              <Link 
+                href={companyQaLink} 
+                className="font-medium hover:text-gray-800 cursor-pointer"
+              >
+                {displayCompanyName}
+              </Link>
+            ) : (
+              <span className="font-medium">{displayCompanyName}</span>
+            )}
           </div>
           <div className="flex items-center">
             <Calendar size={16} className="mr-2 text-gray-500" />
@@ -53,7 +66,46 @@ const QaPreview: React.FC<QaPreviewProps> = ({
           </div>
           <div className="flex items-center">
             <FileText size={16} className="mr-2 text-gray-500" />
-            <span>{qa.fiscalPeriod || '未選択'}</span>
+            <span>{formatFiscalPeriod(qa.fiscalPeriod || '')}</span>
+          </div>
+          
+          {/* 質問ルート */}
+          <div className="flex items-center">
+            <Route size={16} className="mr-2 text-indigo-600" />
+            {qa.question_route ? (
+              (() => {
+                const routeOption = QUESTION_ROUTE_OPTIONS.find(opt => opt.label === qa.question_route);
+                const colorClass = routeOption ? routeOption.color : 'bg-gray-100 text-gray-800';
+                return (
+                  <span className={`inline-flex items-center ${colorClass} px-2 py-1 rounded-full text-xs font-medium`}>
+                    {qa.question_route}
+                  </span>
+                );
+              })()
+            ) : (
+              <span className="text-gray-500 text-xs">未設定</span>
+            )}
+          </div>
+          
+          {/* カテゴリ */}
+          <div className="flex items-center gap-1">
+            <Tag size={16} className="text-amber-600" />
+            {qa.category && qa.category.length > 0 ? (
+              qa.category.map((genre: string) => {
+                const genreOption = CATEGORY_OPTION.find(opt => opt.label === genre);
+                const colorClass = genreOption ? genreOption.color : 'bg-gray-100 text-gray-800';
+                return (
+                  <span
+                    key={genre}
+                    className={`inline-flex items-center ${colorClass} px-2 py-1 rounded-full text-xs font-medium`}
+                  >
+                    {genre}
+                  </span>
+                );
+              })
+            ) : (
+              <span className="text-gray-500 text-xs">未設定</span>
+            )}
           </div>
         </div>
       </div>
@@ -74,64 +126,10 @@ const QaPreview: React.FC<QaPreviewProps> = ({
           回答
         </h3>
         <div className="ml-6">
-          <div className="text-gray-800 leading-relaxed prose prose-sm max-w-none">
+          <div className="text-gray-800 leading-relaxed prose max-w-none">
             <ReactMarkdown>
               {qa.answer || '*回答内容を入力してください*'}
             </ReactMarkdown>
-          </div>
-        </div>
-      </div>
-      
-      {/* メタデータエリア */}
-      <div className="space-y-4 mb-6">
-        {/* 質問ルート */}
-        <div>
-          <h4 className="text-sm font-medium text-gray-700 mb-2 flex items-center">
-            <Route size={14} className="mr-2 text-indigo-600" />
-            質問ルート
-          </h4>
-          <div className="flex flex-wrap gap-2 pl-5">
-            {qa.question_route ? (
-              (() => {
-                const routeOption = QUESTION_ROUTE_OPTIONS.find(opt => opt.label === qa.question_route);
-                const colorClass = routeOption ? routeOption.color : 'bg-gray-100 text-gray-800';
-                return (
-                  <span
-                    className={`inline-flex items-center ${colorClass} px-3 py-1 rounded-full text-xs font-medium`}
-                  >
-                    {qa.question_route}
-                  </span>
-                );
-              })()
-            ) : (
-              <span className="text-gray-500 text-sm">質問ルート未設定</span>
-            )}
-          </div>
-        </div>
-        
-        {/* カテゴリ */}
-        <div>
-          <h4 className="text-sm font-medium text-gray-700 mb-2 flex items-center">
-            <Activity size={14} className="mr-2 text-amber-600" />
-            カテゴリ
-          </h4>
-          <div className="flex flex-wrap gap-2 pl-5">
-            {qa.category && qa.category.length > 0 ? (
-              qa.category.map((genre: string) => {
-                const genreOption = CATEGORY_OPTION.find(opt => opt.label === genre);
-                const colorClass = genreOption ? genreOption.color : 'bg-gray-100 text-gray-800';
-                return (
-                <span
-                  key={genre}
-                    className={`inline-flex items-center ${colorClass} px-3 py-1 rounded-full text-xs font-medium`}
-                >
-                  {genre}
-                </span>
-                );
-              })
-            ) : (
-              <span className="text-gray-500 text-sm">カテゴリ未設定</span>
-            )}
           </div>
         </div>
       </div>
@@ -150,7 +148,14 @@ const QaPreview: React.FC<QaPreviewProps> = ({
             }`}
             disabled={role !== 'investor'}
           >
-            <Bookmark size={16} className="mr-2" />
+            <Bookmark 
+              size={16} 
+              className={`mr-2 ${role === 'investor' && qa.isLiked ? 'fill-current' : 'fill-none'}`}
+              style={{
+                fill: role === 'investor' && qa.isLiked ? 'currentColor' : 'none',
+                stroke: 'currentColor'
+              }}
+            />
             <span className="font-medium">{qa.likeCount || 0}</span>
           </button>
         </div>

@@ -7,7 +7,7 @@ import {
   QUESTION_ROUTE_OPTIONS,
   getTagColor,
 } from '@/components/ui/tagConfig';
-import { X, BookOpen, Plus, Eye, Edit } from 'lucide-react';
+import { X, BookOpen, Plus, Eye, Edit, Tag } from 'lucide-react';
 import { updateCorporateQa, generateCorporateQaAnswer } from '@/lib/api';
 import { useUser } from "@auth0/nextjs-auth0";
 import FiscalPeriodSelect from '@/components/ui/FiscalPeriodSelect';
@@ -312,7 +312,7 @@ const QaDetailModal: React.FC<QaDetailModalProps> = ({
         isOpen={isOpen} 
         onClose={handleClose} 
         title="" 
-        className="max-w-7xl mx-4 lg:mx-8 my-10" 
+        className="max-w-6xl mx-6 lg:mx-12 my-10" 
         showCloseButton={false}
       >
         <div className="overflow-y-auto" style={{ maxHeight: 'calc(90vh - 100px)' }}>
@@ -495,6 +495,7 @@ const QaDetailModal: React.FC<QaDetailModalProps> = ({
                       <div className="flex flex-wrap gap-2 mb-2">
                         {editableQA.category.map((g) => (
                           <div key={g} className={`inline-flex items-center ${getTagColor(g)} px-2 py-1 rounded-md text-xs`}>
+                            <Tag size={12} className="mr-1" />
                             <span className="truncate max-w-[120px]">{g}</span>
                             <button
                               onClick={() => handleRemoveGenre(g)}
